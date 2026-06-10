@@ -63,6 +63,7 @@ const player = {
   radius: 18,
   angle: 0,
   scrollSpeed: 105,
+  viewSpeed: 125,
   health: 100,
   maxHealth: 100,
   energy: 0,
@@ -399,8 +400,24 @@ function applyWorldScroll(object, dt, factor = 1) {
 }
 
 function updateWorldMotion(dt) {
-  state.scrollX = -Math.cos(player.angle) * player.scrollSpeed;
-  state.scrollY = -Math.sin(player.angle) * player.scrollSpeed;
+  const forwardX = Math.cos(player.angle);
+  const forwardY = Math.sin(player.angle);
+  const rightX = -forwardY;
+  const rightY = forwardX;
+  let viewForward = 0;
+  let viewRight = 0;
+
+  if (keys.has("KeyW")) viewForward += 1;
+  if (keys.has("KeyS")) viewForward -= 1;
+  if (keys.has("KeyD")) viewRight += 1;
+  if (keys.has("KeyA")) viewRight -= 1;
+
+  const inputLength = Math.hypot(viewForward, viewRight) || 1;
+  const viewX = (forwardX * viewForward + rightX * viewRight) / inputLength;
+  const viewY = (forwardY * viewForward + rightY * viewRight) / inputLength;
+
+  state.scrollX = -forwardX * player.scrollSpeed - viewX * player.viewSpeed;
+  state.scrollY = -forwardY * player.scrollSpeed - viewY * player.viewSpeed;
   state.worldOffsetX += state.scrollX * dt * 0.34;
   state.worldOffsetY += state.scrollY * dt * 0.34;
 }
@@ -456,7 +473,7 @@ function updatePlayer(dt) {
   player.y = height * 0.56;
   player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
 
-  if ((mouse.down || keys.has("Space")) && player.shootTimer <= 0) {
+  if ((mouse.down || keys.has("KeyF")) && player.shootTimer <= 0) {
     firePlayerBullet();
     player.shootTimer = 0.145;
   }
@@ -936,11 +953,11 @@ window.addEventListener("keydown", (event) => {
   if (event.code === "Space") {
     event.preventDefault();
   }
-  if (event.code === "Space" && !event.repeat && state.running && player.shootTimer <= 0) {
+  if (event.code === "KeyF" && !event.repeat && state.running && player.shootTimer <= 0) {
     firePlayerBullet();
     player.shootTimer = 0.145;
   }
-  if ((event.code === "ShiftLeft" || event.code === "ShiftRight") && !event.repeat) activateShield();
+  if (event.code === "Space" && !event.repeat) activateShield();
   if (event.code === "KeyE" && !event.repeat) activatePulse();
   if (event.code === "Enter" && state.gameOver) {
     initializeAudio();
@@ -972,6 +989,7 @@ canvas.addEventListener("mousedown", (event) => {
       player.shootTimer = 0.145;
     }
   }
+  if (event.button === 2) activatePulse();
 });
 
 window.addEventListener("mouseup", (event) => {
