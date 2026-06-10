@@ -8,7 +8,7 @@
       content="방어 에너지를 모아 생체 파동으로 반격하는 2D 탑다운 우주 방어 슈팅 게임"
     />
     <title>Living Aegis</title>
-    <link rel="stylesheet" href="style.css?v=3" />
+    <link rel="stylesheet" href="style.css?v=4" />
   </head>
   <body>
     <main class="game-shell">
@@ -110,6 +110,14 @@
             <span>생존 시간 <strong id="finalTime">00:00.0</strong></span>
             <span>최종 점수 <strong id="finalScore">000000</strong></span>
           </div>
+          <label class="mode-select mode-select--restart">
+            <input id="restartBeginnerMode" type="checkbox" checked />
+            <span class="mode-select__mark" aria-hidden="true"></span>
+            <span>
+              <strong>BEGINNER MODE</strong>
+              <small>다음 게임의 적 기체를 최대 10기로 제한</small>
+            </span>
+          </label>
           <button id="restartButton" type="button">다시 연결</button>
         </div>
       </section>
@@ -120,6 +128,6 @@
       </div>
     </main>
 
-    <script src="main.js?v=3"></script>
+    <script src="main.js?v=4"></script>
   </body>
 </html>

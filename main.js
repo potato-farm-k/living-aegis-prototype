@@ -14,6 +14,7 @@ const ui = {
   startButton: document.querySelector("#startButton"),
   restartButton: document.querySelector("#restartButton"),
   beginnerMode: document.querySelector("#beginnerMode"),
+  restartBeginnerMode: document.querySelector("#restartBeginnerMode"),
   time: document.querySelector("#timeValue"),
   finalTime: document.querySelector("#finalTime"),
   score: document.querySelector("#scoreValue"),
@@ -174,6 +175,11 @@ function createStars() {
   }));
 }
 
+function syncModeSelectors(beginnerMode) {
+  ui.beginnerMode.checked = beginnerMode;
+  ui.restartBeginnerMode.checked = beginnerMode;
+}
+
 function resetGame(beginnerMode = state.beginnerMode) {
   state.running = true;
   state.gameOver = false;
@@ -184,6 +190,7 @@ function resetGame(beginnerMode = state.beginnerMode) {
   state.flash = 0;
   state.objectiveReached = false;
   state.beginnerMode = beginnerMode;
+  syncModeSelectors(beginnerMode);
 
   Object.assign(player, {
     x: width / 2,
@@ -216,6 +223,7 @@ function endGame() {
   mouse.down = false;
   ui.finalTime.textContent = formatTime(state.elapsed);
   ui.finalScore.textContent = String(state.score).padStart(6, "0");
+  syncModeSelectors(state.beginnerMode);
   ui.gameOver.hidden = false;
 }
 
@@ -910,7 +918,7 @@ window.addEventListener("keydown", (event) => {
   if (event.code === "KeyE" && !event.repeat) activatePulse();
   if (event.code === "Enter" && state.gameOver) {
     initializeAudio();
-    resetGame();
+    resetGame(ui.restartBeginnerMode.checked);
   }
 });
 
@@ -951,7 +959,13 @@ ui.startButton.addEventListener("click", () => {
 });
 ui.restartButton.addEventListener("click", () => {
   initializeAudio();
-  resetGame();
+  resetGame(ui.restartBeginnerMode.checked);
+});
+ui.beginnerMode.addEventListener("change", () => {
+  ui.restartBeginnerMode.checked = ui.beginnerMode.checked;
+});
+ui.restartBeginnerMode.addEventListener("change", () => {
+  ui.beginnerMode.checked = ui.restartBeginnerMode.checked;
 });
 
 resizeCanvas();

@@ -388,6 +388,12 @@ kbd {
   letter-spacing: 0.04em;
 }
 
+.mode-select--restart {
+  margin-bottom: 18px;
+  border-color: rgba(255, 137, 165, 0.2);
+  background: rgba(255, 82, 122, 0.035);
+}
+
 .game-over__card {
   border-color: rgba(255, 82, 122, 0.25);
 }
