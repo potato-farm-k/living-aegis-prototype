@@ -17,6 +17,7 @@ const ui = {
   time: document.querySelector("#timeValue"),
   finalTime: document.querySelector("#finalTime"),
   score: document.querySelector("#scoreValue"),
+  modeStatus: document.querySelector("#modeStatus"),
   finalScore: document.querySelector("#finalScore"),
   health: document.querySelector("#healthValue"),
   healthBar: document.querySelector("#healthBar"),
@@ -74,7 +75,14 @@ let playerBullets = [];
 let particles = [];
 let pulses = [];
 let audioContext = null;
+let audioOutput = null;
 const soundCooldowns = {};
+const sounds = {
+  shot: { type: "triangle", start: 310, end: 105, duration: 0.08, volume: 0.08, cooldown: 0.07 },
+  pulse: { type: "sine", start: 150, end: 34, duration: 0.72, volume: 0.2, cooldown: 0.3 },
+  shield: { type: "triangle", start: 170, end: 620, duration: 0.25, volume: 0.14, cooldown: 0.18 },
+  destroy: { type: "sawtooth", start: 125, end: 38, duration: 0.2, volume: 0.1, cooldown: 0.04 },
+};
 
 // 자주 쓰는 작은 수학 함수들입니다.
 const random = (min, max) => Math.random() * (max - min) + min;
@@ -91,21 +99,33 @@ function initializeAudio() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return null;
 
-  if (!audioContext) audioContext = new AudioContextClass();
-  if (audioContext.state === "suspended") audioContext.resume();
+  if (!audioContext) {
+    audioContext = new AudioContextClass();
+    audioOutput = audioContext.createGain();
+    audioOutput.gain.value = 0.72;
+    audioOutput.connect(audioContext.destination);
+  }
+
+  if (audioContext.state === "suspended") {
+    audioContext.resume().catch(() => {
+      // 브라우저가 아직 오디오를 허용하지 않으면 다음 사용자 입력에서 다시 시도합니다.
+    });
+  }
   return audioContext;
 }
 
 function playSound(name) {
   const context = initializeAudio();
-  if (!context) return;
+  if (!context || !audioOutput) return;
 
-  const sounds = {
-    shot: { type: "triangle", start: 260, end: 110, duration: 0.07, volume: 0.025, cooldown: 0.07 },
-    pulse: { type: "sine", start: 130, end: 34, duration: 0.65, volume: 0.09, cooldown: 0.3 },
-    shield: { type: "triangle", start: 180, end: 520, duration: 0.22, volume: 0.055, cooldown: 0.18 },
-    destroy: { type: "sawtooth", start: 105, end: 36, duration: 0.18, volume: 0.035, cooldown: 0.04 },
-  };
+  // 일부 모바일 브라우저는 첫 입력 전 오디오를 정지합니다. 재개된 직후 효과음을 다시 요청합니다.
+  if (context.state !== "running") {
+    context.resume().then(() => {
+      if (context.state === "running") playSound(name);
+    }).catch(() => {});
+    return;
+  }
+
   const sound = sounds[name];
   const now = context.currentTime;
 
@@ -120,7 +140,7 @@ function playSound(name) {
   gain.gain.setValueAtTime(sound.volume, now);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + sound.duration);
   oscillator.connect(gain);
-  gain.connect(context.destination);
+  gain.connect(audioOutput);
   oscillator.start(now);
   oscillator.stop(now + sound.duration);
 }
@@ -201,6 +221,9 @@ function endGame() {
 
 // 화면 바깥 네 방향 중 한 곳에서 적이 생성됩니다.
 function spawnEnemy() {
+  // 비기너 모드의 제한은 생성 함수 자체에서 강제해 다른 생성 경로가 생겨도 10기를 넘지 않습니다.
+  if (state.beginnerMode && enemies.length >= state.maxBeginnerEnemies) return false;
+
   const margin = 65;
   const side = Math.floor(Math.random() * 4);
   let x;
@@ -237,6 +260,7 @@ function spawnEnemy() {
     phase: random(0, Math.PI * 2),
     touchTimer: 0,
   });
+  return true;
 }
 
 function firePlayerBullet() {
@@ -385,8 +409,7 @@ function update(dt) {
 
   // 생성 간격은 서서히 짧아져 후반부가 더 긴장감 있게 변합니다.
   if (state.spawnTimer <= 0) {
-    // 비기너 모드에서는 살아 있는 적이 10기일 때 추가 생성을 잠시 멈춥니다.
-    if (!state.beginnerMode || enemies.length < state.maxBeginnerEnemies) spawnEnemy();
+    spawnEnemy();
     state.spawnTimer = Math.max(0.34, 1.08 - state.elapsed * 0.008) * random(0.75, 1.2);
   }
 
@@ -842,6 +865,9 @@ function updateHud() {
   const energyRatio = player.energy / player.maxEnergy;
   ui.time.textContent = formatTime(state.elapsed);
   ui.score.textContent = String(state.score).padStart(6, "0");
+  ui.modeStatus.textContent = state.beginnerMode
+    ? `BEGINNER · HOSTILES ${enemies.length}/${state.maxBeginnerEnemies}`
+    : `STANDARD · HOSTILES ${enemies.length}`;
   ui.health.textContent = String(Math.ceil(player.health));
   ui.healthBar.style.transform = `scaleX(${healthRatio})`;
   ui.energy.textContent = `${Math.floor(player.energy)}%`;

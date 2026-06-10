@@ -136,6 +136,13 @@ button:focus-visible {
   letter-spacing: 0.12em;
 }
 
+.score-panel small {
+  margin-top: 3px;
+  color: var(--bio);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
 .status-panel {
   position: absolute;
   left: 28px;
@@ -489,6 +496,10 @@ kbd {
 
   .score-panel strong {
     font-size: 14px;
+  }
+
+  .score-panel small {
+    font-size: 7px;
   }
 
   .hud__center {
