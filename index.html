@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="방어 에너지를 모아 생체 파동으로 반격하는 2D 탑다운 우주 방어 슈팅 게임"
+    />
+    <title>Living Aegis</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <canvas id="gameCanvas" aria-label="Living Aegis 게임 화면"></canvas>
+
+      <section class="hud" aria-label="게임 상태">
+        <div class="brand">
+          <span class="brand__eyebrow">BIO-DEFENSE PROTOCOL</span>
+          <strong>LIVING AEGIS</strong>
+        </div>
+
+        <div class="hud__center">
+          <div class="timer-panel">
+            <span>SURVIVAL</span>
+            <strong id="timeValue">00:00.0</strong>
+            <small id="objectiveText">60초까지 생존하십시오</small>
+          </div>
+        </div>
+
+        <div class="score-panel">
+          <span>SCORE</span>
+          <strong id="scoreValue">000000</strong>
+        </div>
+
+        <div class="status-panel">
+          <div class="meter-row">
+            <div class="meter-label">
+              <span>CORE INTEGRITY</span>
+              <strong id="healthValue">100</strong>
+            </div>
+            <div class="meter meter--health">
+              <i id="healthBar"></i>
+            </div>
+          </div>
+
+          <div class="meter-row">
+            <div class="meter-label">
+              <span>AEGIS ENERGY</span>
+              <strong id="energyValue">0%</strong>
+            </div>
+            <div class="meter meter--energy">
+              <i id="energyBar"></i>
+            </div>
+          </div>
+
+          <div class="ability-row">
+            <span class="keycap">SPACE</span>
+            <div>
+              <strong>전방 생체막</strong>
+              <small id="shieldStatus">READY</small>
+            </div>
+          </div>
+          <div class="ability-row ability-row--pulse" id="pulseHint">
+            <span class="keycap">E</span>
+            <div>
+              <strong>생체 파동</strong>
+              <small id="pulseStatus">CHARGING</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-hint">
+          <span><kbd>WASD</kbd> / <kbd>방향키</kbd> 이동</span>
+          <span><kbd>마우스</kbd> 조준 · <kbd>좌클릭</kbd> 발사</span>
+        </div>
+      </section>
+
+      <section class="intro-overlay" id="introOverlay">
+        <div class="intro-card">
+          <p class="intro-card__eyebrow">ORGANIC AEGIS ONLINE</p>
+          <h1>공격보다 먼저,<br /><em>살아남으십시오.</em></h1>
+          <p>
+            전방 생체막으로 적 탄을 흡수해 에너지를 모으고,<br />
+            완전히 충전된 생체 파동으로 포위를 무너뜨리세요.
+          </p>
+          <div class="intro-controls">
+            <span><kbd>WASD</kbd> 이동</span>
+            <span><kbd>SPACE</kbd> 방어막</span>
+            <span><kbd>E</kbd> 생체 파동</span>
+          </div>
+          <button id="startButton" type="button">방어 프로토콜 시작</button>
+        </div>
+      </section>
+
+      <section class="game-over" id="gameOverOverlay" hidden>
+        <div class="game-over__card">
+          <p>CORE SIGNAL LOST</p>
+          <h2>GAME OVER</h2>
+          <div class="game-over__stats">
+            <span>생존 시간 <strong id="finalTime">00:00.0</strong></span>
+            <span>최종 점수 <strong id="finalScore">000000</strong></span>
+          </div>
+          <button id="restartButton" type="button">다시 연결</button>
+        </div>
+      </section>
+
+      <div class="objective-banner" id="objectiveBanner" hidden>
+        <span>AEGIS STABLE</span>
+        <strong>60초 생존 달성</strong>
+      </div>
+    </main>
+
+    <script src="main.js"></script>
+  </body>
+</html>
