@@ -63,7 +63,7 @@ const player = {
   radius: 18,
   angle: 0,
   scrollSpeed: 105,
-  viewSpeed: 125,
+  turnSpeed: 4.8,
   health: 100,
   maxHealth: 100,
   energy: 0,
@@ -402,22 +402,8 @@ function applyWorldScroll(object, dt, factor = 1) {
 function updateWorldMotion(dt) {
   const forwardX = Math.cos(player.angle);
   const forwardY = Math.sin(player.angle);
-  const rightX = -forwardY;
-  const rightY = forwardX;
-  let viewForward = 0;
-  let viewRight = 0;
-
-  if (keys.has("KeyW")) viewForward += 1;
-  if (keys.has("KeyS")) viewForward -= 1;
-  if (keys.has("KeyD")) viewRight += 1;
-  if (keys.has("KeyA")) viewRight -= 1;
-
-  const inputLength = Math.hypot(viewForward, viewRight) || 1;
-  const viewX = (forwardX * viewForward + rightX * viewRight) / inputLength;
-  const viewY = (forwardY * viewForward + rightY * viewRight) / inputLength;
-
-  state.scrollX = -forwardX * player.scrollSpeed - viewX * player.viewSpeed;
-  state.scrollY = -forwardY * player.scrollSpeed - viewY * player.viewSpeed;
+  state.scrollX = -forwardX * player.scrollSpeed;
+  state.scrollY = -forwardY * player.scrollSpeed;
   state.worldOffsetX += state.scrollX * dt * 0.34;
   state.worldOffsetY += state.scrollY * dt * 0.34;
 }
@@ -468,10 +454,24 @@ function update(dt) {
 }
 
 function updatePlayer(dt) {
-  // 플레이어는 화면 중앙보다 약간 아래에 고정되고 마우스 방향으로만 회전합니다.
+  // 플레이어는 화면 중앙보다 약간 아래에 고정됩니다. WASD 입력 중에는
+  // 화면 기준 방향으로 부드럽게 선회하고, 키를 놓으면 마지막 방향을 유지합니다.
   player.x = width / 2;
   player.y = height * 0.56;
-  player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+
+  let steerX = 0;
+  let steerY = 0;
+  if (keys.has("KeyW")) steerY -= 1;
+  if (keys.has("KeyS")) steerY += 1;
+  if (keys.has("KeyA")) steerX -= 1;
+  if (keys.has("KeyD")) steerX += 1;
+
+  if (steerX !== 0 || steerY !== 0) {
+    const targetAngle = Math.atan2(steerY, steerX);
+    const angleDifference = shortestAngleDifference(targetAngle, player.angle);
+    const maxTurn = player.turnSpeed * dt;
+    player.angle += clamp(angleDifference, -maxTurn, maxTurn);
+  }
 
   if ((mouse.down || keys.has("KeyF")) && player.shootTimer <= 0) {
     firePlayerBullet();
@@ -977,6 +977,7 @@ window.addEventListener("blur", () => {
 canvas.addEventListener("mousemove", (event) => {
   mouse.x = event.clientX;
   mouse.y = event.clientY;
+  player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
 });
 
 canvas.addEventListener("mousedown", (event) => {
