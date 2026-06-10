@@ -71,6 +71,11 @@ const player = {
   shootTimer: 0,
   shieldTimer: 0,
   shieldCooldown: 0,
+  shieldDuration: 0.48,
+  boostTimer: 0,
+  boostDuration: 0.48,
+  boostMultiplier: 1.5,
+  boostParticleTimer: 0,
   hitTimer: 0,
 };
 
@@ -209,6 +214,8 @@ function resetGame(beginnerMode = state.beginnerMode) {
     shootTimer: 0,
     shieldTimer: 0,
     shieldCooldown: 0,
+    boostTimer: 0,
+    boostParticleTimer: 0,
     hitTimer: 0,
   });
 
@@ -325,7 +332,7 @@ function fireEnemyBullet(enemy) {
 function activateShield() {
   if (!state.running || player.shieldCooldown > 0) return;
 
-  player.shieldTimer = 0.48;
+  player.shieldTimer = player.shieldDuration;
   player.shieldCooldown = 1.15;
   createBurst(
     player.x + Math.cos(player.angle) * 38,
@@ -335,6 +342,15 @@ function activateShield() {
     90,
   );
   playSound("shield");
+}
+
+function activateBoost() {
+  if (!state.running) return;
+
+  player.boostTimer = player.boostDuration;
+  player.boostParticleTimer = 0;
+  state.shake = Math.max(state.shake, 2.5);
+  createBoostParticle(8);
 }
 
 function activatePulse() {
@@ -394,6 +410,25 @@ function createBurst(x, y, color, count, speed) {
   }
 }
 
+function createBoostParticle(count = 1) {
+  const backwardAngle = player.angle + Math.PI;
+  for (let i = 0; i < count; i += 1) {
+    const spread = random(-0.22, 0.22);
+    const angle = backwardAngle + spread;
+    const velocity = random(125, 245);
+    particles.push({
+      x: player.x - Math.cos(player.angle) * random(27, 38),
+      y: player.y - Math.sin(player.angle) * random(27, 38),
+      vx: Math.cos(angle) * velocity,
+      vy: Math.sin(angle) * velocity,
+      size: random(1.5, 4.5),
+      life: random(0.22, 0.48),
+      maxLife: 0.48,
+      color: Math.random() < 0.45 ? "#a9f4ff" : "#75ffd1",
+    });
+  }
+}
+
 function applyWorldScroll(object, dt, factor = 1) {
   object.x += state.scrollX * factor * dt;
   object.y += state.scrollY * factor * dt;
@@ -402,8 +437,9 @@ function applyWorldScroll(object, dt, factor = 1) {
 function updateWorldMotion(dt) {
   const forwardX = Math.cos(player.angle);
   const forwardY = Math.sin(player.angle);
-  state.scrollX = -forwardX * player.scrollSpeed;
-  state.scrollY = -forwardY * player.scrollSpeed;
+  const speedMultiplier = player.boostTimer > 0 ? player.boostMultiplier : 1;
+  state.scrollX = -forwardX * player.scrollSpeed * speedMultiplier;
+  state.scrollY = -forwardY * player.scrollSpeed * speedMultiplier;
   state.worldOffsetX += state.scrollX * dt * 0.34;
   state.worldOffsetY += state.scrollY * dt * 0.34;
 }
@@ -424,6 +460,8 @@ function update(dt) {
   player.shootTimer -= dt;
   player.shieldTimer = Math.max(0, player.shieldTimer - dt);
   player.shieldCooldown = Math.max(0, player.shieldCooldown - dt);
+  player.boostTimer = Math.max(0, player.boostTimer - dt);
+  player.boostParticleTimer -= dt;
   player.hitTimer = Math.max(0, player.hitTimer - dt);
 
   updatePlayer(dt);
@@ -465,12 +503,21 @@ function updatePlayer(dt) {
   if (keys.has("KeyS")) steerY += 1;
   if (keys.has("KeyA")) steerX -= 1;
   if (keys.has("KeyD")) steerX += 1;
+  if (keys.has("ArrowUp")) steerY -= 1;
+  if (keys.has("ArrowDown")) steerY += 1;
+  if (keys.has("ArrowLeft")) steerX -= 1;
+  if (keys.has("ArrowRight")) steerX += 1;
 
   if (steerX !== 0 || steerY !== 0) {
     const targetAngle = Math.atan2(steerY, steerX);
     const angleDifference = shortestAngleDifference(targetAngle, player.angle);
     const maxTurn = player.turnSpeed * dt;
     player.angle += clamp(angleDifference, -maxTurn, maxTurn);
+  }
+
+  if (player.boostTimer > 0 && player.boostParticleTimer <= 0) {
+    createBoostParticle(3);
+    player.boostParticleTimer = 0.035;
   }
 
   if ((mouse.down || keys.has("KeyF")) && player.shootTimer <= 0) {
@@ -710,6 +757,8 @@ function drawPlayer() {
   const damagedAlpha = player.hitTimer > 0 && Math.floor(player.hitTimer * 18) % 2 === 0 ? 0.35 : 1;
   ctx.globalAlpha = damagedAlpha;
 
+  if (player.boostTimer > 0) drawBooster();
+
   // 뒤쪽의 촉수 세 갈래를 곡선으로 표현합니다.
   for (let i = -1; i <= 1; i += 1) {
     ctx.strokeStyle = i === 0 ? "rgba(99, 255, 209, 0.58)" : "rgba(69, 179, 159, 0.48)";
@@ -750,6 +799,36 @@ function drawPlayer() {
   ctx.stroke();
 
   if (player.shieldTimer > 0) drawShield();
+  ctx.restore();
+}
+
+function drawBooster() {
+  const strength = clamp(player.boostTimer / player.boostDuration, 0.25, 1);
+  const flicker = Math.sin(state.elapsed * 48) * 5;
+  const length = 54 + flicker + strength * 26;
+  const plume = ctx.createLinearGradient(-16, 0, -length, 0);
+  plume.addColorStop(0, "rgba(222, 255, 248, 0.92)");
+  plume.addColorStop(0.22, "rgba(117, 255, 209, 0.75)");
+  plume.addColorStop(1, "rgba(82, 185, 255, 0)");
+
+  ctx.save();
+  ctx.globalAlpha = strength;
+  ctx.fillStyle = plume;
+  ctx.shadowColor = "#75ffd1";
+  ctx.shadowBlur = 22;
+  ctx.beginPath();
+  ctx.moveTo(-12, -9);
+  ctx.quadraticCurveTo(-length * 0.62, -5, -length, 0);
+  ctx.quadraticCurveTo(-length * 0.62, 5, -12, 9);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(196, 247, 255, 0.85)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-18, 0);
+  ctx.lineTo(-length * 0.82, 0);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -950,7 +1029,7 @@ window.addEventListener("resize", resizeCanvas);
 
 window.addEventListener("keydown", (event) => {
   keys.add(event.code);
-  if (event.code === "Space") {
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(event.code)) {
     event.preventDefault();
   }
   if (event.code === "KeyF" && !event.repeat && state.running && player.shootTimer <= 0) {
@@ -958,6 +1037,7 @@ window.addEventListener("keydown", (event) => {
     player.shootTimer = 0.145;
   }
   if (event.code === "Space" && !event.repeat) activateShield();
+  if ((event.code === "ShiftLeft" || event.code === "ShiftRight") && !event.repeat) activateBoost();
   if (event.code === "KeyE" && !event.repeat) activatePulse();
   if (event.code === "Enter" && state.gameOver) {
     initializeAudio();
