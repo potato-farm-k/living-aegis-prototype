@@ -45,6 +45,10 @@ const state = {
   elapsed: 0,
   score: 0,
   spawnTimer: 0,
+  scrollX: 0,
+  scrollY: 0,
+  worldOffsetX: 0,
+  worldOffsetY: 0,
   shake: 0,
   flash: 0,
   objectiveReached: false,
@@ -58,7 +62,7 @@ const player = {
   y: height / 2,
   radius: 18,
   angle: 0,
-  speed: 255,
+  scrollSpeed: 105,
   health: 100,
   maxHealth: 100,
   energy: 0,
@@ -158,8 +162,8 @@ function resizeCanvas() {
 
   // 이후 모든 그리기 명령이 CSS 픽셀 단위로 동작하도록 좌표계를 맞춥니다.
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  player.x = clamp(player.x, 30, width - 30);
-  player.y = clamp(player.y, 30, height - 30);
+  player.x = width / 2;
+  player.y = height * 0.56;
 
   if (stars.length === 0) createStars();
 }
@@ -185,7 +189,11 @@ function resetGame(beginnerMode = state.beginnerMode) {
   state.gameOver = false;
   state.elapsed = 0;
   state.score = 0;
-  state.spawnTimer = 0.5;
+  state.spawnTimer = 3.5;
+  state.scrollX = 0;
+  state.scrollY = 0;
+  state.worldOffsetX = 0;
+  state.worldOffsetY = 0;
   state.shake = 0;
   state.flash = 0;
   state.objectiveReached = false;
@@ -194,7 +202,7 @@ function resetGame(beginnerMode = state.beginnerMode) {
 
   Object.assign(player, {
     x: width / 2,
-    y: height / 2,
+    y: height * 0.56,
     health: player.maxHealth,
     energy: 0,
     shootTimer: 0,
@@ -220,6 +228,8 @@ function resetGame(beginnerMode = state.beginnerMode) {
 function endGame() {
   state.running = false;
   state.gameOver = true;
+  state.scrollX = 0;
+  state.scrollY = 0;
   mouse.down = false;
   ui.finalTime.textContent = formatTime(state.elapsed);
   ui.finalScore.textContent = String(state.score).padStart(6, "0");
@@ -251,8 +261,8 @@ function spawnEnemy() {
     y = random(0, height);
   }
 
-  // 시간이 흐를수록 사격형 적의 비율과 체력이 조금씩 증가합니다.
-  const shooterChance = clamp(0.38 + state.elapsed / 240, 0.38, 0.62);
+  // 초반에는 돌진형 위주로 등장하고, 시간이 흐를수록 사격형 비율과 체력이 증가합니다.
+  const shooterChance = clamp(0.18 + state.elapsed / 210, 0.18, 0.58);
   const type = Math.random() < shooterChance ? "shooter" : "charger";
   const health = type === "shooter" ? 3 + Math.floor(state.elapsed / 45) : 2 + Math.floor(state.elapsed / 60);
 
@@ -263,8 +273,8 @@ function spawnEnemy() {
     type,
     health,
     maxHealth: health,
-    speed: type === "shooter" ? random(38, 55) : random(72, 104),
-    fireTimer: random(0.7, 1.6),
+    speed: type === "shooter" ? random(32, 47) : random(58, 84),
+    fireTimer: random(2.2, 3.4),
     phase: random(0, Math.PI * 2),
     touchTimer: 0,
   });
@@ -297,7 +307,7 @@ function firePlayerBullet() {
 
 function fireEnemyBullet(enemy) {
   const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-  const speed = random(145, 185) + Math.min(state.elapsed * 0.45, 40);
+  const speed = random(112, 145) + Math.min(state.elapsed * 0.35, 42);
 
   enemyBullets.push({
     x: enemy.x + Math.cos(angle) * enemy.radius,
@@ -383,9 +393,23 @@ function createBurst(x, y, color, count, speed) {
   }
 }
 
+function applyWorldScroll(object, dt, factor = 1) {
+  object.x += state.scrollX * factor * dt;
+  object.y += state.scrollY * factor * dt;
+}
+
+function updateWorldMotion(dt) {
+  state.scrollX = -Math.cos(player.angle) * player.scrollSpeed;
+  state.scrollY = -Math.sin(player.angle) * player.scrollSpeed;
+  state.worldOffsetX += state.scrollX * dt * 0.34;
+  state.worldOffsetY += state.scrollY * dt * 0.34;
+}
+
 function update(dt) {
-  updateStars(dt);
   if (!state.running) {
+    state.scrollX = 0;
+    state.scrollY = 0;
+    updateStars(dt);
     updateParticles(dt);
     return;
   }
@@ -400,6 +424,8 @@ function update(dt) {
   player.hitTimer = Math.max(0, player.hitTimer - dt);
 
   updatePlayer(dt);
+  updateWorldMotion(dt);
+  updateStars(dt);
   updateEnemies(dt);
   updateBullets(dt);
   updatePulses(dt);
@@ -415,33 +441,22 @@ function update(dt) {
     }, 3900);
   }
 
-  // 생성 간격은 서서히 짧아져 후반부가 더 긴장감 있게 변합니다.
+  // 첫 몇 초는 여유를 주고, 생성 간격은 이후 서서히 짧아집니다.
   if (state.spawnTimer <= 0) {
     spawnEnemy();
-    state.spawnTimer = Math.max(0.34, 1.08 - state.elapsed * 0.008) * random(0.75, 1.2);
+    state.spawnTimer = Math.max(0.58, 2.15 - state.elapsed * 0.012) * random(0.85, 1.18);
   }
 
   updateHud();
 }
 
 function updatePlayer(dt) {
-  let moveX = 0;
-  let moveY = 0;
-
-  if (keys.has("KeyW") || keys.has("ArrowUp")) moveY -= 1;
-  if (keys.has("KeyS") || keys.has("ArrowDown")) moveY += 1;
-  if (keys.has("KeyA") || keys.has("ArrowLeft")) moveX -= 1;
-  if (keys.has("KeyD") || keys.has("ArrowRight")) moveX += 1;
-
-  // 대각선 이동이 직선 이동보다 빨라지지 않도록 벡터 길이를 정규화합니다.
-  const length = Math.hypot(moveX, moveY) || 1;
-  player.x += (moveX / length) * player.speed * dt;
-  player.y += (moveY / length) * player.speed * dt;
-  player.x = clamp(player.x, player.radius + 8, width - player.radius - 8);
-  player.y = clamp(player.y, player.radius + 8, height - player.radius - 8);
+  // 플레이어는 화면 중앙보다 약간 아래에 고정되고 마우스 방향으로만 회전합니다.
+  player.x = width / 2;
+  player.y = height * 0.56;
   player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
 
-  if (mouse.down && player.shootTimer <= 0) {
+  if ((mouse.down || keys.has("Space")) && player.shootTimer <= 0) {
     firePlayerBullet();
     player.shootTimer = 0.145;
   }
@@ -450,6 +465,7 @@ function updatePlayer(dt) {
 function updateEnemies(dt) {
   for (let i = enemies.length - 1; i >= 0; i -= 1) {
     const enemy = enemies[i];
+    applyWorldScroll(enemy, dt);
     const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
     const dist = distance(enemy, player);
     enemy.phase += dt * 3;
@@ -468,9 +484,9 @@ function updateEnemies(dt) {
       enemy.y += Math.sin(angle + Math.PI / 2) * Math.sin(enemy.phase) * 18 * dt;
 
       enemy.fireTimer -= dt;
-      if (enemy.fireTimer <= 0 && dist < 620) {
+      if (enemy.fireTimer <= 0 && dist < 620 && state.elapsed >= 7) {
         fireEnemyBullet(enemy);
-        enemy.fireTimer = random(1.35, 2.1) * Math.max(0.62, 1 - state.elapsed / 210);
+        enemy.fireTimer = random(1.75, 2.65) * Math.max(0.68, 1 - state.elapsed / 240);
       }
     }
 
@@ -480,12 +496,15 @@ function updateEnemies(dt) {
       enemy.x -= Math.cos(angle) * 26;
       enemy.y -= Math.sin(angle) * 26;
     }
+
+    if (isOutside(enemy, 560)) enemies.splice(i, 1);
   }
 }
 
 function updateBullets(dt) {
   for (let i = playerBullets.length - 1; i >= 0; i -= 1) {
     const bullet = playerBullets[i];
+    applyWorldScroll(bullet, dt);
     bullet.x += bullet.vx * dt;
     bullet.y += bullet.vy * dt;
     bullet.life -= dt;
@@ -507,6 +526,7 @@ function updateBullets(dt) {
 
   for (let i = enemyBullets.length - 1; i >= 0; i -= 1) {
     const bullet = enemyBullets[i];
+    applyWorldScroll(bullet, dt);
     bullet.x += bullet.vx * dt;
     bullet.y += bullet.vy * dt;
     bullet.life -= dt;
@@ -536,6 +556,7 @@ function updateBullets(dt) {
 function updatePulses(dt) {
   for (let i = pulses.length - 1; i >= 0; i -= 1) {
     const pulse = pulses[i];
+    applyWorldScroll(pulse, dt);
     const previousRadius = pulse.radius;
     pulse.life -= dt;
     pulse.radius += (pulse.maxRadius - pulse.radius) * Math.min(1, dt * 7.5);
@@ -564,6 +585,7 @@ function updatePulses(dt) {
 function updateParticles(dt) {
   for (let i = particles.length - 1; i >= 0; i -= 1) {
     const particle = particles[i];
+    applyWorldScroll(particle, dt);
     particle.x += particle.vx * dt;
     particle.y += particle.vy * dt;
     particle.vx *= 0.97;
@@ -575,13 +597,12 @@ function updateParticles(dt) {
 
 function updateStars(dt) {
   for (const star of stars) {
-    star.y += star.speed * dt;
-    star.x -= star.speed * 0.16 * dt;
-    if (star.y > height + 5) {
-      star.y = -5;
-      star.x = Math.random() * width;
-    }
+    star.x += (state.scrollX * star.layer - star.speed * 0.12) * dt;
+    star.y += (state.scrollY * star.layer + star.speed * 0.22) * dt;
     if (star.x < -5) star.x = width + 5;
+    if (star.x > width + 5) star.x = -5;
+    if (star.y < -5) star.y = height + 5;
+    if (star.y > height + 5) star.y = -5;
   }
 }
 
@@ -647,14 +668,15 @@ function drawBackground() {
   ctx.strokeStyle = "rgba(102, 255, 215, 0.025)";
   ctx.lineWidth = 1;
   const grid = 90;
-  const offset = (state.elapsed * 8) % grid;
-  for (let x = -grid + offset; x < width + grid; x += grid) {
+  const offsetX = ((state.worldOffsetX % grid) + grid) % grid;
+  const offsetY = ((state.worldOffsetY % grid) + grid) % grid;
+  for (let x = -grid + offsetX; x < width + grid; x += grid) {
     ctx.beginPath();
     ctx.moveTo(x, 0);
     ctx.lineTo(x, height);
     ctx.stroke();
   }
-  for (let y = -grid + offset; y < height + grid; y += grid) {
+  for (let y = -grid + offsetY; y < height + grid; y += grid) {
     ctx.beginPath();
     ctx.moveTo(0, y);
     ctx.lineTo(width, y);
@@ -911,10 +933,14 @@ window.addEventListener("resize", resizeCanvas);
 
 window.addEventListener("keydown", (event) => {
   keys.add(event.code);
-  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(event.code)) {
+  if (event.code === "Space") {
     event.preventDefault();
   }
-  if (event.code === "Space" && !event.repeat) activateShield();
+  if (event.code === "Space" && !event.repeat && state.running && player.shootTimer <= 0) {
+    firePlayerBullet();
+    player.shootTimer = 0.145;
+  }
+  if ((event.code === "ShiftLeft" || event.code === "ShiftRight") && !event.repeat) activateShield();
   if (event.code === "KeyE" && !event.repeat) activatePulse();
   if (event.code === "Enter" && state.gameOver) {
     initializeAudio();

@@ -8,7 +8,7 @@
       content="방어 에너지를 모아 생체 파동으로 반격하는 2D 탑다운 우주 방어 슈팅 게임"
     />
     <title>Living Aegis</title>
-    <link rel="stylesheet" href="style.css?v=4" />
+    <link rel="stylesheet" href="style.css?v=5" />
   </head>
   <body>
     <main class="game-shell">
@@ -56,7 +56,7 @@
           </div>
 
           <div class="ability-row">
-            <span class="keycap">SPACE</span>
+            <span class="keycap">SHIFT</span>
             <div>
               <strong>전방 생체막</strong>
               <small id="shieldStatus">READY</small>
@@ -72,8 +72,8 @@
         </div>
 
         <div class="controls-hint">
-          <span><kbd>WASD</kbd> / <kbd>방향키</kbd> 이동</span>
-          <span><kbd>마우스</kbd> 조준 · <kbd>좌클릭</kbd> 발사</span>
+          <span><kbd>마우스</kbd> 회전 · 자동 전진</span>
+          <span><kbd>좌클릭</kbd> / <kbd>SPACE</kbd> 발사</span>
         </div>
       </section>
 
@@ -82,12 +82,13 @@
           <p class="intro-card__eyebrow">ORGANIC AEGIS ONLINE</p>
           <h1>공격보다 먼저,<br /><em>살아남으십시오.</em></h1>
           <p>
-            전방 생체막으로 적 탄을 흡수해 에너지를 모으고,<br />
+            마우스로 비행 방향을 정하고 전방 생체막으로 적 탄을 흡수해,<br />
             완전히 충전된 생체 파동으로 포위를 무너뜨리세요.
           </p>
           <div class="intro-controls">
-            <span><kbd>WASD</kbd> 이동</span>
-            <span><kbd>SPACE</kbd> 방어막</span>
+            <span><kbd>마우스</kbd> 회전</span>
+            <span><kbd>좌클릭</kbd> / <kbd>SPACE</kbd> 발사</span>
+            <span><kbd>SHIFT</kbd> 방어막</span>
             <span><kbd>E</kbd> 생체 파동</span>
           </div>
           <label class="mode-select">
@@ -128,6 +129,6 @@
       </div>
     </main>
 
-    <script src="main.js?v=4"></script>
+    <script src="main.js?v=5"></script>
   </body>
 </html>
