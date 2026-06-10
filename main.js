@@ -13,6 +13,7 @@ const ui = {
   objectiveBanner: document.querySelector("#objectiveBanner"),
   startButton: document.querySelector("#startButton"),
   restartButton: document.querySelector("#restartButton"),
+  beginnerMode: document.querySelector("#beginnerMode"),
   time: document.querySelector("#timeValue"),
   finalTime: document.querySelector("#finalTime"),
   score: document.querySelector("#scoreValue"),
@@ -45,6 +46,8 @@ const state = {
   shake: 0,
   flash: 0,
   objectiveReached: false,
+  beginnerMode: true,
+  maxBeginnerEnemies: 10,
   lastTime: performance.now(),
 };
 
@@ -70,6 +73,8 @@ let enemyBullets = [];
 let playerBullets = [];
 let particles = [];
 let pulses = [];
+let audioContext = null;
+const soundCooldowns = {};
 
 // 자주 쓰는 작은 수학 함수들입니다.
 const random = (min, max) => Math.random() * (max - min) + min;
@@ -78,6 +83,46 @@ const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
 function shortestAngleDifference(a, b) {
   return Math.atan2(Math.sin(a - b), Math.cos(a - b));
+}
+
+// 별도 음원 파일 없이 Web Audio API의 오실레이터로 짧은 효과음을 만듭니다.
+// 브라우저 정책상 오디오는 시작 버튼처럼 사용자가 직접 입력한 뒤 활성화됩니다.
+function initializeAudio() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+
+  if (!audioContext) audioContext = new AudioContextClass();
+  if (audioContext.state === "suspended") audioContext.resume();
+  return audioContext;
+}
+
+function playSound(name) {
+  const context = initializeAudio();
+  if (!context) return;
+
+  const sounds = {
+    shot: { type: "triangle", start: 260, end: 110, duration: 0.07, volume: 0.025, cooldown: 0.07 },
+    pulse: { type: "sine", start: 130, end: 34, duration: 0.65, volume: 0.09, cooldown: 0.3 },
+    shield: { type: "triangle", start: 180, end: 520, duration: 0.22, volume: 0.055, cooldown: 0.18 },
+    destroy: { type: "sawtooth", start: 105, end: 36, duration: 0.18, volume: 0.035, cooldown: 0.04 },
+  };
+  const sound = sounds[name];
+  const now = context.currentTime;
+
+  if (!sound || now - (soundCooldowns[name] ?? -Infinity) < sound.cooldown) return;
+  soundCooldowns[name] = now;
+
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = sound.type;
+  oscillator.frequency.setValueAtTime(sound.start, now);
+  oscillator.frequency.exponentialRampToValueAtTime(sound.end, now + sound.duration);
+  gain.gain.setValueAtTime(sound.volume, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + sound.duration);
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start(now);
+  oscillator.stop(now + sound.duration);
 }
 
 function resizeCanvas() {
@@ -109,7 +154,7 @@ function createStars() {
   }));
 }
 
-function resetGame() {
+function resetGame(beginnerMode = state.beginnerMode) {
   state.running = true;
   state.gameOver = false;
   state.elapsed = 0;
@@ -118,6 +163,7 @@ function resetGame() {
   state.shake = 0;
   state.flash = 0;
   state.objectiveReached = false;
+  state.beginnerMode = beginnerMode;
 
   Object.assign(player, {
     x: width / 2,
@@ -214,6 +260,7 @@ function firePlayerBullet() {
     3,
     40,
   );
+  playSound("shot");
 }
 
 function fireEnemyBullet(enemy) {
@@ -244,6 +291,7 @@ function activateShield() {
     10,
     90,
   );
+  playSound("shield");
 }
 
 function activatePulse() {
@@ -254,6 +302,7 @@ function activatePulse() {
   state.shake = 11;
   state.flash = 0.18;
   createBurst(player.x, player.y, "#c8fff0", 34, 260);
+  playSound("pulse");
 }
 
 function damagePlayer(amount) {
@@ -281,6 +330,7 @@ function destroyEnemy(index, scoreValue = 100) {
   createBurst(enemy.x, enemy.y, enemy.type === "shooter" ? "#ff7699" : "#c17bff", 18, 170);
   enemies.splice(index, 1);
   state.score += scoreValue;
+  playSound("destroy");
 }
 
 // 여러 종류의 효과에 재사용하는 간단한 파티클 생성 함수입니다.
@@ -335,7 +385,8 @@ function update(dt) {
 
   // 생성 간격은 서서히 짧아져 후반부가 더 긴장감 있게 변합니다.
   if (state.spawnTimer <= 0) {
-    spawnEnemy();
+    // 비기너 모드에서는 살아 있는 적이 10기일 때 추가 생성을 잠시 멈춥니다.
+    if (!state.beginnerMode || enemies.length < state.maxBeginnerEnemies) spawnEnemy();
     state.spawnTimer = Math.max(0.34, 1.08 - state.elapsed * 0.008) * random(0.75, 1.2);
   }
 
@@ -831,7 +882,10 @@ window.addEventListener("keydown", (event) => {
   }
   if (event.code === "Space" && !event.repeat) activateShield();
   if (event.code === "KeyE" && !event.repeat) activatePulse();
-  if (event.code === "Enter" && state.gameOver) resetGame();
+  if (event.code === "Enter" && state.gameOver) {
+    initializeAudio();
+    resetGame();
+  }
 });
 
 window.addEventListener("keyup", (event) => {
@@ -865,8 +919,14 @@ window.addEventListener("mouseup", (event) => {
 });
 
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
-ui.startButton.addEventListener("click", resetGame);
-ui.restartButton.addEventListener("click", resetGame);
+ui.startButton.addEventListener("click", () => {
+  initializeAudio();
+  resetGame(ui.beginnerMode.checked);
+});
+ui.restartButton.addEventListener("click", () => {
+  initializeAudio();
+  resetGame();
+});
 
 resizeCanvas();
 updateHud();

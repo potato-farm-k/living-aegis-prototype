@@ -318,13 +318,67 @@ kbd {
 }
 
 .intro-controls {
-  margin: 0 0 28px;
+  margin: 0 0 18px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 14px;
   color: var(--muted);
   font-size: 10px;
+}
+
+.mode-select {
+  width: fit-content;
+  margin: 0 auto 24px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  text-align: left;
+  border: 1px solid rgba(117, 255, 209, 0.16);
+  background: rgba(117, 255, 209, 0.035);
+  cursor: pointer;
+}
+
+.mode-select input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode-select__mark {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(117, 255, 209, 0.5);
+  box-shadow: inset 0 0 0 3px rgba(3, 14, 19, 0.95);
+}
+
+.mode-select input:checked + .mode-select__mark {
+  background: var(--bio);
+  box-shadow: 0 0 12px rgba(117, 255, 209, 0.45), inset 0 0 0 3px rgba(3, 14, 19, 0.95);
+}
+
+.mode-select input:focus-visible + .mode-select__mark {
+  outline: 1px solid var(--bio-bright);
+  outline-offset: 3px;
+}
+
+.mode-select > span:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.mode-select strong {
+  color: var(--bio-bright);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.mode-select small {
+  font-size: 9px;
+  letter-spacing: 0.04em;
 }
 
 .game-over__card {
