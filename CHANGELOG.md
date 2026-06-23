@@ -4,6 +4,7 @@
 
 ### Added
 
+- Codex 반복 작업 지침을 담은 `AGENTS.md` 추가
 - 초기 prototype lab scaffold 추가
 - 루트 prototype 런처 페이지 추가
 - 첫 번째 prototype placeholder `prototype-01-basic-defense` 추가

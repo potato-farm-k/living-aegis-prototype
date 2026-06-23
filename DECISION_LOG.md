@@ -27,3 +27,9 @@
 - HTML, CSS, JavaScript 코드와 변수명, 함수명, class 이름, id 이름은 변경하지 않는다.
 - `Canvas 2D`, `GitHub Pages`, `JavaScript`, `HUD`, `prototype`, `simulator`처럼 필요한 기술 용어는 영어 표기를 허용한다.
 - GitHub Pages 화면의 프로젝트 제목과 저장소 이름은 영어를 유지할 수 있다.
+
+## 2026-06-23 - Codex 반복 작업 지침을 AGENTS.md에 기록
+
+결정: Codex가 이 저장소에서 작업할 때 반복해서 적용할 작업 원칙은 루트의 `AGENTS.md`에 기록한다.
+
+이유: 새 작업을 시작할 때 이전 대화 맥락에 의존하지 않고, 저장소 안의 기준 문서와 각 prototype 폴더의 README를 먼저 확인한 뒤 같은 원칙으로 안전하게 작업하기 위해서이다.
