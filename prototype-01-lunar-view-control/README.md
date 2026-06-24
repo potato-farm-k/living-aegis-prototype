@@ -43,8 +43,15 @@
 - `5`: Earth Scale 5x
 - `6`: Earth Scale 6x
 - `7`: Earth Scale 7x
-- `R`: 기본 정면 보기로 복귀
-- 화면 버튼: Earth Scale 전환 및 기본 정면 보기 복귀
+- `R`: 기본 정면 보기로 복귀. View Offset X/Y만 0으로 되돌리고, 사용자가 선택한 Earth Scale은 유지한다.
+- 화면 버튼: Earth Scale 전환 및 기본 정면 보기 복귀. `Reset View`도 시야 위치만 초기화하고 Earth Scale은 유지한다.
+
+## 현재 설정 패널
+
+- 수치 표시 순서는 지구 구도값, 시야 오프셋, 달 표면 비중 순서로 정리한다.
+- 첫 줄: Earth Scale / Earth Vertical Position
+- 둘째 줄: View Offset X / View Offset Y
+- 셋째 줄: Lunar Surface Area
 
 ## 확인할 질문
 

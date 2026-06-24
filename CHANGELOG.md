@@ -15,6 +15,7 @@
 
 ### Changed
 
+- `prototype-01-lunar-view-control` 현재 설정 패널의 수치 항목 순서를 정정하고 `Reset View` 동작 설명을 문서화
 - `prototype-01-lunar-view-control` 현재 설정 패널의 수치 항목 순서와 여백을 정리하고 6x 유지 검토 결과를 문서화
 - `prototype-01-lunar-view-control`의 기본 Earth Scale을 6x로 조정하고 현재 설정 패널을 compact하게 정리
 - `prototype-01-lunar-view-control`의 시야 이동 범위, WASD/R 입력, Earth Scale 6x, 설정 패널 배치를 개선
