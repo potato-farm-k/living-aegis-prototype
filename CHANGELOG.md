@@ -4,6 +4,9 @@
 
 ### Added
 
+- `prototype-01-lunar-view-control`을 추가해 달-지구 기본 구도와 제한된 시야 이동 감각을 확인할 수 있게 함
+- Earth Scale 5x/7x 전환과 Lunar Surface Area 30%, Earth Vertical Position 30% 기준 화면을 추가
+- 루트 prototype 런처에서 `prototype-01-lunar-view-control`로 이동하는 링크 추가
 - Codex 반복 작업 지침을 담은 `AGENTS.md` 추가
 - 초기 prototype lab scaffold 추가
 - 루트 prototype 런처 페이지 추가

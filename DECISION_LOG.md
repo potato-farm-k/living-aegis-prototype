@@ -33,3 +33,9 @@
 결정: Codex가 이 저장소에서 작업할 때 반복해서 적용할 작업 원칙은 루트의 `AGENTS.md`에 기록한다.
 
 이유: 새 작업을 시작할 때 이전 대화 맥락에 의존하지 않고, 저장소 안의 기준 문서와 각 prototype 폴더의 README를 먼저 확인한 뒤 같은 원칙으로 안전하게 작업하기 위해서이다.
+
+## 2026-06-24 - 달-지구 기본 구도 후보값을 prototype에서 검증
+
+결정: `lunar-view-framing-simulator`에서 정리한 1차 구도 후보값을 실제 플레이 감각에 가까운 `prototype-01-lunar-view-control`에서 검증하기로 한다.
+
+이유: Earth Scale 5x/7x, Earth Vertical Position 30%, Lunar Surface Area 30% 후보값이 게임 화면처럼 느껴지는지 simulator가 아닌 prototype 화면에서 확인하기 위해서이다.
