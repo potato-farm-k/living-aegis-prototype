@@ -4,9 +4,10 @@ const ctx = canvas.getContext("2d");
 const settings = {
   earthVerticalPosition: 0.3,
   lunarSurfaceArea: 0.3,
-  maxOffsetX: 48,
-  maxOffsetY: 32,
+  maxOffsetX: 288,
+  maxOffsetY: 192,
   viewSpeed: 86,
+  keyStep: 18,
 };
 
 const state = {
@@ -134,6 +135,20 @@ function updateView(deltaSeconds) {
     -settings.maxOffsetY,
     settings.maxOffsetY,
   );
+}
+
+function nudgeView(direction) {
+  const offsets = {
+    left: [-settings.keyStep, 0],
+    right: [settings.keyStep, 0],
+    up: [0, -settings.keyStep],
+    down: [0, settings.keyStep],
+  };
+  const [x, y] = offsets[direction];
+
+  state.viewX = clamp(state.viewX + x, -settings.maxOffsetX, settings.maxOffsetX);
+  state.viewY = clamp(state.viewY + y, -settings.maxOffsetY, settings.maxOffsetY);
+  updateSettings();
 }
 
 function drawSpace(width, height) {
@@ -349,8 +364,25 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-function keyToDirection(key) {
-  switch (key.toLowerCase()) {
+function keyToDirection(event) {
+  switch (event.code) {
+    case "ArrowLeft":
+    case "KeyA":
+      return "left";
+    case "ArrowRight":
+    case "KeyD":
+      return "right";
+    case "ArrowUp":
+    case "KeyW":
+      return "up";
+    case "ArrowDown":
+    case "KeyS":
+      return "down";
+    default:
+      break;
+  }
+
+  switch (event.key.toLowerCase()) {
     case "arrowleft":
     case "a":
       return "left";
@@ -368,33 +400,61 @@ function keyToDirection(key) {
   }
 }
 
+function scaleFromKey(event) {
+  switch (event.code) {
+    case "Digit5":
+    case "Numpad5":
+      return 5;
+    case "Digit6":
+    case "Numpad6":
+      return 6;
+    case "Digit7":
+    case "Numpad7":
+      return 7;
+    default:
+      break;
+  }
+
+  if (event.key === "5" || event.key === "6" || event.key === "7") {
+    return Number(event.key);
+  }
+
+  return null;
+}
+
+function isResetKey(event) {
+  return event.code === "KeyR" || event.key.toLowerCase() === "r";
+}
+
 window.addEventListener("keydown", (event) => {
-  const direction = keyToDirection(event.key);
+  const direction = keyToDirection(event);
 
   if (direction) {
+    if (!keys[direction] && !event.repeat) {
+      nudgeView(direction);
+    }
+
     keys[direction] = true;
     event.preventDefault();
     return;
   }
 
-  if (event.key === "1" || event.key === "5") {
-    setEarthScale(5);
+  const scale = scaleFromKey(event);
+
+  if (scale) {
+    setEarthScale(scale);
     event.preventDefault();
+    return;
   }
 
-  if (event.key === "2" || event.key === "7") {
-    setEarthScale(7);
-    event.preventDefault();
-  }
-
-  if (event.key.toLowerCase() === "r") {
+  if (isResetKey(event)) {
     resetView();
     event.preventDefault();
   }
 });
 
 window.addEventListener("keyup", (event) => {
-  const direction = keyToDirection(event.key);
+  const direction = keyToDirection(event);
 
   if (direction) {
     keys[direction] = false;

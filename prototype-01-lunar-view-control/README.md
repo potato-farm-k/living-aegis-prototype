@@ -13,24 +13,25 @@
 ## 적용한 기준값
 
 - Earth Scale: `5x` 기본값
-- Alternative Earth Scale: `7x`
+- Alternative Earth Scale: `6x`, `7x`
 - Earth Vertical Position: `30%`
 - Lunar Surface Area: `30%`
-- View Movement: 작은 범위로 제한된 좌우/상하 이동
+- View Movement: 확대된 범위 안에서 제한된 좌우/상하 이동
 
 이 값들은 최종 게임 기준으로 확정된 값이 아니라, 1차 후보를 검토하기 위한 기본값이다.
 
 ## 조작 방법
 
 - Arrow keys 또는 WASD: 제한된 시야 이동
-- `1` 또는 `5`: Earth Scale 5x
-- `2` 또는 `7`: Earth Scale 7x
+- `5`: Earth Scale 5x
+- `6`: Earth Scale 6x
+- `7`: Earth Scale 7x
 - `R`: 기본 정면 보기로 복귀
 - 화면 버튼: Earth Scale 전환 및 기본 정면 보기 복귀
 
 ## 확인할 질문
 
-- Earth Scale 5x와 7x 중 어느 쪽이 더 게임 화면에 적절한가?
+- Earth Scale 5x, 6x, 7x 중 어느 쪽이 더 게임 화면에 적절한가?
 - Earth Vertical Position 30%가 1인칭 화면에서 자연스러운가?
 - Lunar Surface Area 30%가 달 표면에 서 있다는 감각을 주는가?
 - 제한된 시야 이동이 답답함보다 긴장감과 현장감을 주는가?
@@ -43,7 +44,7 @@
 
 ## 다음 단계 후보
 
-- Earth Scale 5x/7x 비교 결과 기록
+- Earth Scale 5x/6x/7x 비교 결과 기록
 - Earth Vertical Position과 Lunar Surface Area 후보값 조정 여부 판단
 - 제한된 시야 이동 범위가 적절한지 확인
 - 이후 별도 prototype에서 마우스 조준 또는 전투 감각을 독립적으로 실험

@@ -15,6 +15,7 @@
 
 ### Changed
 
+- `prototype-01-lunar-view-control`의 시야 이동 범위, WASD/R 입력, Earth Scale 6x, 설정 패널 배치를 개선
 - 작업 완료 요약에 추천 커밋 메시지를 포함하도록 `AGENTS.md` 지침 추가
 - 루트 prototype 런처 구조와 표시 방식을 simulator 런처 계열에 맞게 정리
 - 초기 placeholder였던 `Basic Defense` 항목을 루트 prototype 런처와 활성 prototype 목록에서 제거
