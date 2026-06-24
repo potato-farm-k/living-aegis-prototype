@@ -11,7 +11,7 @@ const settings = {
 };
 
 const state = {
-  earthScale: 5,
+  earthScale: 6,
   viewX: 0,
   viewY: 0,
   viewportWidth: 1280,

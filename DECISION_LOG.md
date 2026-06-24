@@ -39,3 +39,11 @@
 결정: `lunar-view-framing-simulator`에서 정리한 1차 구도 후보값을 실제 플레이 감각에 가까운 `prototype-01-lunar-view-control`에서 검증하기로 한다.
 
 이유: Earth Scale 5x/7x, Earth Vertical Position 30%, Lunar Surface Area 30% 후보값이 게임 화면처럼 느껴지는지 simulator가 아닌 prototype 화면에서 확인하기 위해서이다.
+
+## 2026-06-24 - Lunar View Control 1차 기본 Earth Scale 후보
+
+결정: `prototype-01-lunar-view-control`의 1차 기본 Earth Scale 후보를 `6x`로 둔다.
+
+이유: `6x`는 지구 자체의 긴장감과 향후 지구 궤도 공격 위성 표시 공간 사이의 균형을 보기 위한 프로토타입 검토용 기준값이다. 메인 게임 공식 확정값은 아니다.
+
+보류: 마우스 시야 이동과 위쪽 시선 이동 시 지구와 달 표면이 살짝 겹치는 구도는 후속 검토 후보로 둔다.

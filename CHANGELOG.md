@@ -15,6 +15,7 @@
 
 ### Changed
 
+- `prototype-01-lunar-view-control`의 기본 Earth Scale을 6x로 조정하고 현재 설정 패널을 compact하게 정리
 - `prototype-01-lunar-view-control`의 시야 이동 범위, WASD/R 입력, Earth Scale 6x, 설정 패널 배치를 개선
 - 작업 완료 요약에 추천 커밋 메시지를 포함하도록 `AGENTS.md` 지침 추가
 - 루트 prototype 런처 구조와 표시 방식을 simulator 런처 계열에 맞게 정리
