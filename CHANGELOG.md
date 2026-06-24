@@ -15,6 +15,12 @@
 
 ### Changed
 
+- 루트 prototype 런처 구조와 표시 방식을 simulator 런처 계열에 맞게 정리
+- 초기 placeholder였던 `Basic Defense` 항목을 루트 prototype 런처와 활성 prototype 목록에서 제거
 - README와 prototype 관련 설명 문서를 한국어 중심으로 정리
 - 루트 `index.html`의 사용자 안내 문구를 한국어 중심으로 조정
 - `DECISION_LOG.md`에 내부 문서 언어 정책 기록
+
+### Removed
+
+- 초기 구조 확인용 placeholder prototype `prototype-01-basic-defense` 삭제
