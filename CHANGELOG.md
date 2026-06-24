@@ -15,6 +15,7 @@
 
 ### Changed
 
+- 작업 완료 요약에 추천 커밋 메시지를 포함하도록 `AGENTS.md` 지침 추가
 - 루트 prototype 런처 구조와 표시 방식을 simulator 런처 계열에 맞게 정리
 - 초기 placeholder였던 `Basic Defense` 항목을 루트 prototype 런처와 활성 prototype 목록에서 제거
 - README와 prototype 관련 설명 문서를 한국어 중심으로 정리
