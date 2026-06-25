@@ -10,7 +10,7 @@
 - Status: `1차 구현`
 - Purpose: 달 표면에서 지구를 바라보는 기본 구도와 제한된 시야 이동 감각 확인
 - Entry: `prototype-01-lunar-view-control/index.html`
-- Notes: Earth Scale 6x를 기본 후보로 두고 5x/7x를 비교 후보로 유지하며, Earth Vertical Position 30%, Lunar Surface Area 30% 후보값을 플레이 감각으로 확인하는 프로토타입
+- Notes: Earth Scale 6x를 기본 후보로 두고 5x/7x를 비교 후보로 유지하며, 키보드와 마우스 시야 이동으로 Earth Vertical Position 30%, Lunar Surface Area 30% 후보값을 플레이 감각으로 확인하는 프로토타입
 
 ## Removed Placeholder
 

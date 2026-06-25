@@ -111,6 +111,15 @@ canvas {
   border-radius: 8px;
   background: #05070b;
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+  cursor: grab;
+}
+
+canvas.is-mouse-view {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 3px rgba(116, 221, 255, 0.12),
+    0 22px 60px rgba(0, 0, 0, 0.34);
+  cursor: none;
 }
 
 .control-section {
@@ -162,6 +171,63 @@ button.is-active {
   border-color: var(--warm);
   color: #111720;
   background: var(--warm);
+}
+
+.mouse-view-panel {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(5, 7, 11, 0.32);
+}
+
+.mouse-status-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.88rem;
+}
+
+.mouse-status-line span,
+.sensitivity-control > span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+#mouse-view-status {
+  color: var(--warm);
+}
+
+#mouse-view-status.is-on {
+  color: var(--accent);
+}
+
+.mouse-view-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.38;
+}
+
+.sensitivity-control {
+  display: grid;
+  gap: 6px;
+}
+
+.sensitivity-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sensitivity-button {
+  min-height: 30px;
+  padding: 5px 6px;
+  font-size: 0.82rem;
 }
 
 .settings-grid {

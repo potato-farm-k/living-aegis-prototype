@@ -40,6 +40,24 @@
             </div>
           </div>
 
+          <div class="mouse-view-panel" aria-live="polite">
+            <div class="mouse-status-line">
+              <span>마우스 시야</span>
+              <strong id="mouse-view-status">꺼짐</strong>
+            </div>
+            <p id="mouse-view-help">
+              Canvas를 클릭하면 마우스 시야 이동을 시작합니다. 필요하면 드래그로 확인합니다.
+            </p>
+            <div class="sensitivity-control" aria-label="Mouse sensitivity">
+              <span>Mouse Sensitivity</span>
+              <div class="sensitivity-row">
+                <button class="sensitivity-button" type="button" data-sensitivity="low">Low</button>
+                <button class="sensitivity-button is-active" type="button" data-sensitivity="medium">Medium</button>
+                <button class="sensitivity-button" type="button" data-sensitivity="high">High</button>
+              </div>
+            </div>
+          </div>
+
           <dl class="settings-grid" aria-live="polite">
             <div>
               <dt>Earth Scale</dt>
@@ -64,7 +82,7 @@
           </dl>
 
           <p class="control-help">
-            Arrow keys 또는 WASD로 시야 이동, 5/6/7은 Earth Scale 전환, R은 기본 정면 보기입니다.
+            Arrow keys 또는 WASD로 시야 이동, 5/6/7은 Earth Scale 전환, R은 기본 정면 보기, Esc는 마우스 시야 해제입니다.
           </p>
         </aside>
       </div>

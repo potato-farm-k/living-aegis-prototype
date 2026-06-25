@@ -30,6 +30,22 @@ const settingEls = {
   earthScale: document.querySelector("#earth-scale-value"),
   viewX: document.querySelector("#view-offset-x"),
   viewY: document.querySelector("#view-offset-y"),
+  mouseView: document.querySelector("#mouse-view-status"),
+  mouseHelp: document.querySelector("#mouse-view-help"),
+};
+
+const mouseSensitivityLevels = {
+  low: 0.35,
+  medium: 0.65,
+  high: 1,
+};
+
+const mouseView = {
+  active: false,
+  dragging: false,
+  sensitivity: "medium",
+  lastX: 0,
+  lastY: 0,
 };
 
 const stars = createStars(130);
@@ -115,10 +131,30 @@ function resetView() {
   updateSettings();
 }
 
+function setMouseViewActive(active) {
+  mouseView.active = active;
+  canvas.classList.toggle("is-mouse-view", active);
+  updateMouseViewStatus();
+}
+
 function updateSettings() {
   settingEls.earthScale.textContent = `${state.earthScale}x`;
   settingEls.viewX.textContent = Math.round(state.viewX).toString();
   settingEls.viewY.textContent = Math.round(state.viewY).toString();
+}
+
+function updateMouseViewStatus() {
+  settingEls.mouseView.textContent = mouseView.active ? "켜짐" : "꺼짐";
+  settingEls.mouseView.classList.toggle("is-on", mouseView.active);
+  settingEls.mouseHelp.textContent = mouseView.active
+    ? "마우스를 움직여 시야를 이동합니다. Esc 키로 해제합니다."
+    : "Canvas를 클릭하면 마우스 시야 이동을 시작합니다. 필요하면 드래그로 확인합니다.";
+}
+
+function updateSensitivityButtons() {
+  document.querySelectorAll(".sensitivity-button").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.sensitivity === mouseView.sensitivity);
+  });
 }
 
 function updateView(deltaSeconds) {
@@ -149,6 +185,81 @@ function nudgeView(direction) {
   state.viewX = clamp(state.viewX + x, -settings.maxOffsetX, settings.maxOffsetX);
   state.viewY = clamp(state.viewY + y, -settings.maxOffsetY, settings.maxOffsetY);
   updateSettings();
+}
+
+function moveViewByMouse(deltaX, deltaY) {
+  const sensitivity = mouseSensitivityLevels[mouseView.sensitivity];
+
+  state.viewX = clamp(state.viewX + deltaX * sensitivity, -settings.maxOffsetX, settings.maxOffsetX);
+  state.viewY = clamp(state.viewY + deltaY * sensitivity, -settings.maxOffsetY, settings.maxOffsetY);
+  updateSettings();
+}
+
+function startMouseDrag(event) {
+  mouseView.dragging = true;
+  mouseView.lastX = event.clientX;
+  mouseView.lastY = event.clientY;
+  setMouseViewActive(true);
+}
+
+function stopMouseDrag() {
+  mouseView.dragging = false;
+
+  if (document.pointerLockElement !== canvas) {
+    setMouseViewActive(false);
+  }
+}
+
+function requestMouseView(event) {
+  if (event.button !== 0) {
+    return;
+  }
+
+  event.preventDefault();
+  startMouseDrag(event);
+
+  if (canvas.requestPointerLock) {
+    const lockRequest = canvas.requestPointerLock();
+
+    if (lockRequest && typeof lockRequest.catch === "function") {
+      lockRequest.catch(() => {});
+    }
+
+    return;
+  }
+}
+
+function releaseMouseView() {
+  if (document.pointerLockElement === canvas) {
+    document.exitPointerLock();
+  }
+
+  stopMouseDrag();
+  setMouseViewActive(false);
+}
+
+function handlePointerLockChange() {
+  const isLocked = document.pointerLockElement === canvas;
+
+  mouseView.dragging = false;
+  setMouseViewActive(isLocked);
+}
+
+function handleMouseMove(event) {
+  if (document.pointerLockElement === canvas) {
+    moveViewByMouse(event.movementX, event.movementY);
+    return;
+  }
+
+  if (!mouseView.dragging) {
+    return;
+  }
+
+  const deltaX = event.clientX - mouseView.lastX;
+  const deltaY = event.clientY - mouseView.lastY;
+  mouseView.lastX = event.clientX;
+  mouseView.lastY = event.clientY;
+  moveViewByMouse(deltaX, deltaY);
 }
 
 function drawSpace(width, height) {
@@ -427,6 +538,12 @@ function isResetKey(event) {
 }
 
 window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    releaseMouseView();
+    event.preventDefault();
+    return;
+  }
+
   const direction = keyToDirection(event);
 
   if (direction) {
@@ -471,6 +588,7 @@ window.addEventListener("blur", () => {
   Object.keys(keys).forEach((key) => {
     keys[key] = false;
   });
+  releaseMouseView();
 });
 
 document.querySelectorAll(".scale-button").forEach((button) => {
@@ -479,8 +597,21 @@ document.querySelectorAll(".scale-button").forEach((button) => {
   });
 });
 
+document.querySelectorAll(".sensitivity-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    mouseView.sensitivity = button.dataset.sensitivity;
+    updateSensitivityButtons();
+  });
+});
+
 document.querySelector("#reset-view").addEventListener("click", resetView);
+canvas.addEventListener("mousedown", requestMouseView);
+document.addEventListener("pointerlockchange", handlePointerLockChange);
+window.addEventListener("mousemove", handleMouseMove);
+window.addEventListener("mouseup", stopMouseDrag);
 
 resizeCanvas();
 updateSettings();
+updateMouseViewStatus();
+updateSensitivityButtons();
 requestAnimationFrame(loop);

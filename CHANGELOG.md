@@ -15,6 +15,7 @@
 
 ### Changed
 
+- `prototype-01-lunar-view-control`에 조준이 아닌 시야 조작감 확인용 Mouse View Mode, 드래그 fallback, 감도 선택을 추가
 - `prototype-01-lunar-view-control` 현재 설정 패널의 수치 항목 순서를 정정하고 `Reset View` 동작 설명을 문서화
 - `prototype-01-lunar-view-control` 현재 설정 패널의 수치 항목 순서와 여백을 정리하고 6x 유지 검토 결과를 문서화
 - `prototype-01-lunar-view-control`의 기본 Earth Scale을 6x로 조정하고 현재 설정 패널을 compact하게 정리
