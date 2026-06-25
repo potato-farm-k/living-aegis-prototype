@@ -237,7 +237,7 @@ button.is-active {
   margin: 0 0 9px;
 }
 
-.settings-grid div {
+.settings-grid > div {
   min-width: 0;
   padding: 8px;
   border: 1px solid var(--line);
@@ -247,6 +247,28 @@ button.is-active {
 
 .setting-wide {
   grid-column: 1 / -1;
+}
+
+.setting-line-card {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 6px;
+}
+
+.setting-line-card dt::after {
+  content: ":";
+}
+
+.setting-line-card dd {
+  margin: 0;
+}
+
+.setting-line-card dd:not(:last-child)::after {
+  content: " /";
+  margin-left: 6px;
+  color: var(--muted);
 }
 
 dt {
