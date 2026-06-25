@@ -18,7 +18,7 @@
 - Status: `1차 구현`
 - Purpose: 마우스 시야 이동으로 화면 밖 또는 지구 주변의 위협 방향을 찾는 감각 확인
 - Entry: `prototype-02-threat-direction-scan/index.html`
-- Notes: Earth Scale 6x, Earth Vertical Position 30%, Lunar Surface Area 30% 기준에서 위협 방향 표시와 edge indicator의 가독성을 확인하는 프로토타입
+- Notes: Earth Scale 6x, Earth Vertical Position 30%, Lunar Surface Area 30% 기준에서 위협 방향 표시, edge indicator, 달 표면 가림 상태와 시야 내 포착 상태의 구분을 확인하는 프로토타입
 
 ## Removed Placeholder
 

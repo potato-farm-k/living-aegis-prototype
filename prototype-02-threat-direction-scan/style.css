@@ -221,7 +221,11 @@ button.is-active {
   text-align: right;
 }
 
-#threat-status.is-detected {
+#threat-status.is-occluded {
+  color: var(--warm);
+}
+
+#threat-status.is-visual {
   color: var(--accent);
 }
 

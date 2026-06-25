@@ -44,10 +44,10 @@
           <div class="threat-panel" aria-live="polite">
             <div class="threat-status-line">
               <span>Threat Status</span>
-              <strong id="threat-status">위협 방향 탐색 중</strong>
+              <strong id="threat-status">화면 밖 위협</strong>
             </div>
             <p>
-              edge indicator가 가리키는 쪽으로 시야를 움직여 위협 마커가 화면 안에 들어오는지 확인합니다.
+              edge indicator가 가리키는 쪽으로 시야를 움직이고, 달 표면에 가려진 상태와 실제 시각 포착을 구분합니다.
             </p>
           </div>
 
@@ -83,8 +83,12 @@
               <dd id="view-offset-y">0</dd>
             </div>
             <div>
-              <dt>Threat In View</dt>
+              <dt>Threat On Screen</dt>
               <dd id="threat-in-view">No</dd>
+            </div>
+            <div>
+              <dt>Visual Contact</dt>
+              <dd id="visual-contact">No</dd>
             </div>
             <div class="setting-wide">
               <dt>Threat Direction</dt>

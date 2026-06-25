@@ -35,6 +35,7 @@ const settingEls = {
   viewY: document.querySelector("#view-offset-y"),
   threatStatus: document.querySelector("#threat-status"),
   threatInView: document.querySelector("#threat-in-view"),
+  visualContact: document.querySelector("#visual-contact"),
   threatDirection: document.querySelector("#threat-direction"),
   mouseView: document.querySelector("#mouse-view-status"),
   mouseHelp: document.querySelector("#mouse-view-help"),
@@ -54,6 +55,7 @@ const threatPatterns = [
   { label: "지구 오른쪽 주변", kind: "orbit", angle: -0.2, distance: 1.75, parallaxX: 0.78, parallaxY: 0.48 },
   { label: "지구 왼쪽 주변", kind: "orbit", angle: 3.42, distance: 1.65, parallaxX: 0.78, parallaxY: 0.48 },
   { label: "오른쪽 하단 외곽", kind: "offscreen", x: 1.04, y: 0.64, parallaxX: 0.96, parallaxY: 0.7 },
+  { label: "달 표면 뒤쪽", kind: "offscreen", x: 0.62, y: 0.78, parallaxX: 0.68, parallaxY: 0.42 },
 ];
 
 const stars = createStars(140);
@@ -136,6 +138,10 @@ function getEarthMetrics(width, height) {
   };
 }
 
+function getLunarSurfaceTop(height) {
+  return height * (1 - settings.lunarSurfaceArea) - state.viewY * 0.18;
+}
+
 function resolveThreat(width, height) {
   const pattern = threatPatterns[state.threatIndex];
   const earth = getEarthMetrics(width, height);
@@ -150,13 +156,19 @@ function resolveThreat(width, height) {
   const screenX = worldX - state.viewX * pattern.parallaxX;
   const screenY = worldY - state.viewY * pattern.parallaxY;
   const margin = 18;
-  const inView = screenX >= margin && screenX <= width - margin && screenY >= margin && screenY <= height - margin;
+  const onScreen = screenX >= margin && screenX <= width - margin && screenY >= margin && screenY <= height - margin;
+  const lunarSurfaceTop = getLunarSurfaceTop(height);
+  const occluded = onScreen && screenY >= lunarSurfaceTop;
+  const visualContact = onScreen && !occluded;
 
   return {
     label: pattern.label,
     screenX,
     screenY,
-    inView,
+    onScreen,
+    occluded,
+    visualContact,
+    lunarSurfaceTop,
     direction: getDirectionLabel(screenX, screenY, width, height),
   };
 }
@@ -207,11 +219,37 @@ function updateSettings(threat) {
     return;
   }
 
-  const status = threat.inView ? "시야 내 포착" : "위협 방향 탐색 중";
+  const status = getThreatStatusLabel(threat);
   settingEls.threatStatus.textContent = status;
-  settingEls.threatStatus.classList.toggle("is-detected", threat.inView);
-  settingEls.threatInView.textContent = threat.inView ? "Yes" : "No";
-  settingEls.threatDirection.textContent = threat.inView ? `${threat.label} / 화면 안` : `${threat.label} / ${threat.direction}`;
+  settingEls.threatStatus.classList.toggle("is-occluded", threat.occluded);
+  settingEls.threatStatus.classList.toggle("is-visual", threat.visualContact);
+  settingEls.threatInView.textContent = threat.onScreen ? "Yes" : "No";
+  settingEls.visualContact.textContent = threat.visualContact ? "Yes" : "No";
+  settingEls.threatDirection.textContent = getThreatDirectionLabel(threat);
+}
+
+function getThreatStatusLabel(threat) {
+  if (!threat.onScreen) {
+    return "화면 밖 위협";
+  }
+
+  if (threat.occluded) {
+    return "감지됨 / 달 표면에 가려짐";
+  }
+
+  return "시야 내 포착";
+}
+
+function getThreatDirectionLabel(threat) {
+  if (!threat.onScreen) {
+    return `${threat.label} / ${threat.direction}`;
+  }
+
+  if (threat.occluded) {
+    return `${threat.label} / 화면 안 / 달 표면 뒤`;
+  }
+
+  return `${threat.label} / 화면 안 / 시각 포착`;
 }
 
 function updateMouseViewStatus() {
@@ -458,8 +496,7 @@ function drawCloudBand(centerX, centerY, radius, tilt) {
 }
 
 function drawMoonSurface(width, height) {
-  const baseTop = height * (1 - settings.lunarSurfaceArea);
-  const top = baseTop - state.viewY * 0.18;
+  const top = getLunarSurfaceTop(height);
   const curveDepth = height * 0.045;
 
   ctx.beginPath();
@@ -506,8 +543,13 @@ function drawMoonSurface(width, height) {
 }
 
 function drawThreat(threat, width, height, timestamp) {
-  if (!threat.inView) {
+  if (!threat.onScreen) {
     drawEdgeIndicator(threat, width, height, timestamp);
+    return;
+  }
+
+  if (threat.occluded) {
+    drawOccludedIndicator(threat, timestamp);
     return;
   }
 
@@ -531,6 +573,31 @@ function drawThreat(threat, width, height, timestamp) {
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.fillStyle = "rgba(255, 230, 210, 0.92)";
   ctx.fillText("Detected", 12, -10);
+  ctx.restore();
+}
+
+function drawOccludedIndicator(threat, timestamp) {
+  const pulse = 0.5 + Math.sin(timestamp / 240) * 0.5;
+  const radius = 8 + pulse * 5;
+
+  ctx.save();
+  ctx.translate(threat.screenX, threat.screenY);
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = `rgba(241, 200, 106, ${0.52 + pulse * 0.24})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.beginPath();
+  ctx.fillStyle = "rgba(241, 200, 106, 0.84)";
+  ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.font = "700 12px Arial, Helvetica, sans-serif";
+  ctx.fillStyle = "rgba(255, 232, 170, 0.9)";
+  ctx.fillText("Occluded", 12, -10);
   ctx.restore();
 }
 

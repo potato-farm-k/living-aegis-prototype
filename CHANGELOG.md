@@ -18,6 +18,7 @@
 
 ### Changed
 
+- `prototype-02-threat-direction-scan`에서 화면 밖 위협, 달 표면에 가려진 감지 상태, 실제 시야 내 포착 상태를 구분하도록 조정
 - `prototype-01-lunar-view-control`에 조준이 아닌 시야 조작감 확인용 Mouse View Mode, 드래그 fallback, 감도 선택을 추가
 - `prototype-01-lunar-view-control` 현재 설정 패널의 수치 항목 순서를 정정하고 `Reset View` 동작 설명을 문서화
 - `prototype-01-lunar-view-control` 현재 설정 패널의 수치 항목 순서와 여백을 정리하고 6x 유지 검토 결과를 문서화
