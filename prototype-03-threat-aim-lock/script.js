@@ -137,13 +137,22 @@ function resizeCanvas() {
 function getEarthMetrics(width, height) {
   const baseRadius = Math.min(width, height) * 0.035;
   const radius = baseRadius * state.earthScale;
+  const world = getEarthWorldPosition(width, height);
+  const screen = projectWorldToScreen(world.x, world.y, width, height);
 
   return {
-    baseX: width * 0.5,
-    baseY: height * settings.earthVerticalPosition,
-    screenX: width * 0.5 - state.viewX * 0.72,
-    screenY: height * settings.earthVerticalPosition - state.viewY * 0.42,
+    baseX: screen.x,
+    baseY: screen.y,
+    screenX: screen.x,
+    screenY: screen.y,
     radius,
+  };
+}
+
+function getEarthWorldPosition(width, height) {
+  return {
+    x: 0,
+    y: (height * settings.earthVerticalPosition - height * 0.5) / settings.viewScale,
   };
 }
 
@@ -180,11 +189,22 @@ function resolveThreat(width, height) {
 }
 
 function projectThreatToScreen(pattern, width, height) {
+  return projectWorldToScreen(pattern.worldX, pattern.worldY, width, height);
+}
+
+function projectWorldToScreen(worldX, worldY, width, height) {
   const aimCenter = getAimCenter(width, height);
 
   return {
-    x: aimCenter.x + (pattern.worldX - state.viewX) * settings.viewScale,
-    y: aimCenter.y + (pattern.worldY - state.viewY) * settings.viewScale,
+    x: aimCenter.x + (worldX - state.viewX) * settings.viewScale,
+    y: aimCenter.y + (worldY - state.viewY) * settings.viewScale,
+  };
+}
+
+function getCameraScreenOffset() {
+  return {
+    x: state.viewX * settings.viewScale,
+    y: state.viewY * settings.viewScale,
   };
 }
 
@@ -427,9 +447,11 @@ function drawSpace(width, height) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 
+  const camera = getCameraScreenOffset();
+
   stars.forEach((star) => {
-    const x = wrap(star.x * width - state.viewX * star.layer * 0.45, width);
-    const y = wrap(star.y * height - state.viewY * star.layer * 0.22, height);
+    const x = wrap(star.x * width - camera.x * star.layer, width);
+    const y = wrap(star.y * height - camera.y * star.layer, height);
 
     ctx.beginPath();
     ctx.fillStyle = `rgba(238, 247, 255, ${star.alpha})`;

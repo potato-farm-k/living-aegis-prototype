@@ -82,6 +82,6 @@
 
 ## 2026-06-25 - Threat Aim Lock의 조준 범위 기준 정리
 
-결정: `prototype-03-threat-aim-lock`의 조준 가능 범위는 지구 주변 영역이 아니라 현재 보이는 Canvas / viewport 전체 기준으로 판단한다. 조준 방식은 화면 중앙에 고정된 crosshair와 view offset 기반 위협 screen-space 투영을 사용한다.
+결정: `prototype-03-threat-aim-lock`의 조준 가능 범위는 지구 주변 영역이 아니라 현재 보이는 Canvas / viewport 전체 기준으로 판단한다. 조준 방식은 화면 중앙에 고정된 crosshair와 view offset 기반 screen-space 투영을 사용한다. 지구와 위협 마커는 동일한 view transform으로 화면 위치를 계산한다.
 
-이유: 조준 기준점은 플레이어 화면 중앙에 고정된 HUD 기준이어야 하며, 마우스 입력은 crosshair가 아니라 view offset을 움직여야 한다. 위협은 world/view-space 위치를 기준으로 현재 view offset에 따라 화면에 투영되며, 조준점이 움직이거나 위협이 자동으로 중앙에 끌려오는 방식은 사용하지 않는다. `Lock Ready`는 `Visual Contact` 상태의 위협이 화면 중앙 조준 기준점 근처에 들어온 경우에만 성립한다. 달 표면에 가려진 위협은 중앙 조준점 근처에 있어도 `Lock Ready`가 되지 않는다.
+이유: 조준 기준점은 플레이어 화면 중앙에 고정된 HUD 기준이어야 하며, 마우스 입력은 crosshair가 아니라 view offset을 움직여야 한다. 지구와 위협은 world/view-space 위치를 기준으로 현재 view offset에 따라 같은 비율로 화면에 투영되며, 조준점이 움직이거나 위협이 자동으로 중앙에 끌려오는 방식은 사용하지 않는다. edge indicator는 화면 밖 방향 표시용 HUD로만 사용한다. `Lock Ready`는 `Visual Contact` 상태의 위협이 화면 중앙 조준 기준점 근처에 들어온 경우에만 성립한다. 달 표면에 가려진 위협은 중앙 조준점 근처에 있어도 `Lock Ready`가 되지 않는다.

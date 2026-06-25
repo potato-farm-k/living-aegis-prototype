@@ -22,6 +22,7 @@
 ### Changed
 
 - `prototype-03-threat-aim-lock`의 조준 가능 범위와 `Aim Aligned / Lock Ready` 판정을 현재 보이는 Canvas 화면 전체 기준으로 정리
+- `prototype-03-threat-aim-lock`에서 지구와 위협 마커가 동일한 view transform을 사용하도록 시야 이동 좌표계를 정리
 - `prototype-03-threat-aim-lock`의 위협 위치 계산을 고정 중앙 crosshair와 view offset 기반 screen-space 투영 방식으로 정리
 - 루트 prototype 런처 카드의 번호 라벨, 제목, `Open` 버튼 텍스트, 최신순 표시를 정리
 - `prototype-02-threat-direction-scan`에서 화면 밖 위협, 달 표면에 가려진 감지 상태, 실제 시야 내 포착 상태를 구분하도록 조정
