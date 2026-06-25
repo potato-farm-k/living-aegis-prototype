@@ -79,3 +79,9 @@
 결정: `prototype-02-threat-direction-scan` 검토 결과, edge indicator를 따라 위협 방향을 찾는 흐름과 화면 밖 위협 / 달 표면에 가려진 위협 / 시야 내 포착 상태 구분이 필요하다고 판단했다. 해당 구분이 동작한 뒤, 다음 단계로 시야 내 포착한 위협을 화면 중앙 조준 기준점에 맞추는 감각을 확인하기 위해 `prototype-03-threat-aim-lock`을 진행한다.
 
 이유: 이번 단계에서는 발사, 격추, 점수, 실패 조건을 구현하지 않고, `Visual Contact` 상태의 위협만 `Aim Aligned / Lock Ready` 상태로 넘어갈 수 있는지 확인한다. `Lock Ready`는 실제 무기 락온 완료가 아니라 조준 중심 정렬 감각을 확인하기 위한 prototype 상태이다.
+
+## 2026-06-25 - Threat Aim Lock의 조준 범위 기준 정리
+
+결정: `prototype-03-threat-aim-lock`의 조준 가능 범위는 지구 주변 영역이 아니라 현재 보이는 Canvas / viewport 전체 기준으로 판단한다.
+
+이유: 조준 기준점은 플레이어 화면 중앙에 고정된 HUD 기준이어야 하며, 마우스 입력은 crosshair가 아니라 view offset을 움직여야 한다. `Lock Ready`는 `Visual Contact` 상태의 위협이 화면 중앙 조준 기준점 근처에 들어온 경우에만 성립한다. 달 표면에 가려진 위협은 중앙 조준점 근처에 있어도 `Lock Ready`가 되지 않는다.

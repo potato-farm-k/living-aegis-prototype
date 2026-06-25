@@ -26,7 +26,7 @@
 - Status: `1차 구현`
 - Purpose: 시야 내 포착한 위협을 화면 중앙 조준 기준점에 맞추는 감각 확인
 - Entry: `prototype-03-threat-aim-lock/index.html`
-- Notes: `prototype-02-threat-direction-scan`의 edge indicator와 위협 상태 구분을 바탕으로, `Visual Contact` 상태에서만 `Aim Aligned / Lock Ready`가 되는지 확인하는 프로토타입
+- Notes: `prototype-02-threat-direction-scan`의 edge indicator와 위협 상태 구분을 바탕으로, 현재 보이는 Canvas 화면 전체 기준에서 `Visual Contact` 상태일 때만 `Aim Aligned / Lock Ready`가 되는지 확인하는 프로토타입
 
 ## Removed Placeholder
 

@@ -10,7 +10,8 @@ const settings = {
   keyStep: 18,
   mouseSensitivity: 0.65,
   edgeInset: 30,
-  aimGuideRadius: 46,
+  screenMargin: 18,
+  aimGuideRadius: 64,
 };
 
 const state = {
@@ -54,15 +55,15 @@ const mouseView = {
 };
 
 const threatPatterns = [
-  { label: "오른쪽 외곽", kind: "offscreen", x: 1.09, y: 0.3, parallaxX: 0.95, parallaxY: 0.68 },
-  { label: "왼쪽 상단 외곽", kind: "offscreen", x: -0.09, y: 0.18, parallaxX: 0.95, parallaxY: 0.74 },
-  { label: "상단 외곽", kind: "offscreen", x: 0.52, y: -0.12, parallaxX: 0.84, parallaxY: 0.86 },
-  { label: "오른쪽 조준 후보", kind: "offscreen", x: 0.66, y: 0.55, parallaxX: 0.9, parallaxY: 0.8 },
-  { label: "왼쪽 조준 후보", kind: "offscreen", x: 0.34, y: 0.42, parallaxX: 0.9, parallaxY: 0.72 },
-  { label: "지구 오른쪽 주변", kind: "orbit", angle: -0.2, distance: 1.48, parallaxX: 0.78, parallaxY: 0.48 },
-  { label: "지구 왼쪽 주변", kind: "orbit", angle: 3.42, distance: 1.42, parallaxX: 0.78, parallaxY: 0.48 },
-  { label: "오른쪽 하단 외곽", kind: "offscreen", x: 1.04, y: 0.64, parallaxX: 0.96, parallaxY: 0.7 },
-  { label: "달 표면 뒤쪽", kind: "offscreen", x: 0.62, y: 0.78, parallaxX: 0.68, parallaxY: 0.42 },
+  { label: "오른쪽 화면 밖", targetViewX: 260, targetViewY: -90, parallaxX: 2.7, parallaxY: 1 },
+  { label: "왼쪽 상단 화면 밖", targetViewX: -260, targetViewY: -135, parallaxX: 2.7, parallaxY: 1.1 },
+  { label: "상단 화면 밖", targetViewX: 30, targetViewY: -170, parallaxX: 1, parallaxY: 2.35 },
+  { label: "화면 오른쪽 상단", targetViewX: 170, targetViewY: -110, parallaxX: 1, parallaxY: 0.95 },
+  { label: "화면 왼쪽 중단", targetViewX: -170, targetViewY: -15, parallaxX: 1, parallaxY: 1 },
+  { label: "화면 하단", targetViewX: 80, targetViewY: 85, parallaxX: 1, parallaxY: 0.9 },
+  { label: "화면 상단", targetViewX: -30, targetViewY: -135, parallaxX: 1, parallaxY: 0.9 },
+  { label: "오른쪽 하단 화면 밖", targetViewX: 240, targetViewY: 115, parallaxX: 2.8, parallaxY: 1.4 },
+  { label: "달 표면 뒤쪽", targetViewX: 150, targetViewY: 170, parallaxX: 0.85, parallaxY: 1.25 },
 ];
 
 const stars = createStars(140);
@@ -151,19 +152,12 @@ function getLunarSurfaceTop(height) {
 
 function resolveThreat(width, height) {
   const pattern = threatPatterns[state.threatIndex];
-  const earth = getEarthMetrics(width, height);
-  let worldX = width * pattern.x;
-  let worldY = height * pattern.y;
-
-  if (pattern.kind === "orbit") {
-    worldX = earth.baseX + Math.cos(pattern.angle) * earth.radius * pattern.distance;
-    worldY = earth.baseY + Math.sin(pattern.angle) * earth.radius * pattern.distance * 0.78;
-  }
-
+  const world = getThreatWorldPosition(pattern, width, height);
+  const worldX = world.x;
+  const worldY = world.y;
   const screenX = worldX - state.viewX * pattern.parallaxX;
   const screenY = worldY - state.viewY * pattern.parallaxY;
-  const margin = 18;
-  const onScreen = screenX >= margin && screenX <= width - margin && screenY >= margin && screenY <= height - margin;
+  const onScreen = isInsideViewport(screenX, screenY, width, height);
   const lunarSurfaceTop = getLunarSurfaceTop(height);
   const occluded = onScreen && screenY >= lunarSurfaceTop;
   const visualContact = onScreen && !occluded;
@@ -186,9 +180,32 @@ function resolveThreat(width, height) {
   };
 }
 
+function getThreatWorldPosition(pattern, width, height) {
+  const aimCenter = getAimCenter(width, height);
+
+  return {
+    x: aimCenter.x + pattern.targetViewX * pattern.parallaxX,
+    y: aimCenter.y + pattern.targetViewY * pattern.parallaxY,
+  };
+}
+
+function isInsideViewport(screenX, screenY, width, height) {
+  const margin = settings.screenMargin;
+
+  return screenX >= margin && screenX <= width - margin && screenY >= margin && screenY <= height - margin;
+}
+
+function getAimCenter(width, height) {
+  return {
+    x: width * 0.5,
+    y: height * 0.5,
+  };
+}
+
 function getAimMetrics(screenX, screenY, width, height) {
-  const dx = screenX - width * 0.5;
-  const dy = screenY - height * 0.5;
+  const aimCenter = getAimCenter(width, height);
+  const dx = screenX - aimCenter.x;
+  const dy = screenY - aimCenter.y;
 
   return {
     dx,
@@ -267,7 +284,7 @@ function getThreatStatusLabel(threat) {
 
 function getAimStatusLabel(threat) {
   if (threat.lockReady) {
-    return "Lock Ready";
+    return "Aim Aligned / Lock Ready";
   }
 
   if (threat.visualContact) {
@@ -713,13 +730,12 @@ function getDirectionLabel(screenX, screenY, width, height) {
 }
 
 function drawAimGuide(width, height, threat, timestamp) {
-  const centerX = width * 0.5;
-  const centerY = height * 0.5;
+  const aimCenter = getAimCenter(width, height);
   const pulse = 0.5 + Math.sin(timestamp / 260) * 0.5;
   const color = threat.lockReady ? "156, 255, 138" : "116, 221, 255";
 
   ctx.save();
-  ctx.translate(centerX, centerY);
+  ctx.translate(aimCenter.x, aimCenter.y);
 
   ctx.beginPath();
   ctx.strokeStyle = `rgba(${color}, ${0.3 + pulse * 0.16})`;
