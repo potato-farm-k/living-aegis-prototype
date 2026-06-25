@@ -1,0 +1,66 @@
+# Prototype 02 - Threat Direction Scan
+
+상태: `1차 구현`
+
+이 프로토타입은 전투 시스템이 아니라, 마우스 시야 이동을 이용해 화면 밖 또는 지구 주변의 위협 방향을 찾는 감각을 확인하기 위한 실험입니다.
+
+## 목적
+
+`prototype-01-lunar-view-control`에서 확인한 달-지구 기본 구도와 마우스 기반 시야 이동 감각을 바탕으로, 위협이 정면에 고정되어 있지 않을 때 플레이어가 방향을 찾아보는 긴장감을 느끼는지 확인한다.
+
+이번 단계의 핵심은 공격하거나 격추하는 감각이 아니라, 화면 밖 또는 지구 주변에 있는 위협 후보를 edge indicator와 제한된 시야 이동으로 찾아내는 감각이다.
+
+## 적용한 기준값
+
+- Earth Scale: `6x` 기본값
+- Alternative Earth Scale: `5x`, `7x`
+- Earth Vertical Position: `30%`
+- Lunar Surface Area: `30%`
+- View Movement: `prototype-01-lunar-view-control`과 같은 제한된 좌우/상하 이동 범위
+
+이 값들은 최종 게임 기준으로 확정된 값이 아니라, 위협 방향 탐색 감각을 확인하기 위한 prototype 기준값이다.
+
+## 조작 방법
+
+- Mouse Move: Canvas 클릭 후 제한된 시야 이동
+- Canvas 드래그: Pointer Lock이 제한되는 환경에서 마우스 시야 이동 확인
+- WASD 또는 Arrow keys: 보조 시야 이동
+- `R`: 기본 정면 보기로 복귀
+- `5`: Earth Scale 5x
+- `6`: Earth Scale 6x
+- `7`: Earth Scale 7x
+- `N`: 다음 위협 위치 생성
+- 화면 버튼: Earth Scale 전환, 기본 정면 보기 복귀, 다음 위협 위치 생성
+
+## 확인할 질문
+
+- 마우스로 시야를 움직이며 위협 방향을 찾는 감각이 생기는가?
+- 위협이 정면에 고정되어 있지 않을 때 긴장감이 더 생기는가?
+- edge indicator가 “저쪽을 봐야 한다”는 느낌을 주는가?
+- Earth Scale 6x와 Lunar Surface Area 30% 기준에서 위협 표시가 잘 읽히는가?
+
+## 포함한 기능
+
+- 2D Canvas 기반 달-지구 기본 배경
+- Earth Scale 5x/6x/7x 비교
+- Earth Vertical Position 30%, Lunar Surface Area 30% 기준 구도
+- 마우스 기반 제한 시야 이동
+- WASD/Arrow keys 보조 시야 이동
+- 화면 밖 또는 지구 주변 위협 후보 표시
+- 화면 밖 위협 방향을 알려주는 edge indicator
+- 위협이 화면 안에 들어왔을 때 `시야 내 포착` 상태 표시
+- 다음 위협 위치를 생성하는 버튼과 `N` 키 입력
+- 현재 상태 패널
+
+## 제외한 기능
+
+플레이어 발사, 미사일 생성, 격추 판정, 점수, 체력, 실패 조건, 적 공격, 사운드, 폭발, 타겟 락온, 실제 궤도 계산은 이번 범위에서 제외합니다.
+
+또한 메인 게임 구현, simulator 저장소 수정, fullscreen mode 구현은 포함하지 않는다.
+
+## 다음 단계 후보
+
+- 위협 마커의 시각적 가독성 개선
+- edge indicator 방향성 개선
+- fullscreen mode 검토
+- 이후 별도 단계에서 조준/발사/격추 루프 검토

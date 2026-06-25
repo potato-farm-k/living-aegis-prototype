@@ -4,6 +4,9 @@
 
 ### Added
 
+- `prototype-02-threat-direction-scan`을 추가해 마우스 기반 시야 이동으로 화면 밖 또는 지구 주변의 위협 방향을 찾는 감각을 확인할 수 있게 함
+- `prototype-02-threat-direction-scan`에 단순 위협 마커, edge indicator, `시야 내 포착` 상태 표시를 추가
+- 루트 prototype 런처에서 `prototype-02-threat-direction-scan`으로 이동하는 링크 추가
 - `prototype-01-lunar-view-control`을 추가해 달-지구 기본 구도와 제한된 시야 이동 감각을 확인할 수 있게 함
 - Earth Scale 5x/7x 전환과 Lunar Surface Area 30%, Earth Vertical Position 30% 기준 화면을 추가
 - 루트 prototype 런처에서 `prototype-01-lunar-view-control`로 이동하는 링크 추가

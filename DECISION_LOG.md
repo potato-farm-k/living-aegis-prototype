@@ -59,3 +59,11 @@
 결정: 키보드 시야 이동만으로는 조작감 판단이 어려워 `prototype-01-lunar-view-control`에 마우스 시야 이동 확인 기능을 추가한다.
 
 이유: 이 기능은 전투 시스템이 아니라 Earth Scale 6x 기준에서 1인칭 HUD 시야 조작감과 현재 시야 이동 폭의 적절성을 검증하기 위한 것이다.
+
+## 2026-06-25 - Threat Direction Scan 진행
+
+결정: `prototype-01-lunar-view-control` 검토 결과, Earth Scale `6x` 기본값이 안정적으로 보이고 마우스 기반 시야 이동이 자연스러운 긴장감을 만든다고 판단했다. 이에 따라 다음 단계로 화면 밖 또는 지구 주변의 위협 방향을 찾는 감각을 확인하기 위해 `prototype-02-threat-direction-scan`을 진행한다.
+
+이유: 이번 단계에서는 전투 시스템으로 넘어가지 않고, 위협이 정면에 고정되어 있지 않을 때 edge indicator와 제한된 시야 이동만으로 “저쪽을 봐야 한다”는 감각이 생기는지 확인하기 위해서이다.
+
+보류: fullscreen mode는 후속 개선 후보로 남긴다. Earth Scale `6x`는 현재 prototype 검토 기준값이며, 메인 게임 공식 확정값은 아니다.
