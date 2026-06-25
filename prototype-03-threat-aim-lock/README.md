@@ -12,6 +12,8 @@
 
 이 프로토타입은 FPS식 중앙 조준 방식을 사용한다. 조준 기준점인 crosshair는 Canvas 화면 중앙에 고정된다. 마우스 입력은 crosshair를 화면 안에서 움직이는 것이 아니라 플레이어 시야, 즉 view offset을 움직인다.
 
+위협은 world/view-space 기준 좌표를 가지고, 현재 view offset에 따라 `screen = center + (world - viewOffset) * viewScale` 방식으로 Canvas에 투영된다. 위협 마커가 조준점 쪽으로 자동 보정되거나 끌려오는 `aim assist`, `target pull`, `smooth align` 동작은 사용하지 않는다.
+
 조준 가능 대상은 지구 주변 영역에 한정하지 않고, 현재 보이는 Canvas / viewport 전체를 기준으로 판단한다.
 
 ## 적용한 기준값
@@ -22,6 +24,7 @@
 - Lunar Surface Area: `30%`
 - View Movement: `prototype-01-lunar-view-control`, `prototype-02-threat-direction-scan`과 같은 제한된 좌우/상하 이동 범위
 - Aim Guide Radius: 화면 중앙 조준 기준점 기준 `64px`
+- Threat Projection: 고정된 화면 중앙 crosshair와 view offset 기반 screen-space 투영
 
 이 값들은 최종 게임 기준으로 확정된 값이 아니라, 조준 중심 정렬 감각을 확인하기 위한 prototype 기준값이다.
 
@@ -51,7 +54,7 @@
 
 위협 마커는 지구 주변에 있어야만 `Visual Contact`가 되는 것이 아니다. 현재 Canvas 화면 안에 있고 달 표면에 가려져 있지 않다면 화면 어느 위치에 있든 `Visual Contact` 상태가 될 수 있다.
 
-위협은 현재 보이는 화면 안에만 고정 생성되는 것이 아니라, 제한된 view offset으로 탐색 가능한 범위 안에 배치된다. 각 위협 후보는 플레이어가 시야를 움직여 화면 중앙 crosshair 근처까지 가져올 수 있는 위치를 기준으로 둔다.
+위협은 현재 보이는 화면 안에만 고정 생성되는 것이 아니라, 제한된 view offset으로 탐색 가능한 world/view-space 범위 안에 배치된다. 각 위협 후보는 플레이어가 시야를 움직여 화면 중앙 crosshair 근처까지 가져올 수 있는 위치를 기준으로 둔다.
 
 ## 조준 상태 규칙
 
@@ -83,6 +86,8 @@
 - 화면 중앙에 고정된 조준 기준점
 - 화면 중앙 기준 조준 가능 범위 가이드
 - crosshair를 움직이지 않고 view offset으로 위협을 중앙에 가져오는 FPS식 조준 흐름
+- 위협 world 좌표를 현재 view offset으로 screen-space에 투영하는 위치 계산
+- 위협을 조준점 쪽으로 자동 보정하지 않는 고정 중앙 조준 방식
 - 위협 상태와 조준 상태를 분리한 현재 상태 패널
 - `Visual Contact` 상태에서만 `Aim Aligned / Lock Ready`가 되는 화면 좌표 기반 단순 거리 판정
 - 다음 위협 위치로 이동하는 버튼과 `N` 키 입력

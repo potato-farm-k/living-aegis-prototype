@@ -12,6 +12,7 @@ const settings = {
   edgeInset: 30,
   screenMargin: 18,
   aimGuideRadius: 64,
+  viewScale: 2.45,
 };
 
 const state = {
@@ -55,15 +56,15 @@ const mouseView = {
 };
 
 const threatPatterns = [
-  { label: "오른쪽 화면 밖", targetViewX: 260, targetViewY: -90, parallaxX: 2.7, parallaxY: 1 },
-  { label: "왼쪽 상단 화면 밖", targetViewX: -260, targetViewY: -135, parallaxX: 2.7, parallaxY: 1.1 },
-  { label: "상단 화면 밖", targetViewX: 30, targetViewY: -170, parallaxX: 1, parallaxY: 2.35 },
-  { label: "화면 오른쪽 상단", targetViewX: 170, targetViewY: -110, parallaxX: 1, parallaxY: 0.95 },
-  { label: "화면 왼쪽 중단", targetViewX: -170, targetViewY: -15, parallaxX: 1, parallaxY: 1 },
-  { label: "화면 하단", targetViewX: 80, targetViewY: 85, parallaxX: 1, parallaxY: 0.9 },
-  { label: "화면 상단", targetViewX: -30, targetViewY: -135, parallaxX: 1, parallaxY: 0.9 },
-  { label: "오른쪽 하단 화면 밖", targetViewX: 240, targetViewY: 115, parallaxX: 2.8, parallaxY: 1.4 },
-  { label: "달 표면 뒤쪽", targetViewX: 150, targetViewY: 170, parallaxX: 0.85, parallaxY: 1.25 },
+  { label: "오른쪽 화면 밖", worldX: 260, worldY: -90 },
+  { label: "왼쪽 상단 화면 밖", worldX: -260, worldY: -135 },
+  { label: "상단 화면 밖", worldX: 30, worldY: -170 },
+  { label: "화면 오른쪽 상단", worldX: 170, worldY: -80 },
+  { label: "화면 왼쪽 중단", worldX: -170, worldY: -15 },
+  { label: "화면 하단", worldX: 80, worldY: 35 },
+  { label: "화면 상단", worldX: -30, worldY: -90 },
+  { label: "오른쪽 하단 화면 밖", worldX: 240, worldY: 70 },
+  { label: "달 표면 뒤쪽", worldX: 75, worldY: 70 },
 ];
 
 const stars = createStars(140);
@@ -152,11 +153,9 @@ function getLunarSurfaceTop(height) {
 
 function resolveThreat(width, height) {
   const pattern = threatPatterns[state.threatIndex];
-  const world = getThreatWorldPosition(pattern, width, height);
-  const worldX = world.x;
-  const worldY = world.y;
-  const screenX = worldX - state.viewX * pattern.parallaxX;
-  const screenY = worldY - state.viewY * pattern.parallaxY;
+  const screen = projectThreatToScreen(pattern, width, height);
+  const screenX = screen.x;
+  const screenY = screen.y;
   const onScreen = isInsideViewport(screenX, screenY, width, height);
   const lunarSurfaceTop = getLunarSurfaceTop(height);
   const occluded = onScreen && screenY >= lunarSurfaceTop;
@@ -180,12 +179,12 @@ function resolveThreat(width, height) {
   };
 }
 
-function getThreatWorldPosition(pattern, width, height) {
+function projectThreatToScreen(pattern, width, height) {
   const aimCenter = getAimCenter(width, height);
 
   return {
-    x: aimCenter.x + pattern.targetViewX * pattern.parallaxX,
-    y: aimCenter.y + pattern.targetViewY * pattern.parallaxY,
+    x: aimCenter.x + (pattern.worldX - state.viewX) * settings.viewScale,
+    y: aimCenter.y + (pattern.worldY - state.viewY) * settings.viewScale,
   };
 }
 
@@ -760,16 +759,6 @@ function drawAimGuide(width, height, threat, timestamp) {
   ctx.fillStyle = `rgba(${color}, 0.92)`;
   ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
   ctx.fill();
-
-  if (threat.visualContact) {
-    ctx.beginPath();
-    ctx.setLineDash([5, 6]);
-    ctx.strokeStyle = threat.lockReady ? "rgba(156, 255, 138, 0.36)" : "rgba(116, 221, 255, 0.24)";
-    ctx.moveTo(0, 0);
-    ctx.lineTo(threat.aimDx, threat.aimDy);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
 
   ctx.restore();
 }
