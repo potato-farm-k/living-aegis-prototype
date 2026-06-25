@@ -4,6 +4,9 @@
 
 ### Added
 
+- `prototype-03-threat-aim-lock`을 추가해 시야 내 포착한 위협을 화면 중앙 조준 기준점에 맞추는 감각을 확인할 수 있게 함
+- `prototype-03-threat-aim-lock`에 중앙 조준 기준점, 조준 가능 범위 가이드, `Aim Aligned / Lock Ready` 상태 표시를 추가
+- 루트 prototype 런처에서 `prototype-03-threat-aim-lock`으로 이동하는 링크 추가
 - `prototype-02-threat-direction-scan`을 추가해 마우스 기반 시야 이동으로 화면 밖 또는 지구 주변의 위협 방향을 찾는 감각을 확인할 수 있게 함
 - `prototype-02-threat-direction-scan`에 단순 위협 마커, edge indicator, `시야 내 포착` 상태 표시를 추가
 - 루트 prototype 런처에서 `prototype-02-threat-direction-scan`으로 이동하는 링크 추가
