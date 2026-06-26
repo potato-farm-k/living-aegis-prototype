@@ -4,6 +4,11 @@
 
 ### Added
 
+- `prototype-05-threat-approach-timing`을 추가해 움직이는 위협을 찾고 조준하고 요격하는 시간 감각을 확인할 수 있게 함
+- `prototype-05-threat-approach-timing`에 단순 곡선 경로를 따라 접근하는 움직이는 위협 1개를 추가
+- `prototype-05-threat-approach-timing`에 Slow / Normal / Fast 위협 속도 선택과 접근 진행 상태 표시를 추가
+- `prototype-05-threat-approach-timing`에서 기존 Lock Ready 발사/요격 피드백 흐름을 움직이는 위협 기준으로 유지
+- 루트 prototype 런처에서 `prototype-05-threat-approach-timing`으로 이동하는 링크 추가
 - `prototype-04-intercept-feedback`을 추가해 Lock Ready 이후 최소 발사/요격 피드백 감각을 확인할 수 있게 함
 - `prototype-04-intercept-feedback`에 Mouse Click과 Space 기반 발사 입력을 추가
 - `prototype-04-intercept-feedback`에 간단한 요격 성공 피드백과 `Intercepted` 상태 표시를 추가

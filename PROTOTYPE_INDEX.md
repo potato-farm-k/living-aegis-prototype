@@ -36,6 +36,14 @@
 - Entry: `prototype-04-intercept-feedback/index.html`
 - Notes: `prototype-03-threat-aim-lock`의 조준 정렬 흐름을 바탕으로, Lock Ready 상태에서 발사/요격 피드백이 자연스러운지 확인하는 프로토타입
 
+## Prototype 05 - Threat Approach Timing
+
+- Path: `prototype-05-threat-approach-timing/`
+- Status: `1차 구현`
+- Purpose: 움직이는 위협을 찾고 조준하고 요격하는 시간 감각 확인
+- Entry: `prototype-05-threat-approach-timing/index.html`
+- Notes: `prototype-04-intercept-feedback`의 Lock Ready 및 요격 피드백 흐름을 바탕으로, 움직이는 위협 1개를 대상으로 tracking, aim, intercept timing을 확인하는 프로토타입
+
 ## Removed Placeholder
 
 - `prototype-01-basic-defense/`는 초기 구조 확인용 scaffold였으며, 실제 실험 대상이 아니어서 루트 런처와 활성 prototype 목록에서 제거했다.
