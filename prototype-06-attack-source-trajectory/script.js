@@ -222,6 +222,19 @@ function getLunarSurfaceTop(height) {
   return height * (1 - getLunarSurfaceArea());
 }
 
+function getLunarSurfaceCurveY(width, height, screenX) {
+  const top = getLunarSurfaceTop(height);
+  const curveDepth = height * 0.045;
+  const t = clamp(screenX / width, 0, 1);
+  const inverse = 1 - t;
+
+  return (
+    inverse * inverse * (top + curveDepth) +
+    2 * inverse * t * (top - curveDepth) +
+    t * t * (top + curveDepth * 0.86)
+  );
+}
+
 function getSourceModeConfig() {
   return sourceModes[state.sourceMode];
 }
@@ -272,9 +285,8 @@ function getTrajectory(width, height) {
 
 function getDefenseZoneWorldPosition(width, height, profile) {
   const aimCenter = getAimCenter(width, height);
-  const lunarSurfaceTop = getLunarSurfaceTop(height);
-  const boundaryInset = clamp(height * 0.05, 22, 36);
-  const screenY = clamp(lunarSurfaceTop - boundaryInset, 42, height - 52);
+  const screenX = aimCenter.x + (profile.targetX - state.viewX) * settings.viewScale;
+  const screenY = clamp(getLunarSurfaceCurveY(width, height, screenX), 42, height - 24);
 
   return {
     x: profile.targetX,
@@ -304,10 +316,12 @@ function getThreatWorldPosition(width, height, progress = state.threatProgress) 
 function resolveThreat(width, height) {
   const mode = getSourceModeConfig();
   const profile = getSourceProfile();
+  const trajectory = getTrajectory(width, height);
   const sourceWorld = getSourceWorldPosition(width, height);
   const sourceScreen = projectWorldToScreen(sourceWorld.x, sourceWorld.y, width, height);
   const world = getThreatWorldPosition(width, height);
   const screen = projectWorldToScreen(world.x, world.y, width, height);
+  const defenseScreen = projectWorldToScreen(trajectory.end.x, trajectory.end.y, width, height);
   const active = !state.intercepted && !state.threatPassed;
   const onScreen = active && isInsideViewport(screen.x, screen.y, width, height);
   const lunarSurfaceTop = getLunarSurfaceTop(height);
@@ -315,7 +329,8 @@ function resolveThreat(width, height) {
   const visualContact = active && onScreen && !occluded;
   const aim = getAimMetrics(screen.x, screen.y, width, height);
   const lockReady = active && visualContact && aim.distance <= settings.aimGuideRadius;
-  const impactWarning = active && (state.threatProgress >= settings.impactWarningProgress || screen.y >= lunarSurfaceTop - 42);
+  const distanceToDefense = Math.hypot(screen.x - defenseScreen.x, screen.y - defenseScreen.y);
+  const impactWarning = active && (state.threatProgress >= settings.impactWarningProgress || distanceToDefense <= 58);
 
   return {
     mode: state.sourceMode,
@@ -1053,26 +1068,33 @@ function drawDefenseZone(width, height, timestamp) {
   ctx.strokeStyle = `rgba(255, 154, 82, ${0.38 + pulse * 0.2})`;
   ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.ellipse(0, 0, 42, 16, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 8, 42, 12, 0, 0, Math.PI * 2);
   ctx.stroke();
   ctx.setLineDash([]);
 
   ctx.beginPath();
   ctx.strokeStyle = "rgba(255, 218, 150, 0.62)";
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2;
   ctx.moveTo(-54, 0);
   ctx.lineTo(54, 0);
   ctx.stroke();
 
   ctx.beginPath();
+  ctx.strokeStyle = "rgba(255, 232, 190, 0.78)";
+  ctx.lineWidth = 1.4;
+  ctx.moveTo(0, -7);
+  ctx.lineTo(0, 8);
+  ctx.stroke();
+
+  ctx.beginPath();
   ctx.fillStyle = `rgba(255, 154, 82, ${0.16 + pulse * 0.08})`;
-  ctx.ellipse(0, 0, 34, 10, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 8, 34, 8, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
   ctx.fillStyle = "rgba(255, 232, 190, 0.92)";
-  ctx.fillText("Lunar Defense Zone", 0, -22);
+  ctx.fillText("Lunar Defense Zone", 0, -18);
   ctx.restore();
 }
 
