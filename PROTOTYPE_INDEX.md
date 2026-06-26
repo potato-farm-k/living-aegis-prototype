@@ -44,6 +44,14 @@
 - Entry: `prototype-05-threat-approach-timing/index.html`
 - Notes: `prototype-04-intercept-feedback`의 Lock Ready 및 요격 피드백 흐름을 바탕으로, 움직이는 위협 1개를 대상으로 tracking, aim, intercept timing을 확인하는 프로토타입
 
+## Prototype 06 - Attack Source Trajectory
+
+- Path: `prototype-06-attack-source-trajectory/`
+- Status: `1차 구현`
+- Purpose: 공격 원천에서 위협이 출발해 접근하고 요격되는 흐름 확인
+- Entry: `prototype-06-attack-source-trajectory/index.html`
+- Notes: `prototype-05-threat-approach-timing`의 움직이는 위협과 요격 흐름을 바탕으로, 지구 또는 지구 주변 공격 원천과 위협 접근 경로가 시각적으로 연결되는지 확인하는 프로토타입
+
 ## Removed Placeholder
 
 - `prototype-01-basic-defense/`는 초기 구조 확인용 scaffold였으며, 실제 실험 대상이 아니어서 루트 런처와 활성 prototype 목록에서 제거했다.

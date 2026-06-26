@@ -4,6 +4,11 @@
 
 ### Added
 
+- `prototype-06-attack-source-trajectory`를 추가해 공격 원천에서 위협이 출발해 접근하고 요격되는 흐름을 확인할 수 있게 함
+- `prototype-06-attack-source-trajectory`에 Earth Source / Orbital Source 공격 원천 마커와 launch pulse 표시를 추가
+- `prototype-06-attack-source-trajectory`에서 공격 원천 근처에서 시작하는 단순 위협 접근 경로를 추가
+- `prototype-06-attack-source-trajectory`에서 움직이는 위협 추적, Lock Ready, Mouse Click/Space 요격 피드백 흐름을 유지
+- 루트 prototype 런처에서 `prototype-06-attack-source-trajectory`로 이동하는 링크 추가
 - `prototype-05-threat-approach-timing`을 추가해 움직이는 위협을 찾고 조준하고 요격하는 시간 감각을 확인할 수 있게 함
 - `prototype-05-threat-approach-timing`에 단순 곡선 경로를 따라 접근하는 움직이는 위협 1개를 추가
 - `prototype-05-threat-approach-timing`에 Slow / Normal / Fast 위협 속도 선택과 접근 진행 상태 표시를 추가
