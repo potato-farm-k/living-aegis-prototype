@@ -17,6 +17,8 @@ const settings = {
   impactWarningProgress: 0.82,
   launchSignalDuration: 1200,
   defenseZoneSurfaceDepth: 0.6,
+  directApproachSkyClearance: 58,
+  directApproachControlLift: 18,
 };
 
 const sourceModes = {
@@ -270,17 +272,42 @@ function getTrajectory(width, height) {
     y: source.y,
   };
   const end = getDefenseZoneWorldPosition(width, height, profile);
-  const control = {
-    x: (start.x + end.x) * 0.5 + profile.curveBias.x,
-    y: (start.y + end.y) * 0.5 + profile.curveBias.y,
-  };
+  const controls = getDirectSurfaceApproachControls(width, height, profile, start, end);
 
   return {
     profile,
     source,
     start,
-    control,
+    controlA: controls.controlA,
+    controlB: controls.controlB,
     end,
+  };
+}
+
+function getDirectSurfaceApproachControls(width, height, profile, start, end) {
+  const startScreen = projectWorldToScreen(start.x, start.y, width, height);
+  const endScreen = projectWorldToScreen(end.x, end.y, width, height);
+  const horizonY = getLunarSurfaceCurveY(width, height, endScreen.x);
+  const sideOffset = profile.curveBias.x * settings.viewScale * 3.8;
+  const lift = settings.directApproachControlLift + Math.abs(profile.curveBias.y) * settings.viewScale;
+  const skyY = clamp(
+    horizonY - settings.directApproachSkyClearance - lift,
+    height * 0.12,
+    horizonY - 28,
+  );
+
+  const controlAScreen = {
+    x: startScreen.x + (endScreen.x - startScreen.x) * 0.38 + sideOffset,
+    y: clamp(Math.min(startScreen.y - lift, skyY - lift * 0.45), height * 0.08, horizonY - 36),
+  };
+  const controlBScreen = {
+    x: endScreen.x + sideOffset * 0.18,
+    y: skyY,
+  };
+
+  return {
+    controlA: unprojectScreenToWorld(controlAScreen.x, controlAScreen.y, width, height),
+    controlB: unprojectScreenToWorld(controlBScreen.x, controlBScreen.y, width, height),
   };
 }
 
@@ -308,14 +335,16 @@ function getThreatWorldPosition(width, height, progress = state.threatProgress) 
 
   return {
     x:
-      inverse * inverse * trajectory.start.x +
-      2 * inverse * t * trajectory.control.x +
-      t * t * trajectory.end.x +
+      inverse * inverse * inverse * trajectory.start.x +
+      3 * inverse * inverse * t * trajectory.controlA.x +
+      3 * inverse * t * t * trajectory.controlB.x +
+      t * t * t * trajectory.end.x +
       drift,
     y:
-      inverse * inverse * trajectory.start.y +
-      2 * inverse * t * trajectory.control.y +
-      t * t * trajectory.end.y,
+      inverse * inverse * inverse * trajectory.start.y +
+      3 * inverse * inverse * t * trajectory.controlA.y +
+      3 * inverse * t * t * trajectory.controlB.y +
+      t * t * t * trajectory.end.y,
   };
 }
 
@@ -374,6 +403,15 @@ function projectWorldToScreen(worldX, worldY, width, height) {
   return {
     x: aimCenter.x + (worldX - state.viewX) * settings.viewScale,
     y: aimCenter.y + (worldY - state.viewY) * settings.viewScale,
+  };
+}
+
+function unprojectScreenToWorld(screenX, screenY, width, height) {
+  const aimCenter = getAimCenter(width, height);
+
+  return {
+    x: state.viewX + (screenX - aimCenter.x) / settings.viewScale,
+    y: state.viewY + (screenY - aimCenter.y) / settings.viewScale,
   };
 }
 

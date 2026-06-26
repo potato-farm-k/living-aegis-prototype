@@ -16,6 +16,8 @@
 
 이번 위치 보정에서는 `Lunar Defense Zone`을 하늘에 떠 있는 목표점이나 지평선 라벨이 아니라 달 표면 내부의 방어 지점으로 본다. 현재 프로토타입에서는 실제 달 위도/경도 대신, 화면에 보이는 달 표면 영역 안의 normalized surface anchor를 사용한다. 기본값은 지평선에서 화면 하단 방향으로 약 `60%` 내려온 surface depth 지점이다. 라벨은 읽기 위해 약간 위에 표시할 수 있지만, 실제 마커와 위협 도달 기준점은 달 표면 내부 anchor에 둔다.
 
+이번 마무리 보정에서는 현재 경로를 `Direct Surface Approach`로 정리했다. 위협은 `Attack Source`에서 출발해 `Lunar Defense Zone` 위쪽 하늘 영역을 따라 접근한 뒤, 달 표면 내부 방어 지점으로 내려온다. 이 경로는 공격 원천과 방어 지점 사이의 시각적 흐름을 확인하기 위한 단순 곡선이며, 실제 탄도, 중력, 궤도 계산은 아니다.
+
 ## 적용한 기준값
 
 - Earth Scale: `6x` 기본값
@@ -23,6 +25,7 @@
 - Earth Vertical Position: `30%`
 - Lunar Surface Area: 정면 보기 약 `30%`, 아래 보기 약 `50%` ~ `80%`
 - Lunar Defense Zone Surface Depth: 보이는 달 표면 영역 안에서 약 `60%`
+- Approach Path: `Direct Surface Approach` 단순 곡선
 - Aim Guide Radius: 화면 중앙 조준 기준점 기준 `64px`
 - View Movement: 이전 prototype과 같은 제한된 좌우/상하 이동 범위
 
@@ -55,8 +58,9 @@
 
 - 위협은 한 번에 1개만 등장한다.
 - 위협은 공격 원천 마커와 동일하거나 거의 같은 지점에서 시작한다.
-- 위협은 world/view-space 기준의 단순 직선 또는 완만한 곡선 경로를 따라 달 표면상의 `Lunar Defense Zone` / 달 방어선 쪽으로 이동한다.
-- 이번 단계에서는 전면 접근 기준으로, 위협이 달 표면 아래나 뒤쪽으로 지나가지 않고 달 표면 내부 방어 지점으로 접근하는 흐름을 우선 확인한다.
+- 위협은 world/view-space 기준의 `Direct Surface Approach` 단순 곡선 경로를 따라 달 표면상의 `Lunar Defense Zone` / 달 방어선 쪽으로 이동한다.
+- 현재 경로는 실제 물리 계산이 아니라, `Attack Source`에서 출발한 위협이 `Lunar Defense Zone` 위쪽 하늘 영역에 둔 control point를 거쳐 표면 내부 방어 지점으로 내려오는 시각적 경로이다.
+- 이번 단계에서는 전면 접근 기준으로, 위협이 달 표면 아래나 뒤쪽으로 지나가지 않고 달 표면 위쪽 하늘 영역에서 표면 내부 방어 지점으로 접근하는 흐름을 우선 확인한다.
 - `Lunar Defense Zone`의 실제 기준점은 공중이나 지평선이 아니라, 현재 표시되는 달 표면 영역 안쪽의 surface depth 약 `60%` 위치에 둔다.
 - 위협의 접근 목표도 이 표면 내부 기준점으로 정리한다.
 - 위협, 지구, 공격 원천, 경로 표시는 같은 view transform 기준으로 화면에 투영된다.
@@ -117,7 +121,7 @@
 - 지구 가장자리 또는 지구 주변 공격 원천 마커
 - 공격 원천 launch pulse
 - 공격 원천과 같은 지점에서 시작하는 단순 위협 접근 경로
-- 달 표면 내부 방어 지점으로 접근하는 전면 접근 기준 경로
+- `Lunar Defense Zone` 위쪽 하늘 영역에서 달 표면 내부 방어 지점으로 내려오는 `Direct Surface Approach` 경로
 - 달 표면 내부 surface anchor 기준의 `Lunar Defense Zone` 표시
 - 현재 표시되는 동적 달 표면 영역 기준의 Occluded / Visual Contact 판정
 - 움직이는 위협 1개
@@ -128,7 +132,7 @@
 
 ## 제외한 기능
 
-점수, 체력, 게임 오버, 웨이브, 난이도 상승, 여러 위협 동시 출현, 사운드, 실제 총알/요격체 궤적, 실제 미사일 궤도, 실제 탄도 계산, 실제 중력 계산, 실제 공격 위성 궤도 계산, 실제 공격무기 궤도, 실제 달 위도/경도 계산, 지구 표면 발사, 지구 궤도 위성 발사, 지구 표면의 정확한 발사 좌표 계산, 종착지/충돌 판정, Attack-Source 위치 다양화, Lunar Defense Zone 좌우/앞뒤 범위 확정은 이번 범위에서 제외합니다.
+점수, 체력, 게임 오버, 웨이브, 난이도 상승, 여러 위협 동시 출현, 사운드, 실제 총알/요격체 궤적, 실제 미사일 궤도, 실제 탄도 계산, 실제 중력 계산, 실제 공격 위성 궤도 계산, 실제 공격무기 궤도, 실제 달 위도/경도 계산, 지구 표면 발사, 지구 궤도 위성 발사, 지구 표면의 정확한 발사 좌표 계산, 종착지/충돌 판정, 달 뒤편/아래쪽 접근 구현, `Behind Surface Approach`, Attack-Source 위치 다양화, Lunar Defense Zone 좌우/앞뒤 범위 확정은 이번 범위에서 제외합니다.
 
 또한 복잡한 폭발 연출, 실제 무기 시스템 확정, 메인 게임 구현, simulator 저장소 수정, fullscreen mode 구현은 포함하지 않는다.
 
@@ -136,6 +140,7 @@
 
 - 위협의 출발점이 지구 또는 지구 주변으로 보이면 게임의 긴장감이 더 명확해지는가?
 - 공격 원천 표시가 너무 복잡하지 않으면서도 “저기서 온다”는 느낌을 주는가?
+- `Direct Surface Approach` 경로가 달 표면 아래로 지나가는 느낌보다 위쪽 하늘 영역에서 방어 지점으로 내려오는 공격 경로처럼 읽히는가?
 - 위협이 이동할 때 기존 edge indicator, Visual Contact, Occluded, Lock Ready 흐름이 유지되는가?
 - 시선을 아래로 향하면 달 표면 비중이 충분히 증가하고, 중앙 crosshair가 달 표면 위에 놓일 수 있는가?
 - Earth Scale 6x 기준에서 공격 원천, 지구, 위협 마커가 함께 읽히는가?
@@ -149,9 +154,10 @@
 - 지구 궤도 위성 발사 지점 후보 비교
 - Attack-Source와 Lunar Defense Zone의 다양한 조합 검토
 - Lunar Defense Zone의 앞/뒤, 좌/우, 달 표면상 위치 기준 검토
-- 전면 접근 / 측면 접근 / 달 뒤편 접근 후보 비교
+- `Behind Surface Approach` 후보 검토
 - 달 표면 아래 또는 뒤편 방향에서 접근하는 위협 검토
 - 달 뒤편 접근 시 처음에는 `Impact Warning` 또는 `Detected / Occluded`로 표시되고, 플레이어가 시선을 아래로 향했을 때 `Visual Contact`가 되는 흐름 검토
+- `Orbital Source`의 실제 발사/궤도 표현 검토
 - 위협 이동 경로 후보 비교
 - 실제 공격 궤도 후보 검토
 - 실제 공격무기 궤도 검토
