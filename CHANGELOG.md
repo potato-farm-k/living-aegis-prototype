@@ -4,6 +4,10 @@
 
 ### Added
 
+- `prototype-07-threat-origin-types`를 추가해 Earth Surface Source, Orbital Source, Behind Surface Approach의 차이를 확인할 수 있게 함
+- `prototype-07-threat-origin-types`에 Origin Type 선택과 타입별 source marker, launch pulse, 단순 접근 경로를 추가
+- `prototype-07-threat-origin-types`에서 기존 edge indicator, Visual Contact, Lock Ready, Mouse Click/Space 요격 피드백 흐름을 유지
+- 루트 prototype 런처에서 `prototype-07-threat-origin-types`로 이동하는 링크 추가
 - `prototype-06-attack-source-trajectory`를 추가해 공격 원천에서 위협이 출발해 접근하고 요격되는 흐름을 확인할 수 있게 함
 - `prototype-06-attack-source-trajectory`에 Earth Source / Orbital Source 공격 원천 마커와 launch pulse 표시를 추가
 - `prototype-06-attack-source-trajectory`에서 공격 원천 근처에서 시작하는 단순 위협 접근 경로를 추가

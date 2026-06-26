@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prototype 07 - Threat Origin Types</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <main class="prototype-shell">
+      <a class="back-link" href="../">Back to Prototype Lab</a>
+
+      <section class="intro" aria-labelledby="prototype-title">
+        <p class="eyebrow">Threat Origin Prototype</p>
+        <h1 id="prototype-title">Threat Origin Types</h1>
+        <p class="lede">
+          공격 원천 타입별 위협 접근 감각을 확인하는 프로토타입입니다.
+        </p>
+      </section>
+
+      <div class="playtest-layout">
+        <section class="stage-section" aria-label="Threat origin types canvas">
+          <canvas
+            id="source-canvas"
+            width="1280"
+            height="720"
+            aria-label="공격 원천 타입별 위협 접근 감각을 확인하는 2D Canvas"
+          ></canvas>
+        </section>
+
+        <aside class="control-section" aria-labelledby="control-title">
+          <div class="control-header">
+            <h2 id="control-title">현재 상태</h2>
+            <div class="button-row" aria-label="Prototype controls">
+              <button class="scale-button" type="button" data-scale="5">Earth 5x</button>
+              <button class="scale-button is-active" type="button" data-scale="6">Earth 6x</button>
+              <button class="scale-button" type="button" data-scale="7">Earth 7x</button>
+              <button id="reset-view" type="button">Reset View</button>
+              <button id="restart-threat" type="button">Restart Threat</button>
+            </div>
+            <div class="source-row" aria-label="Origin type controls">
+              <button class="source-button is-active" type="button" data-source-mode="earth">Earth Surface</button>
+              <button class="source-button" type="button" data-source-mode="orbital">Orbital Source</button>
+              <button class="source-button" type="button" data-source-mode="behind">Behind Surface</button>
+            </div>
+          </div>
+
+          <div class="source-panel" aria-live="polite">
+            <div class="source-status-line">
+              <span>Source Status</span>
+              <strong id="source-status">Launch Signal</strong>
+            </div>
+            <p>
+              Origin Type별 source marker와 launch pulse가 서로 다르게 읽히는지 확인합니다.
+            </p>
+          </div>
+
+          <div class="threat-panel" aria-live="polite">
+            <div class="threat-status-line">
+              <span>Threat Status</span>
+              <strong id="threat-status">Off-screen</strong>
+            </div>
+            <p>
+              위협이 움직여도 Off-screen, Occluded, Visual Contact 흐름이 유지되는지 확인합니다.
+            </p>
+          </div>
+
+          <div class="aim-panel" aria-live="polite">
+            <div class="aim-status-line">
+              <span>Aim Status</span>
+              <strong id="aim-status">Not Available</strong>
+            </div>
+            <p>
+              Lock Ready는 보이는 위협이 화면 중앙 crosshair 근처에 들어왔을 때만 표시합니다.
+            </p>
+          </div>
+
+          <div class="intercept-panel" aria-live="polite">
+            <div class="intercept-status-line">
+              <span>Fire Status</span>
+              <strong id="fire-status">No Visual Contact</strong>
+            </div>
+            <p>
+              Mouse Click 또는 Space로 발사합니다. Lock Ready 상태에서만 요격 성공으로 처리합니다.
+            </p>
+          </div>
+
+          <div class="approach-panel" aria-live="polite">
+            <div class="approach-status-line">
+              <span>Approach Status</span>
+              <strong id="approach-status">Approaching</strong>
+            </div>
+            <p>
+              타입별 단순 접근 경로로 Lunar Defense Zone 가까이 도달하면 Impact Warning 또는 Threat Passed만 표시합니다.
+            </p>
+          </div>
+
+          <div class="mouse-view-panel" aria-live="polite">
+            <div class="mouse-status-line">
+              <span>마우스 시야</span>
+              <strong id="mouse-view-status">꺼짐</strong>
+            </div>
+            <p id="mouse-view-help">
+              Canvas를 클릭하면 발사와 마우스 시야 이동을 함께 확인합니다. 필요하면 드래그로 확인합니다.
+            </p>
+          </div>
+
+          <dl class="settings-grid" aria-live="polite">
+            <div class="setting-line-card">
+              <dt>Earth Scale</dt>
+              <dd id="earth-scale-value">6x</dd>
+              <dt>Earth Vertical Position</dt>
+              <dd>30%</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>View Offset X</dt>
+              <dd id="view-offset-x">0</dd>
+              <dt>View Offset Y</dt>
+              <dd id="view-offset-y">0</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Origin Type</dt>
+              <dd id="attack-source-mode">Earth Surface Source</dd>
+              <dt>Source Status</dt>
+              <dd id="source-status-value">Launch Signal</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Threat On Screen</dt>
+              <dd id="threat-in-view">No</dd>
+              <dt>Visual Contact</dt>
+              <dd id="visual-contact">No</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Aim Distance</dt>
+              <dd id="aim-distance">0 px</dd>
+              <dt>Aim Guide Radius</dt>
+              <dd id="aim-guide-radius">64 px</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Occluded By Lunar Surface</dt>
+              <dd id="occluded-by-lunar">No</dd>
+              <dt>Occlusion Rule</dt>
+              <dd>Visible Only</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Threat Direction</dt>
+              <dd id="threat-direction">오른쪽</dd>
+              <dt>Fire Status</dt>
+              <dd id="fire-status-value">No Visual Contact</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Threat Progress</dt>
+              <dd id="threat-progress">0%</dd>
+              <dt>Lunar Surface Area</dt>
+              <dd id="lunar-surface-area">30%</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Defense Zone Depth</dt>
+              <dd>60%</dd>
+              <dt>Aim Reference</dt>
+              <dd>Screen Center</dd>
+            </div>
+          </dl>
+
+          <p class="control-help">
+            Mouse Move: 제한된 시야 이동. Mouse Click/Space: 발사. WASD/Arrow keys: 보조 시야 이동. 5/6/7: Earth Scale 전환. R: 기본 정면 보기. N: 새 위협 생성/Restart. Origin Type 버튼으로 원천 타입을 바꿉니다.
+          </p>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>

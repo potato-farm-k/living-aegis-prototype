@@ -163,3 +163,13 @@
 결정: 직선 이동보다 완만한 곡선 접근이 더 자연스러우므로 현재 단계에서는 단순 곡선 접근을 유지한다.
 
 보류: 마지막 도달 지점에서 위협이 달 내부로 들어가는 듯한 표현은 실제 달 표면 지형, 충돌 연출, 공격체 고도 표현, 접근 타입 구분과 함께 후속 단계에서 다룬다.
+
+## 2026-06-26 - Threat Origin Types 진행
+
+결정: `prototype-06-attack-source-trajectory` 검토 결과, 공격 원천에서 출발한 위협이 Lunar Defense Zone으로 접근하는 흐름은 성립한다고 판단했다.
+
+결정: Lunar Defense Zone은 달 지평선이 아니라 달 표면 내부 방어 지점으로 정리했으며, 현재 prototype 기준에서는 보이는 달 표면 영역 안에서 surface depth 약 `60%` 지점에 둔다.
+
+결정: 다음 단계로 Earth Surface Source / Orbital Source / Behind Surface Approach를 구분해 공격 원천 타입별 플레이 감각을 확인하기 위해 `prototype-07-threat-origin-types`를 진행한다.
+
+보류: 마지막 도달 지점에서 위협이 달 내부로 들어가는 듯한 표현은 후속 표면/충돌 연출 문제로 남긴다. 실제 궤도 물리, 실제 공격 위성 궤도, 실제 달 뒤편 접근 물리, 지구 표면의 정확한 발사 좌표 계산은 후속 검토 후보로 남긴다.

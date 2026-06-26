@@ -52,6 +52,14 @@
 - Entry: `prototype-06-attack-source-trajectory/index.html`
 - Notes: `prototype-05-threat-approach-timing`의 움직이는 위협과 요격 흐름을 바탕으로, 지구 또는 지구 주변 공격 원천과 위협 접근 경로가 시각적으로 연결되는지 확인하는 프로토타입
 
+## Prototype 07 - Threat Origin Types
+
+- Path: `prototype-07-threat-origin-types/`
+- Status: `1차 구현`
+- Purpose: 공격 원천 타입별 위협 접근 감각 확인
+- Entry: `prototype-07-threat-origin-types/index.html`
+- Notes: `prototype-06-attack-source-trajectory`의 공격 원천 → 접근 경로 → Lunar Defense Zone 흐름을 바탕으로, Earth Surface Source / Orbital Source / Behind Surface Approach가 시각적으로 구분되고 기존 요격 흐름이 유지되는지 확인하는 프로토타입
+
 ## Removed Placeholder
 
 - `prototype-01-basic-defense/`는 초기 구조 확인용 scaffold였으며, 실제 실험 대상이 아니어서 루트 런처와 활성 prototype 목록에서 제거했다.
