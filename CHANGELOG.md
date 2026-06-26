@@ -35,6 +35,7 @@
 
 ### Changed
 
+- `prototype-06-attack-source-trajectory`에서 `Lunar Defense Zone`을 달 지평선 기준이 아닌 달 표면 내부 surface depth 약 60% 지점으로 보정
 - `prototype-06-attack-source-trajectory`에서 `Lunar Defense Zone` 마커와 위협 도달 기준을 달 표면에 붙은 방어 지점처럼 보이도록 보정
 - `prototype-06-attack-source-trajectory`에서 시야 아래 이동 시 Lunar Surface Area가 증가하도록 보정하고, 위협이 달 표면 위쪽 경계의 `Lunar Defense Zone`으로 접근하도록 조정
 - `prototype-06-attack-source-trajectory`에서 위협 시작점을 attack-source 마커와 같은 지점으로 맞추고, 단순 경로가 하단 `Lunar Defense Zone` / 달 방어선 쪽으로 향하도록 보정

@@ -16,6 +16,7 @@ const settings = {
   threatRate: 0.052,
   impactWarningProgress: 0.82,
   launchSignalDuration: 1200,
+  defenseZoneSurfaceDepth: 0.6,
 };
 
 const sourceModes = {
@@ -286,7 +287,12 @@ function getTrajectory(width, height) {
 function getDefenseZoneWorldPosition(width, height, profile) {
   const aimCenter = getAimCenter(width, height);
   const screenX = aimCenter.x + (profile.targetX - state.viewX) * settings.viewScale;
-  const screenY = clamp(getLunarSurfaceCurveY(width, height, screenX), 42, height - 24);
+  const horizonY = getLunarSurfaceCurveY(width, height, screenX);
+  const screenY = clamp(
+    horizonY + (height - horizonY) * settings.defenseZoneSurfaceDepth,
+    horizonY + 24,
+    height - 24,
+  );
 
   return {
     x: profile.targetX,
@@ -1068,7 +1074,7 @@ function drawDefenseZone(width, height, timestamp) {
   ctx.strokeStyle = `rgba(255, 154, 82, ${0.38 + pulse * 0.2})`;
   ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.ellipse(0, 8, 42, 12, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 42, 12, 0, 0, Math.PI * 2);
   ctx.stroke();
   ctx.setLineDash([]);
 
@@ -1082,19 +1088,24 @@ function drawDefenseZone(width, height, timestamp) {
   ctx.beginPath();
   ctx.strokeStyle = "rgba(255, 232, 190, 0.78)";
   ctx.lineWidth = 1.4;
-  ctx.moveTo(0, -7);
-  ctx.lineTo(0, 8);
+  ctx.moveTo(0, -12);
+  ctx.lineTo(0, 12);
   ctx.stroke();
 
   ctx.beginPath();
   ctx.fillStyle = `rgba(255, 154, 82, ${0.16 + pulse * 0.08})`;
-  ctx.ellipse(0, 8, 34, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 34, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.fillStyle = "rgba(255, 232, 190, 0.92)";
+  ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
   ctx.fillStyle = "rgba(255, 232, 190, 0.92)";
-  ctx.fillText("Lunar Defense Zone", 0, -18);
+  ctx.fillText("Lunar Defense Zone", 0, -20);
   ctx.restore();
 }
 

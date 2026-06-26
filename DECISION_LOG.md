@@ -135,3 +135,13 @@
 결정: `Lunar Defense Zone`은 공중의 목표점이 아니라, 주인공이 서 있는 달 표면 앞쪽의 기준점으로 표현한다.
 
 이유: `Lunar Defense Zone`이 하늘에 떠 있는 마커처럼 보이면 위협이 달 표면 방어 지점으로 접근한다는 흐름이 약해지므로, 실제 마커와 도달 기준점은 현재 화면에 표시되는 달 표면에 붙어 있어야 한다.
+
+## 2026-06-26 - Lunar Defense Zone surface anchor 기준
+
+결정: `prototype-06-attack-source-trajectory`에서 `Lunar Defense Zone`은 지평선 기준이 아니라 달 표면 내부의 surface anchor로 표현한다.
+
+결정: 현재 기준값은 달 표면 영역 안에서 지평선으로부터 약 `60%` 내려온 지점으로 둔다.
+
+결정: 실제 달 위도/경도와 Lunar Defense Zone의 좌우/앞뒤 범위는 후속 검토 후보로 남긴다.
+
+이유: `Lunar Defense Zone`이 지평선 라벨처럼 보이면 주인공 앞쪽 표면 방어 지점이라는 의미가 약해지므로, 현재 보이는 달 표면 영역 안쪽에 명확한 기준점을 두기 위해서이다.
