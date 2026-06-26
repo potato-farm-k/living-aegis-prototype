@@ -85,3 +85,11 @@
 결정: `prototype-03-threat-aim-lock`의 조준 가능 범위는 지구 주변 영역이 아니라 현재 보이는 Canvas / viewport 전체 기준으로 판단한다. 조준 방식은 화면 중앙에 고정된 crosshair와 view offset 기반 screen-space 투영을 사용한다. 지구와 위협 마커는 동일한 view transform으로 화면 위치를 계산한다.
 
 이유: 조준 기준점은 플레이어 화면 중앙에 고정된 HUD 기준이어야 하며, 마우스 입력은 crosshair가 아니라 view offset을 움직여야 한다. 지구와 위협은 world/view-space 위치를 기준으로 현재 view offset에 따라 같은 비율로 화면에 투영되며, 조준점이 움직이거나 위협이 자동으로 중앙에 끌려오는 방식은 사용하지 않는다. edge indicator는 화면 밖 방향 표시용 HUD로만 사용한다. `Lock Ready`는 `Visual Contact` 상태의 위협이 화면 중앙 조준 기준점 근처에 들어온 경우에만 성립한다. 달 표면에 가려진 위협은 중앙 조준점 근처에 있어도 `Lock Ready`가 되지 않는다.
+
+## 2026-06-26 - Intercept Feedback 진행
+
+결정: `prototype-03-threat-aim-lock` 검토 결과, 위협 탐색 → 시야 내 포착 → 중앙 조준점 정렬 → `Lock Ready` 흐름이 동작한다고 판단했다. 조준점은 화면 중앙에 고정하고 지구/배경/위협 마커가 같은 view transform을 공유하도록 수정한 뒤 움직임이 자연스러워졌다. 다음 단계로 `Lock Ready` 상태에서 최소 발사/요격 피드백 감각을 확인하기 위해 `prototype-04-intercept-feedback`을 진행한다.
+
+이유: 이번 단계는 완성형 전투 루프가 아니라, `Lock Ready` 이후 발사 입력과 위협 제거 피드백이 자연스럽게 읽히는지 확인하기 위한 작은 prototype이 필요하기 때문이다. 점수, 체력, 실패 조건, 웨이브, 난이도 상승, 실제 무기 시스템 확정은 포함하지 않는다.
+
+보류: fullscreen mode, 위협 위치, 실제 공격 궤도, 마우스 감도/시야 범위 조정은 후속 검토 후보로 남긴다.

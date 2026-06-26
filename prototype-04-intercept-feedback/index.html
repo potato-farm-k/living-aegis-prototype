@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prototype 04 - Intercept Feedback</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <main class="prototype-shell">
+      <a class="back-link" href="../">Back to Prototype Lab</a>
+
+      <section class="intro" aria-labelledby="prototype-title">
+        <p class="eyebrow">Fire Feedback Prototype</p>
+        <h1 id="prototype-title">Intercept Feedback</h1>
+        <p class="lede">
+          Lock Ready 상태에서 발사 입력 후 최소 요격 피드백 감각을 확인하는 프로토타입입니다.
+        </p>
+      </section>
+
+      <div class="playtest-layout">
+        <section class="stage-section" aria-label="Intercept feedback canvas">
+          <canvas
+            id="intercept-canvas"
+            width="1280"
+            height="720"
+            aria-label="Lock Ready 상태에서 발사 후 요격 피드백을 확인하는 2D Canvas"
+          ></canvas>
+        </section>
+
+        <aside class="control-section" aria-labelledby="control-title">
+          <div class="control-header">
+            <h2 id="control-title">현재 상태</h2>
+            <div class="button-row" aria-label="Prototype controls">
+              <button class="scale-button" type="button" data-scale="5">Earth 5x</button>
+              <button class="scale-button is-active" type="button" data-scale="6">Earth 6x</button>
+              <button class="scale-button" type="button" data-scale="7">Earth 7x</button>
+              <button id="reset-view" type="button">Reset View</button>
+              <button id="next-threat" type="button">Next Threat</button>
+            </div>
+          </div>
+
+          <div class="threat-panel" aria-live="polite">
+            <div class="threat-status-line">
+              <span>Threat Status</span>
+              <strong id="threat-status">Off-screen</strong>
+            </div>
+            <p>
+              edge indicator에서 visual contact, Lock Ready, Intercepted까지 이어지는 흐름을 확인합니다.
+            </p>
+          </div>
+
+          <div class="aim-panel" aria-live="polite">
+            <div class="aim-status-line">
+              <span>Aim Status</span>
+              <strong id="aim-status">Not Available</strong>
+            </div>
+            <p>
+              Lock Ready는 실제 무기 락온 완료가 아니라, 중앙 조준 기준점 근처에 들어왔는지 확인하는 임시 상태입니다.
+            </p>
+          </div>
+
+          <div class="intercept-panel" aria-live="polite">
+            <div class="intercept-status-line">
+              <span>Fire Status</span>
+              <strong id="fire-status">No Visual Contact</strong>
+            </div>
+            <p>
+              Mouse Click 또는 Space로 발사합니다. Lock Ready 상태에서만 요격 성공으로 처리합니다.
+            </p>
+          </div>
+
+          <div class="mouse-view-panel" aria-live="polite">
+            <div class="mouse-status-line">
+              <span>마우스 시야</span>
+              <strong id="mouse-view-status">꺼짐</strong>
+            </div>
+            <p id="mouse-view-help">
+              Canvas를 클릭하면 마우스 시야 이동을 시작합니다. 필요하면 드래그로 확인합니다.
+            </p>
+          </div>
+
+          <dl class="settings-grid" aria-live="polite">
+            <div class="setting-line-card">
+              <dt>Earth Scale</dt>
+              <dd id="earth-scale-value">6x</dd>
+              <dt>Earth Vertical Position</dt>
+              <dd>30%</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>View Offset X</dt>
+              <dd id="view-offset-x">0</dd>
+              <dt>View Offset Y</dt>
+              <dd id="view-offset-y">0</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Threat On Screen</dt>
+              <dd id="threat-in-view">No</dd>
+              <dt>Visual Contact</dt>
+              <dd id="visual-contact">No</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Aim Distance</dt>
+              <dd id="aim-distance">0 px</dd>
+              <dt>Aim Guide Radius</dt>
+              <dd id="aim-guide-radius">64 px</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Occluded By Lunar Surface</dt>
+              <dd id="occluded-by-lunar">No</dd>
+              <dt>Aim Reference</dt>
+              <dd>Screen Center</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Threat Direction</dt>
+              <dd id="threat-direction">오른쪽</dd>
+              <dt>Fire Status</dt>
+              <dd id="fire-status-value">No Visual Contact</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Lunar Surface Area</dt>
+              <dd>30%</dd>
+            </div>
+          </dl>
+
+          <p class="control-help">
+            Mouse Move: 제한된 시야 이동. Mouse Click/Space: 발사. WASD/Arrow keys: 보조 시야 이동. 5/6/7: Earth Scale 전환. R: 기본 정면 보기. N: 다음 위협 위치.
+          </p>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>

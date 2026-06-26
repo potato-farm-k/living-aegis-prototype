@@ -4,6 +4,10 @@
 
 ### Added
 
+- `prototype-04-intercept-feedback`을 추가해 Lock Ready 이후 최소 발사/요격 피드백 감각을 확인할 수 있게 함
+- `prototype-04-intercept-feedback`에 Mouse Click과 Space 기반 발사 입력을 추가
+- `prototype-04-intercept-feedback`에 간단한 요격 성공 피드백과 `Intercepted` 상태 표시를 추가
+- 루트 prototype 런처에서 `prototype-04-intercept-feedback`으로 이동하는 링크 추가
 - `prototype-03-threat-aim-lock`을 추가해 시야 내 포착한 위협을 화면 중앙 조준 기준점에 맞추는 감각을 확인할 수 있게 함
 - `prototype-03-threat-aim-lock`에 중앙 조준 기준점, 조준 가능 범위 가이드, `Aim Aligned / Lock Ready` 상태 표시를 추가
 - 루트 prototype 런처에서 `prototype-03-threat-aim-lock`으로 이동하는 링크 추가

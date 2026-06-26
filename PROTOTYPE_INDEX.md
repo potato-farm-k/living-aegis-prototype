@@ -28,6 +28,14 @@
 - Entry: `prototype-03-threat-aim-lock/index.html`
 - Notes: `prototype-02-threat-direction-scan`의 edge indicator와 위협 상태 구분을 바탕으로, 현재 보이는 Canvas 화면 전체 기준에서 `Visual Contact` 상태일 때만 `Aim Aligned / Lock Ready`가 되는지 확인하는 프로토타입
 
+## Prototype 04 - Intercept Feedback
+
+- Path: `prototype-04-intercept-feedback/`
+- Status: `1차 구현`
+- Purpose: Lock Ready 상태에서 발사 입력 후 최소 요격 피드백 감각 확인
+- Entry: `prototype-04-intercept-feedback/index.html`
+- Notes: `prototype-03-threat-aim-lock`의 조준 정렬 흐름을 바탕으로, Lock Ready 상태에서 발사/요격 피드백이 자연스러운지 확인하는 프로토타입
+
 ## Removed Placeholder
 
 - `prototype-01-basic-defense/`는 초기 구조 확인용 scaffold였으며, 실제 실험 대상이 아니어서 루트 런처와 활성 prototype 목록에서 제거했다.
