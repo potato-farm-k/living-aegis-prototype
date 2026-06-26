@@ -35,6 +35,7 @@
 
 ### Changed
 
+- `prototype-06-attack-source-trajectory`에서 위협 시작점을 attack-source 마커와 같은 지점으로 맞추고, 단순 경로가 하단 `Lunar Defense Zone` / 달 방어선 쪽으로 향하도록 보정
 - `prototype-03-threat-aim-lock`의 조준 가능 범위와 `Aim Aligned / Lock Ready` 판정을 현재 보이는 Canvas 화면 전체 기준으로 정리
 - `prototype-03-threat-aim-lock`에서 지구와 위협 마커가 동일한 view transform을 사용하도록 시야 이동 좌표계를 정리
 - `prototype-03-threat-aim-lock`의 위협 위치 계산을 고정 중앙 crosshair와 view offset 기반 screen-space 투영 방식으로 정리

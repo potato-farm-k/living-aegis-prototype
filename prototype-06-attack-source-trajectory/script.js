@@ -27,19 +27,17 @@ const sourceModes = {
         label: "Earth Source / 왼쪽 가장자리",
         angle: -2.34,
         radiusMultiplier: 0.96,
-        launchOffset: 10,
-        end: { x: -112, y: 116 },
-        curveBias: { x: 44, y: -42 },
-        drift: 12,
+        targetX: -18,
+        curveBias: { x: -10, y: -6 },
+        drift: 0,
       },
       {
         label: "Earth Source / 오른쪽 가장자리",
         angle: -0.82,
         radiusMultiplier: 0.96,
-        launchOffset: 10,
-        end: { x: 112, y: 116 },
-        curveBias: { x: -44, y: -38 },
-        drift: -12,
+        targetX: 18,
+        curveBias: { x: 10, y: -6 },
+        drift: 0,
       },
     ],
   },
@@ -51,19 +49,17 @@ const sourceModes = {
         label: "Orbital Source / 오른쪽 궤도",
         angle: -0.62,
         radiusMultiplier: 1.36,
-        launchOffset: 18,
-        end: { x: 86, y: 116 },
-        curveBias: { x: 58, y: -28 },
-        drift: 16,
+        targetX: 24,
+        curveBias: { x: 10, y: -8 },
+        drift: 0,
       },
       {
         label: "Orbital Source / 왼쪽 궤도",
         angle: -2.08,
         radiusMultiplier: 1.32,
-        launchOffset: 18,
-        end: { x: -86, y: 116 },
-        curveBias: { x: -58, y: -30 },
-        drift: -16,
+        targetX: -24,
+        curveBias: { x: -10, y: -8 },
+        drift: 0,
       },
     ],
   },
@@ -248,10 +244,10 @@ function getTrajectory(width, height) {
   const profile = getSourceProfile();
   const source = getSourceWorldPosition(width, height);
   const start = {
-    x: source.x + source.unitX * profile.launchOffset,
-    y: source.y + source.unitY * profile.launchOffset,
+    x: source.x,
+    y: source.y,
   };
-  const end = profile.end;
+  const end = getDefenseZoneWorldPosition(width, height, profile);
   const control = {
     x: (start.x + end.x) * 0.5 + profile.curveBias.x,
     y: (start.y + end.y) * 0.5 + profile.curveBias.y,
@@ -263,6 +259,17 @@ function getTrajectory(width, height) {
     start,
     control,
     end,
+  };
+}
+
+function getDefenseZoneWorldPosition(width, height, profile) {
+  const aimCenter = getAimCenter(width, height);
+  const lunarSurfaceTop = getLunarSurfaceTop(height);
+  const screenY = clamp(lunarSurfaceTop + height * 0.18, lunarSurfaceTop + 52, height - 42);
+
+  return {
+    x: profile.targetX,
+    y: state.viewY + (screenY - aimCenter.y) / settings.viewScale,
   };
 }
 
@@ -1014,6 +1021,51 @@ function drawMoonSurface(width, height) {
   ctx.fillRect(0, top, width, height - top);
 }
 
+function drawDefenseZone(width, height, timestamp) {
+  const trajectory = getTrajectory(width, height);
+  const defense = projectWorldToScreen(trajectory.end.x, trajectory.end.y, width, height);
+  const pulse = 0.5 + Math.sin(timestamp / 280) * 0.5;
+  const margin = 76;
+
+  if (
+    defense.x < -margin ||
+    defense.x > width + margin ||
+    defense.y < -margin ||
+    defense.y > height + margin
+  ) {
+    return;
+  }
+
+  ctx.save();
+  ctx.translate(defense.x, defense.y);
+
+  ctx.setLineDash([6, 6]);
+  ctx.strokeStyle = `rgba(255, 154, 82, ${0.38 + pulse * 0.2})`;
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 42, 16, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(255, 218, 150, 0.62)";
+  ctx.lineWidth = 1.5;
+  ctx.moveTo(-54, 0);
+  ctx.lineTo(54, 0);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.fillStyle = `rgba(255, 154, 82, ${0.16 + pulse * 0.08})`;
+  ctx.ellipse(0, 0, 34, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.font = "700 12px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(255, 232, 190, 0.92)";
+  ctx.fillText("Lunar Defense Zone", 0, -22);
+  ctx.restore();
+}
+
 function drawTrajectoryTrace(width, height) {
   if (state.intercepted || state.threatPassed) {
     return;
@@ -1322,6 +1374,7 @@ function render(timestamp) {
   drawSourceMarker(threat, timestamp);
   drawTrajectoryTrace(width, height);
   drawMoonSurface(width, height);
+  drawDefenseZone(width, height, timestamp);
   drawVignette(width, height);
   drawThreat(threat, width, height, timestamp);
   drawAimGuide(width, height, threat, timestamp);
