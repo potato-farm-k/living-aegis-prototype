@@ -107,6 +107,7 @@ const settingEls = {
   occludedByLunar: document.querySelector("#occluded-by-lunar"),
   threatDirection: document.querySelector("#threat-direction"),
   threatProgress: document.querySelector("#threat-progress"),
+  lunarSurfaceArea: document.querySelector("#lunar-surface-area"),
   fireStatus: document.querySelector("#fire-status"),
   fireStatusValue: document.querySelector("#fire-status-value"),
   mouseView: document.querySelector("#mouse-view-status"),
@@ -210,8 +211,15 @@ function getEarthMetrics(width, height) {
   };
 }
 
+function getLunarSurfaceArea() {
+  const lookDown = clamp(Math.max(state.viewY, 0) / settings.maxOffsetY, 0, 1);
+  const lookUp = clamp(Math.max(-state.viewY, 0) / settings.maxOffsetY, 0, 1);
+
+  return clamp(settings.lunarSurfaceArea + lookDown * 0.48 - lookUp * 0.08, 0.22, 0.78);
+}
+
 function getLunarSurfaceTop(height) {
-  return height * (1 - settings.lunarSurfaceArea) - state.viewY * 0.18;
+  return height * (1 - getLunarSurfaceArea());
 }
 
 function getSourceModeConfig() {
@@ -265,7 +273,8 @@ function getTrajectory(width, height) {
 function getDefenseZoneWorldPosition(width, height, profile) {
   const aimCenter = getAimCenter(width, height);
   const lunarSurfaceTop = getLunarSurfaceTop(height);
-  const screenY = clamp(lunarSurfaceTop + height * 0.18, lunarSurfaceTop + 52, height - 42);
+  const boundaryInset = clamp(height * 0.05, 22, 36);
+  const screenY = clamp(lunarSurfaceTop - boundaryInset, 42, height - 52);
 
   return {
     x: profile.targetX,
@@ -532,6 +541,7 @@ function updateSettings(threat) {
   settingEls.occludedByLunar.textContent = threat.occluded ? "Yes" : "No";
   settingEls.threatDirection.textContent = getThreatDirectionLabel(threat);
   settingEls.threatProgress.textContent = `${Math.round(threat.progress * 100)}%`;
+  settingEls.lunarSurfaceArea.textContent = `${Math.round(getLunarSurfaceArea() * 100)}%`;
 }
 
 function getSourceStatusLabel(threat) {
