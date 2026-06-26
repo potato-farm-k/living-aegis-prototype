@@ -35,6 +35,7 @@
 
 ### Changed
 
+- `prototype-06-attack-source-trajectory` 검토 결과를 문서화하고 마지막 도달 지점의 달 내부 진입처럼 보이는 표현을 후속 과제로 기록
 - `prototype-06-attack-source-trajectory`에서 위협 이동을 `Direct Surface Approach` 단순 곡선으로 보정해 달 표면 내부 방어 지점 위쪽에서 내려오는 흐름을 강화
 - `prototype-06-attack-source-trajectory`에서 `Lunar Defense Zone`을 달 지평선 기준이 아닌 달 표면 내부 surface depth 약 60% 지점으로 보정
 - `prototype-06-attack-source-trajectory`에서 `Lunar Defense Zone` 마커와 위협 도달 기준을 달 표면에 붙은 방어 지점처럼 보이도록 보정
