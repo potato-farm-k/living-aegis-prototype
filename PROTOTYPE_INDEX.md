@@ -58,7 +58,7 @@
 - Status: `1차 구현`
 - Purpose: 공격 원천 타입별 위협 접근 감각 확인
 - Entry: `prototype-07-threat-origin-types/index.html`
-- Notes: `prototype-06-attack-source-trajectory`의 공격 원천 → 접근 경로 → Lunar Defense Zone 흐름을 바탕으로, Earth Surface Source / Orbital Source / Behind Surface Approach가 시각적으로 구분되고 기존 요격 흐름이 유지되는지 확인하는 프로토타입
+- Notes: `prototype-06-attack-source-trajectory`의 공격 원천 → 접근 경로 → Lunar Defense Zone 흐름을 바탕으로, Earth Surface Source / Orbital Source / Under-Horizon Approach가 시각적으로 구분되고 낮은 지구/궤도 원천의 가려짐 → Visual Contact → 요격 흐름이 유지되는지 확인하는 프로토타입
 
 ## Removed Placeholder
 

@@ -194,7 +194,7 @@ button.is-active {
   background: var(--accent);
 }
 
-.source-button[data-source-mode="behind"].is-active {
+.source-button[data-source-mode="underHorizon"].is-active {
   border-color: var(--danger-strong);
   background: var(--danger-strong);
 }

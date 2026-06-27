@@ -19,8 +19,8 @@ const settings = {
   defenseZoneSurfaceDepth: 0.6,
   directApproachSkyClearance: 58,
   directApproachControlLift: 18,
-  behindRevealLookDown: 0.34,
-  behindInitialOccludedProgress: 0.025,
+  underHorizonHiddenProgress: 0.25,
+  underHorizonRevealProgress: 0.46,
 };
 
 const sourceModes = {
@@ -74,27 +74,39 @@ const sourceModes = {
       },
     ],
   },
-  behind: {
-    label: "Behind Surface Approach",
-    markerLabel: "Behind Surface Source",
-    trajectory: "behind",
+  underHorizon: {
+    label: "Under-Horizon Approach",
+    markerLabel: "Low Earth Source",
+    trajectory: "under-horizon",
     color: "255, 132, 111",
     textColor: "rgba(255, 222, 210, 0.94)",
     profiles: [
       {
-        label: "Behind Surface / 왼쪽 아래",
-        startX: -118,
+        label: "Low Earth Source / 지구 하단",
+        markerLabel: "Low Earth Source",
+        sourceKind: "low-earth",
+        angle: 1.4,
+        radiusMultiplier: 0.98,
         targetX: -16,
-        surfaceDepth: 0.9,
+        hiddenX: 92,
+        revealX: 48,
+        hiddenDepth: 38,
+        revealClearance: 104,
         targetSurfaceDepth: 0.6,
         curveBias: { x: -8, y: 18 },
         drift: -10,
       },
       {
-        label: "Behind Surface / 오른쪽 아래",
-        startX: 118,
+        label: "Low Orbital Source / 지구 하단 궤도",
+        markerLabel: "Low Orbital Source",
+        sourceKind: "low-orbit",
+        angle: 1.82,
+        radiusMultiplier: 1.34,
         targetX: 16,
-        surfaceDepth: 0.88,
+        hiddenX: -92,
+        revealX: -48,
+        hiddenDepth: 42,
+        revealClearance: 100,
         targetSurfaceDepth: 0.6,
         curveBias: { x: 8, y: 18 },
         drift: 10,
@@ -260,8 +272,8 @@ function getLunarSurfaceTop(height) {
   return height * (1 - getLunarSurfaceArea());
 }
 
-function getLunarSurfaceCurveY(width, height, screenX) {
-  const top = getLunarSurfaceTop(height);
+function getLunarSurfaceCurveY(width, height, screenX, surfaceArea = getLunarSurfaceArea()) {
+  const top = height * (1 - surfaceArea);
   const curveDepth = height * 0.045;
   const t = clamp(screenX / width, 0, 1);
   const inverse = 1 - t;
@@ -283,19 +295,7 @@ function getSourceProfile() {
 }
 
 function getSourceWorldPosition(width, height) {
-  const mode = getSourceModeConfig();
   const profile = getSourceProfile();
-
-  if (mode.trajectory === "behind") {
-    const position = getSurfaceAnchoredWorldPosition(width, height, profile.startX, profile.surfaceDepth);
-
-    return {
-      ...position,
-      unitX: 0,
-      unitY: 1,
-    };
-  }
-
   const earth = getEarthWorldPosition(width, height);
   const radius = getEarthWorldRadius(width, height);
   const unit = {
@@ -320,8 +320,8 @@ function getTrajectory(width, height) {
     y: source.y,
   };
   const end = getDefenseZoneWorldPosition(width, height, profile);
-  const controls = mode.trajectory === "behind"
-    ? getBehindSurfaceApproachControls(width, height, profile, start, end)
+  const path = mode.trajectory === "under-horizon"
+    ? getUnderHorizonApproachPath(width, height, profile, start, end)
     : getDirectSurfaceApproachControls(width, height, profile, start, end);
 
   return {
@@ -329,8 +329,7 @@ function getTrajectory(width, height) {
     profile,
     source,
     start,
-    controlA: controls.controlA,
-    controlB: controls.controlB,
+    ...path,
     end,
   };
 }
@@ -378,26 +377,49 @@ function getDirectSurfaceApproachControls(width, height, profile, start, end) {
   };
 }
 
-function getBehindSurfaceApproachControls(width, height, profile, start, end) {
+function getUnderHorizonApproachPath(width, height, profile, start, end) {
   const startScreen = projectWorldToScreen(start.x, start.y, width, height);
-  const endScreen = projectWorldToScreen(end.x, end.y, width, height);
-  const midpointX = startScreen.x + (endScreen.x - startScreen.x) * 0.56;
-  const localSurfaceY = getLunarSurfaceCurveY(width, height, midpointX);
+  const aimCenter = getAimCenter(width, height);
+  const hiddenScreenX = aimCenter.x + profile.hiddenX * settings.viewScale;
+  const revealScreenX = aimCenter.x + profile.revealX * settings.viewScale;
+  const targetScreenX = aimCenter.x + profile.targetX * settings.viewScale;
+  const hiddenSurfaceY = getLunarSurfaceCurveY(width, height, hiddenScreenX, settings.lunarSurfaceArea);
+  const revealSurfaceY = getLunarSurfaceCurveY(width, height, revealScreenX, settings.lunarSurfaceArea);
+  const targetSurfaceY = getLunarSurfaceCurveY(width, height, targetScreenX, settings.lunarSurfaceArea);
   const sideOffset = profile.curveBias.x * settings.viewScale * 3.4;
-  const lift = 68 + Math.abs(profile.curveBias.y) * settings.viewScale;
+  const hiddenScreen = {
+    x: hiddenScreenX,
+    y: clamp(hiddenSurfaceY + profile.hiddenDepth, hiddenSurfaceY + 24, height - 24),
+  };
+  const revealScreen = {
+    x: revealScreenX,
+    y: clamp(revealSurfaceY - profile.revealClearance, height * 0.14, revealSurfaceY - 56),
+  };
+  const hiddenControlScreen = {
+    x: startScreen.x + (hiddenScreen.x - startScreen.x) * 0.58,
+    y: Math.max(startScreen.y + 48, hiddenScreen.y - 42),
+  };
+  const revealControlScreen = {
+    x: hiddenScreen.x + (revealScreen.x - hiddenScreen.x) * 0.5,
+    y: clamp(hiddenScreen.y + 18, hiddenSurfaceY + 26, height - 18),
+  };
 
   const controlAScreen = {
-    x: startScreen.x + (endScreen.x - startScreen.x) * 0.38 + sideOffset,
-    y: clamp(startScreen.y - lift, localSurfaceY + 18, height - 28),
+    x: revealScreen.x + (targetScreenX - revealScreen.x) * 0.34 + sideOffset,
+    y: clamp(revealScreen.y - 34, height * 0.12, revealSurfaceY - 70),
   };
   const controlBScreen = {
-    x: endScreen.x + sideOffset * 0.16,
-    y: clamp(endScreen.y - lift * 0.72, localSurfaceY + 14, height - 34),
+    x: targetScreenX + sideOffset * 0.16,
+    y: clamp(targetSurfaceY - 86, height * 0.16, targetSurfaceY - 48),
   };
 
   return {
-    controlA: unprojectScreenToWorld(controlAScreen.x, controlAScreen.y, width, height),
-    controlB: unprojectScreenToWorld(controlBScreen.x, controlBScreen.y, width, height),
+    hidden: unprojectNeutralScreenToWorld(hiddenScreen.x, hiddenScreen.y, width, height),
+    reveal: unprojectNeutralScreenToWorld(revealScreen.x, revealScreen.y, width, height),
+    hiddenControl: unprojectNeutralScreenToWorld(hiddenControlScreen.x, hiddenControlScreen.y, width, height),
+    revealControl: unprojectNeutralScreenToWorld(revealControlScreen.x, revealControlScreen.y, width, height),
+    controlA: unprojectNeutralScreenToWorld(controlAScreen.x, controlAScreen.y, width, height),
+    controlB: unprojectNeutralScreenToWorld(controlBScreen.x, controlBScreen.y, width, height),
   };
 }
 
@@ -413,21 +435,77 @@ function getDefenseZoneWorldPosition(width, height, profile) {
 function getThreatWorldPosition(width, height, progress = state.threatProgress) {
   const trajectory = getTrajectory(width, height);
   const t = clamp(progress, 0, 1);
-  const inverse = 1 - t;
   const drift = Math.sin(t * Math.PI) * trajectory.profile.drift;
+  let point;
+
+  if (trajectory.type === "under-horizon") {
+    point = getUnderHorizonThreatWorldPosition(trajectory, t);
+  } else {
+    point = cubicBezierPoint(
+      trajectory.start,
+      trajectory.controlA,
+      trajectory.controlB,
+      trajectory.end,
+      t,
+    );
+  }
+
+  return {
+    x: point.x + drift,
+    y: point.y,
+  };
+}
+
+function getUnderHorizonThreatWorldPosition(trajectory, progress) {
+  if (progress < settings.underHorizonHiddenProgress) {
+    const localProgress = progress / settings.underHorizonHiddenProgress;
+    return quadraticBezierPoint(trajectory.start, trajectory.hiddenControl, trajectory.hidden, localProgress);
+  }
+
+  if (progress < settings.underHorizonRevealProgress) {
+    const localProgress = (
+      (progress - settings.underHorizonHiddenProgress) /
+      (settings.underHorizonRevealProgress - settings.underHorizonHiddenProgress)
+    );
+    return quadraticBezierPoint(trajectory.hidden, trajectory.revealControl, trajectory.reveal, localProgress);
+  }
+
+  const localProgress = (
+    (progress - settings.underHorizonRevealProgress) /
+    (1 - settings.underHorizonRevealProgress)
+  );
+  return cubicBezierPoint(
+    trajectory.reveal,
+    trajectory.controlA,
+    trajectory.controlB,
+    trajectory.end,
+    localProgress,
+  );
+}
+
+function quadraticBezierPoint(start, control, end, progress) {
+  const inverse = 1 - progress;
+
+  return {
+    x: inverse * inverse * start.x + 2 * inverse * progress * control.x + progress * progress * end.x,
+    y: inverse * inverse * start.y + 2 * inverse * progress * control.y + progress * progress * end.y,
+  };
+}
+
+function cubicBezierPoint(start, controlA, controlB, end, progress) {
+  const inverse = 1 - progress;
 
   return {
     x:
-      inverse * inverse * inverse * trajectory.start.x +
-      3 * inverse * inverse * t * trajectory.controlA.x +
-      3 * inverse * t * t * trajectory.controlB.x +
-      t * t * t * trajectory.end.x +
-      drift,
+      inverse * inverse * inverse * start.x +
+      3 * inverse * inverse * progress * controlA.x +
+      3 * inverse * progress * progress * controlB.x +
+      progress * progress * progress * end.x,
     y:
-      inverse * inverse * inverse * trajectory.start.y +
-      3 * inverse * inverse * t * trajectory.controlA.y +
-      3 * inverse * t * t * trajectory.controlB.y +
-      t * t * t * trajectory.end.y,
+      inverse * inverse * inverse * start.y +
+      3 * inverse * inverse * progress * controlA.y +
+      3 * inverse * progress * progress * controlB.y +
+      progress * progress * progress * end.y,
   };
 }
 
@@ -451,13 +529,14 @@ function resolveThreat(width, height) {
   const impactWarning = active && (
     state.threatProgress >= settings.impactWarningProgress ||
     distanceToDefense <= 58 ||
-    (state.sourceMode === "behind" && state.threatProgress <= 0.18)
+    (state.sourceMode === "underHorizon" && state.threatProgress <= 0.18)
   );
 
   return {
     mode: state.sourceMode,
     modeLabel: mode.label,
-    markerLabel: mode.markerLabel,
+    markerLabel: profile.markerLabel || mode.markerLabel,
+    sourceKind: profile.sourceKind || state.sourceMode,
     profileLabel: profile.label,
     active,
     intercepted: state.intercepted,
@@ -487,16 +566,8 @@ function resolveThreat(width, height) {
 function isOccludedByLunarSurface(screenX, screenY, width, height, mode, progress) {
   const surfaceY = getLunarSurfaceCurveY(width, height, screenX);
 
-  if (mode === "behind") {
-    const lookDown = clamp(Math.max(state.viewY, 0) / settings.maxOffsetY, 0, 1);
-    const visibleByLookDown = lookDown >= settings.behindRevealLookDown && screenY <= height - 24;
-    const emergedAboveHorizon = screenY < surfaceY - 8;
-
-    if (progress <= settings.behindInitialOccludedProgress) {
-      return true;
-    }
-
-    return !(visibleByLookDown || emergedAboveHorizon);
+  if (mode === "underHorizon") {
+    return progress < settings.underHorizonRevealProgress;
   }
 
   return screenY >= surfaceY;
@@ -517,6 +588,15 @@ function unprojectScreenToWorld(screenX, screenY, width, height) {
   return {
     x: state.viewX + (screenX - aimCenter.x) / settings.viewScale,
     y: state.viewY + (screenY - aimCenter.y) / settings.viewScale,
+  };
+}
+
+function unprojectNeutralScreenToWorld(screenX, screenY, width, height) {
+  const aimCenter = getAimCenter(width, height);
+
+  return {
+    x: (screenX - aimCenter.x) / settings.viewScale,
+    y: (screenY - aimCenter.y) / settings.viewScale,
   };
 }
 
@@ -699,6 +779,8 @@ function updateSettings(threat) {
   settingEls.fireStatus.classList.toggle("is-intercepted", fireStatus === "Intercepted");
   settingEls.fireStatusValue.textContent = fireStatus;
   settingEls.aimDistance.textContent = threat.intercepted || threat.threatPassed ? "-" : `${Math.round(threat.aimDistance)} px`;
+  settingEls.aimDistance.dataset.aimDx = Math.round(threat.aimDx).toString();
+  settingEls.aimDistance.dataset.aimDy = Math.round(threat.aimDy).toString();
   settingEls.aimGuideRadius.textContent = `${settings.aimGuideRadius} px`;
   settingEls.threatInView.textContent = threat.onScreen ? "Yes" : "No";
   settingEls.visualContact.textContent = threat.visualContact ? "Yes" : "No";
@@ -832,7 +914,8 @@ function getThreatDirectionLabel(threat) {
   }
 
   if (threat.occluded) {
-    return `${threat.profileLabel} / 화면 안 / 달 표면 뒤`;
+    const occlusionLabel = threat.mode === "underHorizon" ? "시야 지평선 아래 / 감지 추적" : "달 표면 뒤";
+    return `${threat.profileLabel} / 화면 안 / ${occlusionLabel}`;
   }
 
   if (threat.lockReady) {
@@ -1104,6 +1187,11 @@ function getSourceTextColor(mode) {
 function drawOriginGuide(threat, width, height, timestamp) {
   if (threat.mode === "orbital") {
     drawOrbitalGuide(width, height, timestamp);
+    return;
+  }
+
+  if (threat.mode === "underHorizon" && threat.sourceKind === "low-orbit") {
+    drawLowOrbitalGuide(width, height, timestamp);
   }
 }
 
@@ -1125,13 +1213,30 @@ function drawOrbitalGuide(width, height, timestamp) {
   ctx.restore();
 }
 
+function drawLowOrbitalGuide(width, height, timestamp) {
+  const earth = getEarthMetrics(width, height);
+  const pulse = 0.5 + Math.sin(timestamp / 420) * 0.5;
+
+  ctx.save();
+  ctx.translate(earth.screenX, earth.screenY);
+  ctx.rotate(0.12);
+  ctx.setLineDash([8, 11]);
+  ctx.strokeStyle = `rgba(255, 132, 111, ${0.18 + pulse * 0.1})`;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, earth.radius * 1.34, earth.radius * 0.38, 0, 0.08 * Math.PI, 0.92 * Math.PI);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
 function drawSourceMarker(threat, timestamp) {
   const sourceAge = timestamp - state.launchStartedAt;
   const launchProgress = clamp(sourceAge / settings.launchSignalDuration, 0, 1);
   const pulse = 0.5 + Math.sin(timestamp / 190) * 0.5;
   const isLaunchSignal = sourceAge <= settings.launchSignalDuration && threat.active;
   const sourceColor = getSourceColor(threat.mode);
-  const markerRadius = threat.mode === "orbital" ? 4 : threat.mode === "behind" ? 5.5 : 5;
+  const markerRadius = threat.mode === "orbital" ? 4 : threat.mode === "underHorizon" ? 5.5 : 5;
 
   ctx.save();
   ctx.translate(threat.sourceScreenX, threat.sourceScreenY);
@@ -1181,22 +1286,22 @@ function drawSourceMarker(threat, timestamp) {
   ctx.restore();
 }
 
-function drawBehindSurfaceCue(threat, width, height, timestamp) {
-  if (threat.mode !== "behind") {
+function drawUnderHorizonCue(threat, width, height, timestamp) {
+  if (threat.mode !== "underHorizon" || threat.progress >= settings.underHorizonRevealProgress) {
     return;
   }
 
   const pulse = 0.5 + Math.sin(timestamp / 240) * 0.5;
   const color = getSourceColor(threat.mode);
-  const surfaceY = getLunarSurfaceCurveY(width, height, threat.sourceScreenX);
-  const cueY = clamp(threat.sourceScreenY, surfaceY + 20, height - 26);
-  const lookDown = clamp(Math.max(state.viewY, 0) / settings.maxOffsetY, 0, 1);
-  const revealAlpha = lookDown >= settings.behindRevealLookDown ? 0.72 : 0.44;
+  const trajectory = getTrajectory(width, height);
+  const hiddenScreen = projectWorldToScreen(trajectory.hidden.x, trajectory.hidden.y, width, height);
+  const surfaceY = getLunarSurfaceCurveY(width, height, hiddenScreen.x);
+  const cueY = clamp(surfaceY + 8, surfaceY + 6, height - 26);
 
   ctx.save();
-  ctx.translate(threat.sourceScreenX, cueY);
+  ctx.translate(hiddenScreen.x, cueY);
   ctx.setLineDash([5, 6]);
-  ctx.strokeStyle = `rgba(${color}, ${revealAlpha})`;
+  ctx.strokeStyle = `rgba(${color}, 0.56)`;
   ctx.lineWidth = 1.8;
   ctx.beginPath();
   ctx.ellipse(0, 0, 44, 13, 0, 0, Math.PI * 2);
@@ -1216,7 +1321,7 @@ function drawBehindSurfaceCue(threat, width, height, timestamp) {
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
   ctx.fillStyle = getSourceTextColor(threat.mode);
-  ctx.fillText("Behind Surface Signal", 0, -18);
+  ctx.fillText("Occluded Track", 0, -18);
   ctx.restore();
 }
 
@@ -1635,7 +1740,7 @@ function render(timestamp) {
   drawTrajectoryTrace(width, height);
   drawMoonSurface(width, height);
   drawDefenseZone(width, height, timestamp);
-  drawBehindSurfaceCue(threat, width, height, timestamp);
+  drawUnderHorizonCue(threat, width, height, timestamp);
   drawVignette(width, height);
   drawThreat(threat, width, height, timestamp);
   drawAimGuide(width, height, threat, timestamp);

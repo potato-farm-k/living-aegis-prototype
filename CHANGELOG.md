@@ -4,8 +4,8 @@
 
 ### Added
 
-- `prototype-07-threat-origin-types`를 추가해 Earth Surface Source, Orbital Source, Behind Surface Approach의 차이를 확인할 수 있게 함
-- `prototype-07-threat-origin-types`에 Origin Type 선택과 타입별 source marker, launch pulse, 단순 접근 경로를 추가
+- `prototype-07-threat-origin-types`를 추가해 Earth Surface Source, Orbital Source, Under-Horizon Approach의 차이를 확인할 수 있게 함
+- `prototype-07-threat-origin-types`에 Origin / Approach Type 선택과 타입별 source marker, launch pulse, 단순 접근 경로를 추가
 - `prototype-07-threat-origin-types`에서 기존 edge indicator, Visual Contact, Lock Ready, Mouse Click/Space 요격 피드백 흐름을 유지
 - 루트 prototype 런처에서 `prototype-07-threat-origin-types`로 이동하는 링크 추가
 - `prototype-06-attack-source-trajectory`를 추가해 공격 원천에서 위협이 출발해 접근하고 요격되는 흐름을 확인할 수 있게 함
@@ -39,6 +39,7 @@
 
 ### Changed
 
+- `prototype-07-threat-origin-types`의 `Behind Surface Approach`를 `Under-Horizon Approach`로 재정의하고, 지구 하단/낮은 궤도 원천에서 출발해 시야 지평선에 가려졌다가 보이는 하늘로 등장하는 단순 waypoint 경로로 수정
 - `prototype-06-attack-source-trajectory` 검토 결과를 문서화하고 마지막 도달 지점의 달 내부 진입처럼 보이는 표현을 후속 과제로 기록
 - `prototype-06-attack-source-trajectory`에서 위협 이동을 `Direct Surface Approach` 단순 곡선으로 보정해 달 표면 내부 방어 지점 위쪽에서 내려오는 흐름을 강화
 - `prototype-06-attack-source-trajectory`에서 `Lunar Defense Zone`을 달 지평선 기준이 아닌 달 표면 내부 surface depth 약 60% 지점으로 보정
