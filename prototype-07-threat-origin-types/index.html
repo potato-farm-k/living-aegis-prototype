@@ -15,7 +15,7 @@
         <p class="eyebrow">Threat Origin Prototype</p>
         <h1 id="prototype-title">Threat Origin Types</h1>
         <p class="lede">
-          공격 원천과 가려진 접근 방식의 차이를 확인하는 프로토타입입니다.
+          공격 원천의 종류와 출발 위치에 따른 가려짐과 등장 차이를 확인하는 프로토타입입니다.
         </p>
       </section>
 
@@ -39,10 +39,11 @@
               <button id="reset-view" type="button">Reset View</button>
               <button id="restart-threat" type="button">Restart Threat</button>
             </div>
-            <div class="source-row" aria-label="Origin and approach type controls">
-              <button class="source-button is-active" type="button" data-source-mode="earth">Earth Surface Source</button>
-              <button class="source-button" type="button" data-source-mode="orbital">Orbital Source</button>
-              <button class="source-button" type="button" data-source-mode="underHorizon">Under-Horizon Approach</button>
+            <div class="source-row" aria-label="Origin type and source position controls">
+              <button class="source-button is-active" type="button" data-source-mode="earthHigh">Earth Surface High</button>
+              <button class="source-button" type="button" data-source-mode="earthLow">Earth Surface Low</button>
+              <button class="source-button" type="button" data-source-mode="orbitalHigh">Orbital High</button>
+              <button class="source-button" type="button" data-source-mode="orbitalLow">Orbital Low</button>
             </div>
           </div>
 
@@ -52,7 +53,7 @@
               <strong id="source-status">Launch Signal</strong>
             </div>
             <p>
-              Source marker, launch pulse, approach path가 타입별로 다르게 읽히는지 확인합니다.
+              Source marker, launch pulse, 출발 위치가 조합별로 다르게 읽히는지 확인합니다.
             </p>
           </div>
 
@@ -92,7 +93,7 @@
               <strong id="approach-status">Approaching</strong>
             </div>
             <p>
-              타입별 단순 접근 경로로 Lunar Defense Zone 가까이 도달하면 Impact Warning 또는 Threat Passed만 표시합니다.
+              Low 위치는 가려졌다가 등장하며, Lunar Defense Zone 가까이 도달하면 Impact Warning 또는 Threat Passed를 표시합니다.
             </p>
           </div>
 
@@ -120,10 +121,10 @@
               <dd id="view-offset-y">0</dd>
             </div>
             <div class="setting-line-card">
-              <dt>Origin / Approach Type</dt>
-              <dd id="attack-source-mode">Earth Surface Source</dd>
-              <dt>Source Status</dt>
-              <dd id="source-status-value">Launch Signal</dd>
+              <dt>Origin Type</dt>
+              <dd id="attack-source-mode">Earth Surface</dd>
+              <dt>Source Position</dt>
+              <dd id="source-position">High / Visible</dd>
             </div>
             <div class="setting-line-card">
               <dt>Threat On Screen</dt>
@@ -164,7 +165,7 @@
           </dl>
 
           <p class="control-help">
-            Mouse Move: 제한된 시야 이동. Mouse Click/Space: 발사. WASD/Arrow keys: 보조 시야 이동. 5/6/7: Earth Scale 전환. R: 기본 정면 보기. N: 새 위협 생성/Restart. Type 버튼으로 원천 또는 접근 타입을 바꿉니다.
+            Mouse Move: 제한된 시야 이동. Mouse Click/Space: 발사. WASD/Arrow keys: 보조 시야 이동. 5/6/7: Earth Scale 전환. R: 기본 정면 보기. N: 새 위협 생성/Restart. 조합 버튼으로 Origin Type과 Source Position을 바꿉니다.
           </p>
         </aside>
       </div>

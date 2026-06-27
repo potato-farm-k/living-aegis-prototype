@@ -24,8 +24,12 @@ const settings = {
 };
 
 const sourceModes = {
-  earth: {
-    label: "Earth Surface Source",
+  earthHigh: {
+    label: "Earth Surface High",
+    originLabel: "Earth Surface",
+    positionLabel: "High / Visible",
+    originType: "earth",
+    sourcePosition: "high",
     markerLabel: "Earth Surface Source",
     trajectory: "direct",
     color: "255, 207, 112",
@@ -49,8 +53,39 @@ const sourceModes = {
       },
     ],
   },
-  orbital: {
-    label: "Orbital Source",
+  earthLow: {
+    label: "Earth Surface Low",
+    originLabel: "Earth Surface",
+    positionLabel: "Low / Under-Horizon",
+    originType: "earth",
+    sourcePosition: "low",
+    markerLabel: "Low Earth Source",
+    trajectory: "under-horizon",
+    color: "255, 132, 111",
+    textColor: "rgba(255, 222, 210, 0.94)",
+    profiles: [
+      {
+        label: "Earth Surface Low / 지구 하단",
+        markerLabel: "Low Earth Source",
+        angle: 1.4,
+        radiusMultiplier: 0.98,
+        targetX: -16,
+        hiddenX: 92,
+        revealX: 48,
+        hiddenDepth: 38,
+        revealClearance: 104,
+        targetSurfaceDepth: 0.6,
+        curveBias: { x: -8, y: 18 },
+        drift: -10,
+      },
+    ],
+  },
+  orbitalHigh: {
+    label: "Orbital High",
+    originLabel: "Orbital",
+    positionLabel: "High / Visible",
+    originType: "orbital",
+    sourcePosition: "high",
     markerLabel: "Orbital Source",
     trajectory: "direct",
     color: "116, 221, 255",
@@ -74,32 +109,20 @@ const sourceModes = {
       },
     ],
   },
-  underHorizon: {
-    label: "Under-Horizon Approach",
-    markerLabel: "Low Earth Source",
+  orbitalLow: {
+    label: "Orbital Low",
+    originLabel: "Orbital",
+    positionLabel: "Low / Under-Horizon",
+    originType: "orbital",
+    sourcePosition: "low",
+    markerLabel: "Low Orbital Source",
     trajectory: "under-horizon",
-    color: "255, 132, 111",
-    textColor: "rgba(255, 222, 210, 0.94)",
+    color: "116, 221, 255",
+    textColor: "rgba(210, 246, 255, 0.94)",
     profiles: [
       {
-        label: "Low Earth Source / 지구 하단",
-        markerLabel: "Low Earth Source",
-        sourceKind: "low-earth",
-        angle: 1.4,
-        radiusMultiplier: 0.98,
-        targetX: -16,
-        hiddenX: 92,
-        revealX: 48,
-        hiddenDepth: 38,
-        revealClearance: 104,
-        targetSurfaceDepth: 0.6,
-        curveBias: { x: -8, y: 18 },
-        drift: -10,
-      },
-      {
-        label: "Low Orbital Source / 지구 하단 궤도",
+        label: "Orbital Low / 지구 하단 궤도",
         markerLabel: "Low Orbital Source",
-        sourceKind: "low-orbit",
         angle: 1.82,
         radiusMultiplier: 1.34,
         targetX: 16,
@@ -117,7 +140,7 @@ const sourceModes = {
 
 const state = {
   earthScale: 6,
-  sourceMode: "earth",
+  sourceMode: "earthHigh",
   sourceSequence: 0,
   viewX: 0,
   viewY: 0,
@@ -145,8 +168,8 @@ const settingEls = {
   viewX: document.querySelector("#view-offset-x"),
   viewY: document.querySelector("#view-offset-y"),
   sourceStatus: document.querySelector("#source-status"),
-  sourceStatusValue: document.querySelector("#source-status-value"),
   sourceMode: document.querySelector("#attack-source-mode"),
+  sourcePosition: document.querySelector("#source-position"),
   threatStatus: document.querySelector("#threat-status"),
   aimStatus: document.querySelector("#aim-status"),
   approachStatus: document.querySelector("#approach-status"),
@@ -529,14 +552,18 @@ function resolveThreat(width, height) {
   const impactWarning = active && (
     state.threatProgress >= settings.impactWarningProgress ||
     distanceToDefense <= 58 ||
-    (state.sourceMode === "underHorizon" && state.threatProgress <= 0.18)
+    (trajectory.type === "under-horizon" && state.threatProgress <= 0.18)
   );
 
   return {
     mode: state.sourceMode,
     modeLabel: mode.label,
+    originLabel: mode.originLabel,
+    positionLabel: mode.positionLabel,
+    originType: mode.originType,
+    sourcePosition: mode.sourcePosition,
+    trajectoryType: trajectory.type,
     markerLabel: profile.markerLabel || mode.markerLabel,
-    sourceKind: profile.sourceKind || state.sourceMode,
     profileLabel: profile.label,
     active,
     intercepted: state.intercepted,
@@ -566,7 +593,7 @@ function resolveThreat(width, height) {
 function isOccludedByLunarSurface(screenX, screenY, width, height, mode, progress) {
   const surfaceY = getLunarSurfaceCurveY(width, height, screenX);
 
-  if (mode === "underHorizon") {
+  if (sourceModes[mode]?.trajectory === "under-horizon") {
     return progress < settings.underHorizonRevealProgress;
   }
 
@@ -756,9 +783,9 @@ function updateSettings(threat) {
   const approachStatus = getApproachStatusLabel(threat);
 
   settingEls.sourceStatus.textContent = sourceStatus;
-  settingEls.sourceStatusValue.textContent = sourceStatus;
   settingEls.sourceStatus.classList.toggle("is-ready", sourceStatus === "Source Ready");
-  settingEls.sourceMode.textContent = threat.modeLabel;
+  settingEls.sourceMode.textContent = threat.originLabel;
+  settingEls.sourcePosition.textContent = threat.positionLabel;
   settingEls.threatStatus.textContent = status;
   settingEls.threatStatus.classList.toggle("is-occluded", threat.occluded);
   settingEls.threatStatus.classList.toggle("is-visual", threat.visualContact);
@@ -914,7 +941,7 @@ function getThreatDirectionLabel(threat) {
   }
 
   if (threat.occluded) {
-    const occlusionLabel = threat.mode === "underHorizon" ? "시야 지평선 아래 / 감지 추적" : "달 표면 뒤";
+    const occlusionLabel = threat.trajectoryType === "under-horizon" ? "시야 지평선 아래 / 감지 추적" : "달 표면 뒤";
     return `${threat.profileLabel} / 화면 안 / ${occlusionLabel}`;
   }
 
@@ -1185,14 +1212,16 @@ function getSourceTextColor(mode) {
 }
 
 function drawOriginGuide(threat, width, height, timestamp) {
-  if (threat.mode === "orbital") {
-    drawOrbitalGuide(width, height, timestamp);
+  if (threat.originType !== "orbital") {
     return;
   }
 
-  if (threat.mode === "underHorizon" && threat.sourceKind === "low-orbit") {
+  if (threat.sourcePosition === "low") {
     drawLowOrbitalGuide(width, height, timestamp);
+    return;
   }
+
+  drawOrbitalGuide(width, height, timestamp);
 }
 
 function drawOrbitalGuide(width, height, timestamp) {
@@ -1236,7 +1265,7 @@ function drawSourceMarker(threat, timestamp) {
   const pulse = 0.5 + Math.sin(timestamp / 190) * 0.5;
   const isLaunchSignal = sourceAge <= settings.launchSignalDuration && threat.active;
   const sourceColor = getSourceColor(threat.mode);
-  const markerRadius = threat.mode === "orbital" ? 4 : threat.mode === "underHorizon" ? 5.5 : 5;
+  const markerRadius = threat.originType === "orbital" ? 4 : 5;
 
   ctx.save();
   ctx.translate(threat.sourceScreenX, threat.sourceScreenY);
@@ -1287,7 +1316,7 @@ function drawSourceMarker(threat, timestamp) {
 }
 
 function drawUnderHorizonCue(threat, width, height, timestamp) {
-  if (threat.mode !== "underHorizon" || threat.progress >= settings.underHorizonRevealProgress) {
+  if (threat.trajectoryType !== "under-horizon" || threat.progress >= settings.underHorizonRevealProgress) {
     return;
   }
 

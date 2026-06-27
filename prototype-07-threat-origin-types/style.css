@@ -153,7 +153,7 @@ canvas.is-mouse-view {
 }
 
 .source-row {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 #reset-view,
@@ -189,12 +189,12 @@ button.is-active {
   background: var(--warm);
 }
 
-.source-button[data-source-mode="orbital"].is-active {
+.source-button[data-source-mode^="orbital"].is-active {
   border-color: var(--accent);
   background: var(--accent);
 }
 
-.source-button[data-source-mode="underHorizon"].is-active {
+.source-button[data-source-mode$="Low"].is-active {
   border-color: var(--danger-strong);
   background: var(--danger-strong);
 }
