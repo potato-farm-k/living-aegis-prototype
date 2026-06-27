@@ -19,6 +19,7 @@ const settings = {
   defenseZoneSurfaceDepth: 0.6,
   approachSkyClearance: 58,
   approachControlLift: 18,
+  launchBoostDistanceRatio: 0.5,
 };
 
 const sourceModes = {
@@ -334,6 +335,15 @@ function getSurfaceAnchoredWorldPosition(width, height, worldX, surfaceDepth) {
 function getCommonApproachControls(width, height, start, end) {
   const startScreen = projectWorldToScreen(start.x, start.y, width, height);
   const endScreen = projectWorldToScreen(end.x, end.y, width, height);
+  const earthCenter = getEarthWorldPosition(width, height);
+  const radialX = start.x - earthCenter.x;
+  const radialY = start.y - earthCenter.y;
+  const radialLength = Math.hypot(radialX, radialY) || 1;
+  const boostDistance = getEarthWorldRadius(width, height) * settings.launchBoostDistanceRatio;
+  const boostPoint = {
+    x: start.x + (radialX / radialLength) * boostDistance,
+    y: start.y + (radialY / radialLength) * boostDistance,
+  };
   const horizonY = getLunarSurfaceCurveY(width, height, endScreen.x);
   const horizontalDistance = Math.abs(endScreen.x - startScreen.x);
   const lift = settings.approachControlLift + clamp(horizontalDistance * 0.04, 0, 28);
@@ -343,17 +353,14 @@ function getCommonApproachControls(width, height, start, end) {
     horizonY - 28,
   );
 
-  const controlAScreen = {
-    x: startScreen.x + (endScreen.x - startScreen.x) * 0.38,
-    y: clamp(Math.min(startScreen.y - lift, skyY - lift * 0.45), height * 0.08, horizonY - 36),
-  };
   const controlBScreen = {
     x: endScreen.x,
     y: skyY,
   };
 
   return {
-    controlA: unprojectScreenToWorld(controlAScreen.x, controlAScreen.y, width, height),
+    boostPoint,
+    controlA: boostPoint,
     controlB: unprojectScreenToWorld(controlBScreen.x, controlBScreen.y, width, height),
   };
 }

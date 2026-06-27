@@ -39,6 +39,7 @@
 
 ### Changed
 
+- `prototype-07-threat-origin-types`의 발사 직후 boost 방향을 화면 위쪽 고정이 아니라 source position에서 지구 중심 반대쪽을 향하는 radial outward 방향으로 보정
 - `prototype-07-threat-origin-types`의 Earth Surface High / Low, Orbital High / Low가 출발 위치만 다른 공통 trajectory model을 사용하도록 단순화
 - `prototype-07-threat-origin-types`에서 Low 전용 hidden / reveal 경로와 강제 가림 판정을 제거하고, 현재 화면과 동적 달 표면 영역 기준의 공통 visibility 판정으로 정리
 - `prototype-07-threat-origin-types`에서 `Under-Horizon`을 독립 Origin Type이나 별도 trajectory model이 아닌 source position과 시야 상태에 따른 visibility behavior로 정리

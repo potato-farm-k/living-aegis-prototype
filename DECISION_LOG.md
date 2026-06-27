@@ -187,3 +187,13 @@
 이유: Low 전용 hidden / reveal 경로는 Low를 별도 공격 방식처럼 보이게 하고 궤적을 복잡하게 만든다. 공통 경로 생성기와 화면 기준 가림 판정을 사용하면 원천 종류와 위치만 비교하면서 기존 탐색·조준·요격 흐름을 유지할 수 있다.
 
 보류: 실제 지구 남극 좌표, 실제 공격 위성 궤도와 위성 운동, 실제 탄도/중력, 실제 달 뒤편 물리 계산은 후속 검토 후보로 남긴다.
+
+## 2026-06-27 - 발사 직후 radial outward boost 방향
+
+결정: `prototype-07-threat-origin-types` 검토 결과, 발사체의 첫 boost 방향은 화면 기준 위쪽이 아니라 source position에서 지구 중심 반대 방향으로 향하는 radial outward 방향으로 정리한다.
+
+결정: boost 방향은 `normalize(sourcePosition - earthCenter)`로 계산하며, Earth Surface / Orbital과 High / Low 모두에 같은 계산과 공통 trajectory model을 적용한다.
+
+이유: 화면 위쪽으로 고정된 초기 방향은 지구 아래쪽 source에서 발사체가 지구 쪽으로 솟는 것처럼 보일 수 있다. source별 radial outward 방향을 사용하면 어느 위치에서 발사해도 첫 추진 방향이 지구 바깥쪽으로 일관되게 읽힌다.
+
+보류: 실제 탄도, 중력, 지구 탈출 궤도, 위성 궤도, 달까지의 비행 궤도 계산은 후속 검토 후보로 남긴다.
