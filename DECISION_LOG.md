@@ -217,3 +217,15 @@
 결정: Earth Surface / Orbital과 High / Low는 radial outward boost와 공통 trajectory model을 계속 공유한다.
 
 보류: 실제 궤도 계산과 마지막 접근의 고도감, 표면, 충돌, 비주얼 연출은 후속 검토 후보로 남긴다.
+
+## 2026-06-27 - 목표점 하나의 단순 곡선 기준
+
+결정: `prototype-07-threat-origin-types`에서 visible approach를 만들기 위한 고정 하늘 경유점은 위협 궤적을 `П` 모양처럼 부자연스럽게 만들므로 사용하지 않는다.
+
+결정: 위협의 목표점은 `Lunar Defense Zone` 하나로 두고, source position에서 목표까지 하나의 부드러운 cubic bezier로 이동한다.
+
+결정: 발사 직후 radial outward 방향은 반드시 통과하는 boost 구간이 아니라 곡선의 초기 접선과 짧은 boost 영향으로만 사용한다. Earth Surface / Orbital과 High / Low는 같은 trajectory generator를 공유한다.
+
+결정: `Visual Contact`는 경로 강제 보정이 아니라 현재 화면과 동적 달 표면 영역 기준의 상태 판정으로 처리한다.
+
+보류: Visual Contact 시간과 마지막 접근에서 아래로 꽂히는 느낌은 후속 시야 범위, 속도, 공격 각도, 고도감, 표면, 충돌, 비주얼 연출에서 다룬다.

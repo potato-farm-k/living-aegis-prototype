@@ -17,11 +17,8 @@ const settings = {
   impactWarningProgress: 0.92,
   launchSignalDuration: 1200,
   defenseZoneSurfaceDepth: 0.6,
-  terminalEntryStartProgress: 0.64,
-  terminalDescentStartProgress: 0.84,
-  terminalEntryLiftRatio: 1.32,
-  terminalEntryLateralRatio: 0.14,
   launchBoostDistanceRatio: 0.5,
+  approachControlRatio: 0.28,
 };
 
 const sourceModes = {
@@ -308,70 +305,35 @@ function getTrajectory(width, height) {
     y: source.y,
   };
   const end = getDefenseZoneWorldPosition(width, height);
-  const path = getCommonApproachPath(width, height, start, end);
+  const controls = getCommonApproachControls(width, height, start, end);
 
   return {
     profile,
     source,
     start,
-    ...path,
+    ...controls,
     end,
   };
 }
 
-function getCommonApproachPath(width, height, start, end) {
+function getCommonApproachControls(width, height, start, end) {
   const earthCenter = getEarthWorldPosition(width, height);
   const radialX = start.x - earthCenter.x;
   const radialY = start.y - earthCenter.y;
   const radialLength = Math.hypot(radialX, radialY) || 1;
   const boostDistance = getEarthWorldRadius(width, height) * settings.launchBoostDistanceRatio;
-  const boostPoint = {
+  const controlA = {
     x: start.x + (radialX / radialLength) * boostDistance,
     y: start.y + (radialY / radialLength) * boostDistance,
   };
-  const worldWidth = width / settings.viewScale;
-  const worldHeight = height / settings.viewScale;
-  const approachSide = start.x < end.x ? -1 : 1;
-  const terminalEntryLift = worldHeight * settings.terminalEntryLiftRatio;
-  const terminalEntryLateral = worldWidth * settings.terminalEntryLateralRatio;
-  const terminalEntryWindowStart = {
-    x: end.x + approachSide * terminalEntryLateral,
-    y: end.y - terminalEntryLift,
-  };
-  const terminalEntryPoint = {
-    x: end.x + approachSide * worldWidth * 0.027,
-    y: end.y - terminalEntryLift,
-  };
-  const transferControl = {
-    x: terminalEntryWindowStart.x + approachSide * terminalEntryLateral * 0.55,
-    y: terminalEntryWindowStart.y,
-  };
-  const terminalEntryControlA = {
-    x: terminalEntryWindowStart.x - approachSide * terminalEntryLateral * 0.3,
-    y: terminalEntryWindowStart.y,
-  };
-  const terminalEntryControlB = {
-    x: terminalEntryPoint.x + approachSide * terminalEntryLateral * 0.24,
-    y: terminalEntryPoint.y - worldHeight * 0.028,
-  };
-  const terminalControlA = {
-    x: terminalEntryPoint.x - approachSide * worldWidth * 0.011,
-    y: terminalEntryPoint.y + worldHeight * 0.17,
-  };
-  const terminalControlB = {
-    x: end.x,
-    y: end.y - worldHeight * 0.13,
+  const controlB = {
+    x: end.x - (end.x - start.x) * settings.approachControlRatio,
+    y: end.y - (end.y - start.y) * settings.approachControlRatio,
   };
 
   return {
-    boostPoint,
-    transferControl,
-    terminalEntryWindowStart,
-    terminalEntryControlA,
-    terminalEntryControlB,
-    terminalEntryPoint,
-    terminalControlA,
-    terminalControlB,
+    controlA,
+    controlB,
   };
 }
 
@@ -394,45 +356,12 @@ function getDefenseZoneWorldPosition(width, height) {
 function getThreatWorldPosition(width, height, progress = state.threatProgress) {
   const trajectory = getTrajectory(width, height);
   const t = clamp(progress, 0, 1);
-
-  if (t < settings.terminalEntryStartProgress) {
-    const transferProgress = t / settings.terminalEntryStartProgress;
-
-    return cubicBezierPoint(
-      trajectory.start,
-      trajectory.boostPoint,
-      trajectory.transferControl,
-      trajectory.terminalEntryWindowStart,
-      transferProgress,
-    );
-  }
-
-  if (t < settings.terminalDescentStartProgress) {
-    const terminalEntryProgress = (
-      (t - settings.terminalEntryStartProgress) /
-      (settings.terminalDescentStartProgress - settings.terminalEntryStartProgress)
-    );
-
-    return cubicBezierPoint(
-      trajectory.terminalEntryWindowStart,
-      trajectory.terminalEntryControlA,
-      trajectory.terminalEntryControlB,
-      trajectory.terminalEntryPoint,
-      terminalEntryProgress,
-    );
-  }
-
-  const terminalProgress = (
-    (t - settings.terminalDescentStartProgress) /
-    (1 - settings.terminalDescentStartProgress)
-  );
-
   return cubicBezierPoint(
-    trajectory.terminalEntryPoint,
-    trajectory.terminalControlA,
-    trajectory.terminalControlB,
+    trajectory.start,
+    trajectory.controlA,
+    trajectory.controlB,
     trajectory.end,
-    terminalProgress,
+    t,
   );
 }
 
