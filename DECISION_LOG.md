@@ -207,3 +207,13 @@
 결정: `Impact Warning`은 Visual Contact가 한 번 이상 발생한 뒤 terminal approach 후반부에 표시한다.
 
 보류: 마지막 접근이 플레이어에게 다가오기보다 달 표면으로 꽂히는 느낌은 후속 고도감, 표면, 충돌, 비주얼 연출에서 다룬다. 실제 탄도, 중력, 궤도 계산은 이번 단계에서 구현하지 않는다.
+
+## 2026-06-27 - world-space terminal entry 기준
+
+결정: `prototype-07-threat-origin-types`의 `visible approach window`는 화면의 고정 하늘 목표점이 아니라 `Lunar Defense Zone` 기준 world-space terminal entry 구간으로 정리한다.
+
+결정: 시야 이동은 위협 경로를 바꾸지 않고, world-space 궤도 위의 위협이 보이거나 달 표면에 가려지는 방식만 바꾼다.
+
+결정: Earth Surface / Orbital과 High / Low는 radial outward boost와 공통 trajectory model을 계속 공유한다.
+
+보류: 실제 궤도 계산과 마지막 접근의 고도감, 표면, 충돌, 비주얼 연출은 후속 검토 후보로 남긴다.

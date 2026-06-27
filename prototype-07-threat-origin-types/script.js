@@ -17,10 +17,10 @@ const settings = {
   impactWarningProgress: 0.92,
   launchSignalDuration: 1200,
   defenseZoneSurfaceDepth: 0.6,
-  visibleApproachStartProgress: 0.64,
+  terminalEntryStartProgress: 0.64,
   terminalDescentStartProgress: 0.84,
-  visibleApproachSkyClearanceRatio: 0.2,
-  visibleApproachLateralRatio: 0.14,
+  terminalEntryLiftRatio: 1.32,
+  terminalEntryLateralRatio: 0.14,
   launchBoostDistanceRatio: 0.5,
 };
 
@@ -319,25 +319,7 @@ function getTrajectory(width, height) {
   };
 }
 
-function getSurfaceAnchoredWorldPosition(width, height, worldX, surfaceDepth) {
-  const aimCenter = getAimCenter(width, height);
-  const screenX = aimCenter.x + (worldX - state.viewX) * settings.viewScale;
-  const surfaceY = getLunarSurfaceCurveY(width, height, screenX);
-  const screenY = clamp(
-    surfaceY + (height - surfaceY) * surfaceDepth,
-    surfaceY + 18,
-    height + 90,
-  );
-
-  return {
-    x: worldX,
-    y: state.viewY + (screenY - aimCenter.y) / settings.viewScale,
-  };
-}
-
 function getCommonApproachPath(width, height, start, end) {
-  const startScreen = projectWorldToScreen(start.x, start.y, width, height);
-  const endScreen = projectWorldToScreen(end.x, end.y, width, height);
   const earthCenter = getEarthWorldPosition(width, height);
   const radialX = start.x - earthCenter.x;
   const radialY = start.y - earthCenter.y;
@@ -347,132 +329,96 @@ function getCommonApproachPath(width, height, start, end) {
     x: start.x + (radialX / radialLength) * boostDistance,
     y: start.y + (radialY / radialLength) * boostDistance,
   };
-  const horizonY = getLunarSurfaceCurveY(width, height, endScreen.x);
-  const approachSide = startScreen.x < endScreen.x ? -1 : 1;
-  const skyClearance = clamp(
-    height * settings.visibleApproachSkyClearanceRatio,
-    72,
-    128,
-  );
-  const lateralDistance = clamp(
-    width * settings.visibleApproachLateralRatio,
-    90,
-    170,
-  );
-  const visibleApproachY = Math.max(settings.screenMargin + 8, horizonY - skyClearance);
-  const visibleApproachEntryScreen = {
-    x: endScreen.x + approachSide * lateralDistance,
-    y: visibleApproachY - 12,
+  const worldWidth = width / settings.viewScale;
+  const worldHeight = height / settings.viewScale;
+  const approachSide = start.x < end.x ? -1 : 1;
+  const terminalEntryLift = worldHeight * settings.terminalEntryLiftRatio;
+  const terminalEntryLateral = worldWidth * settings.terminalEntryLateralRatio;
+  const terminalEntryWindowStart = {
+    x: end.x + approachSide * terminalEntryLateral,
+    y: end.y - terminalEntryLift,
   };
-  const visibleApproachPointScreen = {
-    x: endScreen.x + approachSide * 24,
-    y: visibleApproachY,
+  const terminalEntryPoint = {
+    x: end.x + approachSide * worldWidth * 0.027,
+    y: end.y - terminalEntryLift,
   };
-  const transferControlScreen = {
-    x: visibleApproachEntryScreen.x + approachSide * lateralDistance * 0.55,
-    y: visibleApproachEntryScreen.y,
+  const transferControl = {
+    x: terminalEntryWindowStart.x + approachSide * terminalEntryLateral * 0.55,
+    y: terminalEntryWindowStart.y,
   };
-  const visibleControlAScreen = {
-    x: visibleApproachEntryScreen.x - approachSide * lateralDistance * 0.3,
-    y: visibleApproachEntryScreen.y,
+  const terminalEntryControlA = {
+    x: terminalEntryWindowStart.x - approachSide * terminalEntryLateral * 0.3,
+    y: terminalEntryWindowStart.y,
   };
-  const visibleControlBScreen = {
-    x: visibleApproachPointScreen.x + approachSide * lateralDistance * 0.24,
-    y: visibleApproachPointScreen.y - 14,
+  const terminalEntryControlB = {
+    x: terminalEntryPoint.x + approachSide * terminalEntryLateral * 0.24,
+    y: terminalEntryPoint.y - worldHeight * 0.028,
   };
-  const terminalControlAScreen = {
-    x: visibleApproachPointScreen.x - approachSide * 10,
-    y: visibleApproachPointScreen.y + skyClearance * 0.34,
+  const terminalControlA = {
+    x: terminalEntryPoint.x - approachSide * worldWidth * 0.011,
+    y: terminalEntryPoint.y + worldHeight * 0.17,
   };
-  const terminalControlBScreen = {
-    x: endScreen.x,
-    y: horizonY - clamp(skyClearance * 0.22, 20, 34),
+  const terminalControlB = {
+    x: end.x,
+    y: end.y - worldHeight * 0.13,
   };
 
   return {
     boostPoint,
-    transferControl: unprojectScreenToWorld(
-      transferControlScreen.x,
-      transferControlScreen.y,
-      width,
-      height,
-    ),
-    visibleApproachEntry: unprojectScreenToWorld(
-      visibleApproachEntryScreen.x,
-      visibleApproachEntryScreen.y,
-      width,
-      height,
-    ),
-    visibleControlA: unprojectScreenToWorld(
-      visibleControlAScreen.x,
-      visibleControlAScreen.y,
-      width,
-      height,
-    ),
-    visibleControlB: unprojectScreenToWorld(
-      visibleControlBScreen.x,
-      visibleControlBScreen.y,
-      width,
-      height,
-    ),
-    visibleApproachPoint: unprojectScreenToWorld(
-      visibleApproachPointScreen.x,
-      visibleApproachPointScreen.y,
-      width,
-      height,
-    ),
-    terminalControlA: unprojectScreenToWorld(
-      terminalControlAScreen.x,
-      terminalControlAScreen.y,
-      width,
-      height,
-    ),
-    terminalControlB: unprojectScreenToWorld(
-      terminalControlBScreen.x,
-      terminalControlBScreen.y,
-      width,
-      height,
-    ),
+    transferControl,
+    terminalEntryWindowStart,
+    terminalEntryControlA,
+    terminalEntryControlB,
+    terminalEntryPoint,
+    terminalControlA,
+    terminalControlB,
   };
 }
 
 function getDefenseZoneWorldPosition(width, height) {
-  return getSurfaceAnchoredWorldPosition(
+  const aimCenter = getAimCenter(width, height);
+  const surfaceY = getLunarSurfaceCurveY(
     width,
     height,
-    0,
-    settings.defenseZoneSurfaceDepth,
+    aimCenter.x,
+    settings.lunarSurfaceArea,
   );
+  const screenY = surfaceY + (height - surfaceY) * settings.defenseZoneSurfaceDepth;
+
+  return {
+    x: 0,
+    y: (screenY - aimCenter.y) / settings.viewScale,
+  };
 }
 
 function getThreatWorldPosition(width, height, progress = state.threatProgress) {
   const trajectory = getTrajectory(width, height);
   const t = clamp(progress, 0, 1);
 
-  if (t < settings.visibleApproachStartProgress) {
-    const transferProgress = t / settings.visibleApproachStartProgress;
+  if (t < settings.terminalEntryStartProgress) {
+    const transferProgress = t / settings.terminalEntryStartProgress;
 
     return cubicBezierPoint(
       trajectory.start,
       trajectory.boostPoint,
       trajectory.transferControl,
-      trajectory.visibleApproachEntry,
+      trajectory.terminalEntryWindowStart,
       transferProgress,
     );
   }
 
   if (t < settings.terminalDescentStartProgress) {
-    const visibleProgress = (
-      (t - settings.visibleApproachStartProgress) /
-      (settings.terminalDescentStartProgress - settings.visibleApproachStartProgress)
+    const terminalEntryProgress = (
+      (t - settings.terminalEntryStartProgress) /
+      (settings.terminalDescentStartProgress - settings.terminalEntryStartProgress)
     );
 
     return cubicBezierPoint(
-      trajectory.visibleApproachEntry,
-      trajectory.visibleControlA,
-      trajectory.visibleControlB,
-      trajectory.visibleApproachPoint,
-      visibleProgress,
+      trajectory.terminalEntryWindowStart,
+      trajectory.terminalEntryControlA,
+      trajectory.terminalEntryControlB,
+      trajectory.terminalEntryPoint,
+      terminalEntryProgress,
     );
   }
 
@@ -482,7 +428,7 @@ function getThreatWorldPosition(width, height, progress = state.threatProgress) 
   );
 
   return cubicBezierPoint(
-    trajectory.visibleApproachPoint,
+    trajectory.terminalEntryPoint,
     trajectory.terminalControlA,
     trajectory.terminalControlB,
     trajectory.end,
@@ -571,15 +517,6 @@ function projectWorldToScreen(worldX, worldY, width, height) {
   return {
     x: aimCenter.x + (worldX - state.viewX) * settings.viewScale,
     y: aimCenter.y + (worldY - state.viewY) * settings.viewScale,
-  };
-}
-
-function unprojectScreenToWorld(screenX, screenY, width, height) {
-  const aimCenter = getAimCenter(width, height);
-
-  return {
-    x: state.viewX + (screenX - aimCenter.x) / settings.viewScale,
-    y: state.viewY + (screenY - aimCenter.y) / settings.viewScale,
   };
 }
 

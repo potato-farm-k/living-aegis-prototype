@@ -39,6 +39,7 @@
 
 ### Changed
 
+- `prototype-07-threat-origin-types`의 visible approach 기준을 화면/지평선 목표점에서 Lunar Defense Zone 기준 world-space terminal entry 구간으로 보정
 - `prototype-07-threat-origin-types`의 공통 궤적에 착탄 전 visible approach window를 추가하고, Visual Contact 이후 terminal approach 후반부에만 Impact Warning이 표시되도록 보정
 - `prototype-07-threat-origin-types`의 발사 직후 boost 방향을 화면 위쪽 고정이 아니라 source position에서 지구 중심 반대쪽을 향하는 radial outward 방향으로 보정
 - `prototype-07-threat-origin-types`의 Earth Surface High / Low, Orbital High / Low가 출발 위치만 다른 공통 trajectory model을 사용하도록 단순화
