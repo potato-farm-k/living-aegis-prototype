@@ -17,106 +17,76 @@ const settings = {
   impactWarningProgress: 0.82,
   launchSignalDuration: 1200,
   defenseZoneSurfaceDepth: 0.6,
-  directApproachSkyClearance: 58,
-  directApproachControlLift: 18,
-  underHorizonHiddenProgress: 0.25,
-  underHorizonRevealProgress: 0.46,
+  approachSkyClearance: 58,
+  approachControlLift: 18,
 };
 
 const sourceModes = {
   earthHigh: {
-    label: "Earth Surface High",
     originLabel: "Earth Surface",
-    positionLabel: "High / Visible",
+    positionLabel: "High",
     originType: "earth",
     sourcePosition: "high",
     markerLabel: "Earth Surface Source",
-    trajectory: "direct",
     color: "255, 207, 112",
     textColor: "rgba(255, 232, 176, 0.94)",
     profiles: [
       {
-        label: "Earth Surface / 왼쪽 가장자리",
+        label: "Earth Surface High / 왼쪽 가장자리",
         angle: -2.34,
         radiusMultiplier: 0.96,
-        targetX: -18,
-        curveBias: { x: -10, y: -6 },
-        drift: 0,
       },
       {
-        label: "Earth Surface / 오른쪽 가장자리",
+        label: "Earth Surface High / 오른쪽 가장자리",
         angle: -0.82,
         radiusMultiplier: 0.96,
-        targetX: 18,
-        curveBias: { x: 10, y: -6 },
-        drift: 0,
       },
     ],
   },
   earthLow: {
-    label: "Earth Surface Low",
     originLabel: "Earth Surface",
-    positionLabel: "Low / Under-Horizon",
+    positionLabel: "Low",
     originType: "earth",
     sourcePosition: "low",
     markerLabel: "Low Earth Source",
-    trajectory: "under-horizon",
     color: "255, 132, 111",
     textColor: "rgba(255, 222, 210, 0.94)",
     profiles: [
       {
         label: "Earth Surface Low / 지구 하단",
         markerLabel: "Low Earth Source",
-        angle: 1.4,
+        angle: 2.2,
         radiusMultiplier: 0.98,
-        targetX: -16,
-        hiddenX: 92,
-        revealX: 48,
-        hiddenDepth: 38,
-        revealClearance: 104,
-        targetSurfaceDepth: 0.6,
-        curveBias: { x: -8, y: 18 },
-        drift: -10,
       },
     ],
   },
   orbitalHigh: {
-    label: "Orbital High",
     originLabel: "Orbital",
-    positionLabel: "High / Visible",
+    positionLabel: "High",
     originType: "orbital",
     sourcePosition: "high",
     markerLabel: "Orbital Source",
-    trajectory: "direct",
     color: "116, 221, 255",
     textColor: "rgba(210, 246, 255, 0.94)",
     profiles: [
       {
-        label: "Orbital Source / 오른쪽 궤도",
+        label: "Orbital High / 오른쪽 궤도",
         angle: -0.62,
         radiusMultiplier: 1.36,
-        targetX: 24,
-        curveBias: { x: 10, y: -8 },
-        drift: 0,
       },
       {
-        label: "Orbital Source / 왼쪽 궤도",
+        label: "Orbital High / 왼쪽 궤도",
         angle: -2.08,
         radiusMultiplier: 1.32,
-        targetX: -24,
-        curveBias: { x: -10, y: -8 },
-        drift: 0,
       },
     ],
   },
   orbitalLow: {
-    label: "Orbital Low",
     originLabel: "Orbital",
-    positionLabel: "Low / Under-Horizon",
+    positionLabel: "Low",
     originType: "orbital",
     sourcePosition: "low",
     markerLabel: "Low Orbital Source",
-    trajectory: "under-horizon",
     color: "116, 221, 255",
     textColor: "rgba(210, 246, 255, 0.94)",
     profiles: [
@@ -125,14 +95,6 @@ const sourceModes = {
         markerLabel: "Low Orbital Source",
         angle: 1.82,
         radiusMultiplier: 1.34,
-        targetX: 16,
-        hiddenX: -92,
-        revealX: -48,
-        hiddenDepth: 42,
-        revealClearance: 100,
-        targetSurfaceDepth: 0.6,
-        curveBias: { x: 8, y: 18 },
-        drift: 10,
       },
     ],
   },
@@ -335,20 +297,16 @@ function getSourceWorldPosition(width, height) {
 }
 
 function getTrajectory(width, height) {
-  const mode = getSourceModeConfig();
   const profile = getSourceProfile();
   const source = getSourceWorldPosition(width, height);
   const start = {
     x: source.x,
     y: source.y,
   };
-  const end = getDefenseZoneWorldPosition(width, height, profile);
-  const path = mode.trajectory === "under-horizon"
-    ? getUnderHorizonApproachPath(width, height, profile, start, end)
-    : getDirectSurfaceApproachControls(width, height, profile, start, end);
+  const end = getDefenseZoneWorldPosition(width, height);
+  const path = getCommonApproachControls(width, height, start, end);
 
   return {
-    type: mode.trajectory,
     profile,
     source,
     start,
@@ -373,24 +331,24 @@ function getSurfaceAnchoredWorldPosition(width, height, worldX, surfaceDepth) {
   };
 }
 
-function getDirectSurfaceApproachControls(width, height, profile, start, end) {
+function getCommonApproachControls(width, height, start, end) {
   const startScreen = projectWorldToScreen(start.x, start.y, width, height);
   const endScreen = projectWorldToScreen(end.x, end.y, width, height);
   const horizonY = getLunarSurfaceCurveY(width, height, endScreen.x);
-  const sideOffset = profile.curveBias.x * settings.viewScale * 3.8;
-  const lift = settings.directApproachControlLift + Math.abs(profile.curveBias.y) * settings.viewScale;
+  const horizontalDistance = Math.abs(endScreen.x - startScreen.x);
+  const lift = settings.approachControlLift + clamp(horizontalDistance * 0.04, 0, 28);
   const skyY = clamp(
-    horizonY - settings.directApproachSkyClearance - lift,
+    horizonY - settings.approachSkyClearance - lift,
     height * 0.12,
     horizonY - 28,
   );
 
   const controlAScreen = {
-    x: startScreen.x + (endScreen.x - startScreen.x) * 0.38 + sideOffset,
+    x: startScreen.x + (endScreen.x - startScreen.x) * 0.38,
     y: clamp(Math.min(startScreen.y - lift, skyY - lift * 0.45), height * 0.08, horizonY - 36),
   };
   const controlBScreen = {
-    x: endScreen.x + sideOffset * 0.18,
+    x: endScreen.x,
     y: skyY,
   };
 
@@ -400,119 +358,25 @@ function getDirectSurfaceApproachControls(width, height, profile, start, end) {
   };
 }
 
-function getUnderHorizonApproachPath(width, height, profile, start, end) {
-  const startScreen = projectWorldToScreen(start.x, start.y, width, height);
-  const aimCenter = getAimCenter(width, height);
-  const hiddenScreenX = aimCenter.x + profile.hiddenX * settings.viewScale;
-  const revealScreenX = aimCenter.x + profile.revealX * settings.viewScale;
-  const targetScreenX = aimCenter.x + profile.targetX * settings.viewScale;
-  const hiddenSurfaceY = getLunarSurfaceCurveY(width, height, hiddenScreenX, settings.lunarSurfaceArea);
-  const revealSurfaceY = getLunarSurfaceCurveY(width, height, revealScreenX, settings.lunarSurfaceArea);
-  const targetSurfaceY = getLunarSurfaceCurveY(width, height, targetScreenX, settings.lunarSurfaceArea);
-  const sideOffset = profile.curveBias.x * settings.viewScale * 3.4;
-  const hiddenScreen = {
-    x: hiddenScreenX,
-    y: clamp(hiddenSurfaceY + profile.hiddenDepth, hiddenSurfaceY + 24, height - 24),
-  };
-  const revealScreen = {
-    x: revealScreenX,
-    y: clamp(revealSurfaceY - profile.revealClearance, height * 0.14, revealSurfaceY - 56),
-  };
-  const hiddenControlScreen = {
-    x: startScreen.x + (hiddenScreen.x - startScreen.x) * 0.58,
-    y: Math.max(startScreen.y + 48, hiddenScreen.y - 42),
-  };
-  const revealControlScreen = {
-    x: hiddenScreen.x + (revealScreen.x - hiddenScreen.x) * 0.5,
-    y: clamp(hiddenScreen.y + 18, hiddenSurfaceY + 26, height - 18),
-  };
-
-  const controlAScreen = {
-    x: revealScreen.x + (targetScreenX - revealScreen.x) * 0.34 + sideOffset,
-    y: clamp(revealScreen.y - 34, height * 0.12, revealSurfaceY - 70),
-  };
-  const controlBScreen = {
-    x: targetScreenX + sideOffset * 0.16,
-    y: clamp(targetSurfaceY - 86, height * 0.16, targetSurfaceY - 48),
-  };
-
-  return {
-    hidden: unprojectNeutralScreenToWorld(hiddenScreen.x, hiddenScreen.y, width, height),
-    reveal: unprojectNeutralScreenToWorld(revealScreen.x, revealScreen.y, width, height),
-    hiddenControl: unprojectNeutralScreenToWorld(hiddenControlScreen.x, hiddenControlScreen.y, width, height),
-    revealControl: unprojectNeutralScreenToWorld(revealControlScreen.x, revealControlScreen.y, width, height),
-    controlA: unprojectNeutralScreenToWorld(controlAScreen.x, controlAScreen.y, width, height),
-    controlB: unprojectNeutralScreenToWorld(controlBScreen.x, controlBScreen.y, width, height),
-  };
-}
-
-function getDefenseZoneWorldPosition(width, height, profile) {
+function getDefenseZoneWorldPosition(width, height) {
   return getSurfaceAnchoredWorldPosition(
     width,
     height,
-    profile.targetX,
-    profile.targetSurfaceDepth || settings.defenseZoneSurfaceDepth,
+    0,
+    settings.defenseZoneSurfaceDepth,
   );
 }
 
 function getThreatWorldPosition(width, height, progress = state.threatProgress) {
   const trajectory = getTrajectory(width, height);
   const t = clamp(progress, 0, 1);
-  const drift = Math.sin(t * Math.PI) * trajectory.profile.drift;
-  let point;
-
-  if (trajectory.type === "under-horizon") {
-    point = getUnderHorizonThreatWorldPosition(trajectory, t);
-  } else {
-    point = cubicBezierPoint(
-      trajectory.start,
-      trajectory.controlA,
-      trajectory.controlB,
-      trajectory.end,
-      t,
-    );
-  }
-
-  return {
-    x: point.x + drift,
-    y: point.y,
-  };
-}
-
-function getUnderHorizonThreatWorldPosition(trajectory, progress) {
-  if (progress < settings.underHorizonHiddenProgress) {
-    const localProgress = progress / settings.underHorizonHiddenProgress;
-    return quadraticBezierPoint(trajectory.start, trajectory.hiddenControl, trajectory.hidden, localProgress);
-  }
-
-  if (progress < settings.underHorizonRevealProgress) {
-    const localProgress = (
-      (progress - settings.underHorizonHiddenProgress) /
-      (settings.underHorizonRevealProgress - settings.underHorizonHiddenProgress)
-    );
-    return quadraticBezierPoint(trajectory.hidden, trajectory.revealControl, trajectory.reveal, localProgress);
-  }
-
-  const localProgress = (
-    (progress - settings.underHorizonRevealProgress) /
-    (1 - settings.underHorizonRevealProgress)
-  );
   return cubicBezierPoint(
-    trajectory.reveal,
+    trajectory.start,
     trajectory.controlA,
     trajectory.controlB,
     trajectory.end,
-    localProgress,
+    t,
   );
-}
-
-function quadraticBezierPoint(start, control, end, progress) {
-  const inverse = 1 - progress;
-
-  return {
-    x: inverse * inverse * start.x + 2 * inverse * progress * control.x + progress * progress * end.x,
-    y: inverse * inverse * start.y + 2 * inverse * progress * control.y + progress * progress * end.y,
-  };
 }
 
 function cubicBezierPoint(start, controlA, controlB, end, progress) {
@@ -544,25 +408,22 @@ function resolveThreat(width, height) {
   const active = !state.intercepted && !state.threatPassed;
   const onScreen = active && isInsideViewport(screen.x, screen.y, width, height);
   const lunarSurfaceY = getLunarSurfaceCurveY(width, height, screen.x);
-  const occluded = active && onScreen && isOccludedByLunarSurface(screen.x, screen.y, width, height, state.sourceMode, state.threatProgress);
+  const occluded = active && onScreen && isOccludedByLunarSurface(screen.x, screen.y, width, height);
   const visualContact = active && onScreen && !occluded;
   const aim = getAimMetrics(screen.x, screen.y, width, height);
   const lockReady = active && visualContact && aim.distance <= settings.aimGuideRadius;
   const distanceToDefense = Math.hypot(screen.x - defenseScreen.x, screen.y - defenseScreen.y);
   const impactWarning = active && (
     state.threatProgress >= settings.impactWarningProgress ||
-    distanceToDefense <= 58 ||
-    (trajectory.type === "under-horizon" && state.threatProgress <= 0.18)
+    distanceToDefense <= 58
   );
 
   return {
     mode: state.sourceMode,
-    modeLabel: mode.label,
     originLabel: mode.originLabel,
     positionLabel: mode.positionLabel,
     originType: mode.originType,
     sourcePosition: mode.sourcePosition,
-    trajectoryType: trajectory.type,
     markerLabel: profile.markerLabel || mode.markerLabel,
     profileLabel: profile.label,
     active,
@@ -590,13 +451,8 @@ function resolveThreat(width, height) {
   };
 }
 
-function isOccludedByLunarSurface(screenX, screenY, width, height, mode, progress) {
+function isOccludedByLunarSurface(screenX, screenY, width, height) {
   const surfaceY = getLunarSurfaceCurveY(width, height, screenX);
-
-  if (sourceModes[mode]?.trajectory === "under-horizon") {
-    return progress < settings.underHorizonRevealProgress;
-  }
-
   return screenY >= surfaceY;
 }
 
@@ -615,15 +471,6 @@ function unprojectScreenToWorld(screenX, screenY, width, height) {
   return {
     x: state.viewX + (screenX - aimCenter.x) / settings.viewScale,
     y: state.viewY + (screenY - aimCenter.y) / settings.viewScale,
-  };
-}
-
-function unprojectNeutralScreenToWorld(screenX, screenY, width, height) {
-  const aimCenter = getAimCenter(width, height);
-
-  return {
-    x: (screenX - aimCenter.x) / settings.viewScale,
-    y: (screenY - aimCenter.y) / settings.viewScale,
   };
 }
 
@@ -941,8 +788,7 @@ function getThreatDirectionLabel(threat) {
   }
 
   if (threat.occluded) {
-    const occlusionLabel = threat.trajectoryType === "under-horizon" ? "시야 지평선 아래 / 감지 추적" : "달 표면 뒤";
-    return `${threat.profileLabel} / 화면 안 / ${occlusionLabel}`;
+    return `${threat.profileLabel} / 화면 안 / 달 표면 뒤`;
   }
 
   if (threat.lockReady) {
@@ -1250,7 +1096,7 @@ function drawLowOrbitalGuide(width, height, timestamp) {
   ctx.translate(earth.screenX, earth.screenY);
   ctx.rotate(0.12);
   ctx.setLineDash([8, 11]);
-  ctx.strokeStyle = `rgba(255, 132, 111, ${0.18 + pulse * 0.1})`;
+  ctx.strokeStyle = `rgba(116, 221, 255, ${0.18 + pulse * 0.1})`;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.ellipse(0, 0, earth.radius * 1.34, earth.radius * 0.38, 0, 0.08 * Math.PI, 0.92 * Math.PI);
@@ -1312,45 +1158,6 @@ function drawSourceMarker(threat, timestamp) {
   ctx.fillStyle = getSourceTextColor(threat.mode);
   ctx.fillText(threat.markerLabel, 14, -12);
 
-  ctx.restore();
-}
-
-function drawUnderHorizonCue(threat, width, height, timestamp) {
-  if (threat.trajectoryType !== "under-horizon" || threat.progress >= settings.underHorizonRevealProgress) {
-    return;
-  }
-
-  const pulse = 0.5 + Math.sin(timestamp / 240) * 0.5;
-  const color = getSourceColor(threat.mode);
-  const trajectory = getTrajectory(width, height);
-  const hiddenScreen = projectWorldToScreen(trajectory.hidden.x, trajectory.hidden.y, width, height);
-  const surfaceY = getLunarSurfaceCurveY(width, height, hiddenScreen.x);
-  const cueY = clamp(surfaceY + 8, surfaceY + 6, height - 26);
-
-  ctx.save();
-  ctx.translate(hiddenScreen.x, cueY);
-  ctx.setLineDash([5, 6]);
-  ctx.strokeStyle = `rgba(${color}, 0.56)`;
-  ctx.lineWidth = 1.8;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, 44, 13, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.beginPath();
-  ctx.fillStyle = `rgba(${color}, ${0.13 + pulse * 0.08})`;
-  ctx.ellipse(0, 0, 36, 9, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.fillStyle = `rgba(${color}, 0.9)`;
-  ctx.arc(0, 0, 3.5 + pulse * 1.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.font = "700 12px Arial, Helvetica, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillStyle = getSourceTextColor(threat.mode);
-  ctx.fillText("Occluded Track", 0, -18);
   ctx.restore();
 }
 
@@ -1769,7 +1576,6 @@ function render(timestamp) {
   drawTrajectoryTrace(width, height);
   drawMoonSurface(width, height);
   drawDefenseZone(width, height, timestamp);
-  drawUnderHorizonCue(threat, width, height, timestamp);
   drawVignette(width, height);
   drawThreat(threat, width, height, timestamp);
   drawAimGuide(width, height, threat, timestamp);

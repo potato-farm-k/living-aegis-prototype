@@ -174,16 +174,16 @@
 
 보류: 마지막 도달 지점에서 위협이 달 내부로 들어가는 듯한 표현은 후속 표면/충돌 연출 문제로 남긴다. 실제 궤도 물리, 실제 공격 위성 궤도, 실제 달 뒤편 접근 물리, 지구 표면의 정확한 발사 좌표 계산은 후속 검토 후보로 남긴다.
 
-## 2026-06-27 - Under-Horizon과 공격 원천 분류 기준 정리
+## 2026-06-27 - 공격 원천 위치와 공통 trajectory 기준 정리
 
-결정: `prototype-07-threat-origin-types` 검토 결과, `Under-Horizon Approach`는 독립된 Origin Type이 아니다.
+결정: `prototype-07-threat-origin-types` 검토 결과, High / Low는 별도 공격 타입이나 별도 궤적 모델이 아니라 source position preset으로 정리한다.
 
-결정: Under-Horizon은 낮은 `Earth Surface Source` 또는 낮은 `Orbital Source`에서 발생하는 `Occluded-then-Visual-Contact` visibility behavior로 정리한다. 위협은 달에서 발사되지 않으며, 지구 하단 또는 지구 아래쪽 궤도 원천에서 출발해 달 표면/시야에 잠시 가려진 뒤 보이는 하늘 영역으로 올라와 `Visual Contact`가 된다.
+결정: `Earth Surface High`, `Earth Surface Low`, `Orbital High`, `Orbital Low`는 모두 같은 trajectory generator를 사용한다. 각 조합의 차이는 지구 표면 또는 지구 주변 궤도상의 출발 위치에만 둔다.
 
-결정: `prototype-07`의 분류 기준은 Origin Type과 Source Position을 분리한다. Origin Type은 `Earth Surface` / `Orbital`, Source Position은 `High / Visible` / `Low / Under-Horizon`으로 구분하며, 현재 UI에서는 네 조합 버튼으로 테스트한다.
+결정: Under-Horizon은 독립된 Origin Type이나 별도 trajectory model이 아니다. 낮은 source position 또는 현재 view offset 때문에 위협이 동적 달 표면 영역 뒤에 놓일 때 발생하는 `Occluded-then-Visual-Contact` visibility behavior로 정리한다.
 
-결정: Low 계열은 hidden waypoint와 reveal waypoint를 잇는 단순 곡선으로 가려졌다가 등장하는 감각만 확인한다.
+결정: `Occluded`, `Visual Contact`, `Lock Ready`는 Origin Type이나 Source Position으로 강제하지 않고 현재 화면과 동적 달 표면 영역을 기준으로 판정한다.
 
-이유: Under-Horizon을 독립 원천 타입으로 두면 위협이 달 뒤쪽이나 달 표면 아래에서 발생하는 것으로 읽힐 수 있다. 발사 원천과 위치, 보이는 방식을 분리하면 실제 원천이 지구/지구 궤도임을 유지하면서 의도한 가림 효과를 설명할 수 있다.
+이유: Low 전용 hidden / reveal 경로는 Low를 별도 공격 방식처럼 보이게 하고 궤적을 복잡하게 만든다. 공통 경로 생성기와 화면 기준 가림 판정을 사용하면 원천 종류와 위치만 비교하면서 기존 탐색·조준·요격 흐름을 유지할 수 있다.
 
 보류: 실제 지구 남극 좌표, 실제 공격 위성 궤도와 위성 운동, 실제 탄도/중력, 실제 달 뒤편 물리 계산은 후속 검토 후보로 남긴다.

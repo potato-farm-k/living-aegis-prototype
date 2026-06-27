@@ -25,7 +25,7 @@
             id="source-canvas"
             width="1280"
             height="720"
-            aria-label="공격 원천 타입별 위협 접근 감각을 확인하는 2D Canvas"
+            aria-label="공격 원천 종류와 위치별 위협 접근 감각을 확인하는 2D Canvas"
           ></canvas>
         </section>
 
@@ -93,7 +93,7 @@
               <strong id="approach-status">Approaching</strong>
             </div>
             <p>
-              Low 위치는 가려졌다가 등장하며, Lunar Defense Zone 가까이 도달하면 Impact Warning 또는 Threat Passed를 표시합니다.
+              모든 source position은 같은 trajectory model로 Lunar Defense Zone을 향합니다.
             </p>
           </div>
 
@@ -124,7 +124,7 @@
               <dt>Origin Type</dt>
               <dd id="attack-source-mode">Earth Surface</dd>
               <dt>Source Position</dt>
-              <dd id="source-position">High / Visible</dd>
+              <dd id="source-position">High</dd>
             </div>
             <div class="setting-line-card">
               <dt>Threat On Screen</dt>
@@ -142,7 +142,7 @@
               <dt>Occluded By Horizon</dt>
               <dd id="occluded-by-lunar">No</dd>
               <dt>Occlusion Rule</dt>
-              <dd>Visible Only</dd>
+              <dd>Dynamic Surface</dd>
             </div>
             <div class="setting-line-card">
               <dt>Threat Direction</dt>

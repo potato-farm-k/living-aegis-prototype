@@ -2,17 +2,18 @@
 
 상태: `1차 구현`
 
-이 프로토타입은 완성형 전투 시스템이 아니라, 공격 원천의 종류와 출발 위치에 따라 위협의 가려짐, Visual Contact, 접근 감각이 어떻게 달라지는지 확인하기 위한 실험입니다.
+이 프로토타입은 완성형 전투 시스템이 아니라, 공격 원천의 종류와 위치가 시야 가림, Visual Contact, 접근 감각에 어떤 영향을 주는지 확인하기 위한 실험입니다.
 
 ## 목적
 
-`prototype-06-attack-source-trajectory`에서 확인한 공격 원천 표시, launch pulse, 단순 접근 경로, Lunar Defense Zone 접근 흐름을 바탕으로 다음 구분이 화면에서 읽히는지 확인한다.
+`prototype-06-attack-source-trajectory`에서 확인한 source marker, launch pulse, 단순 접근 경로, Lunar Defense Zone 접근 흐름을 바탕으로 다음 개념을 분리해 비교한다.
 
 - `Origin Type`: 어디서 발사됐는가
 - `Source Position`: 어느 위치에서 발사됐는가
-- `Visibility Behavior`: 처음부터 보이는가, 아니면 가려졌다가 나중에 보이는가
+- `Trajectory Model`: 어떻게 목표로 이동하는가
+- `Visibility Behavior`: 현재 화면에서 보이는가, 가려지는가
 
-`Under-Horizon Approach`는 독립된 Origin Type이 아니다. `Under-Horizon`은 낮은 `Earth Surface Source` 또는 낮은 `Orbital Source`에서 발생하는 `Occluded-then-Visual-Contact` visibility behavior로 정리한다. 발사 원천은 항상 지구 표면 또는 지구 주변 궤도이며, 달 표면 아래나 달 뒤쪽에서 위협이 생성되는 것으로 다루지 않는다.
+High / Low는 별도 공격 타입이나 별도 궤적 모델이 아니라, 프로토타입 검토용 source position preset이다. 네 조합은 모두 같은 trajectory generator를 사용하고, 차이는 지구 또는 궤도상의 출발 위치에만 둔다.
 
 ## 분류 기준과 테스트 조합
 
@@ -23,44 +24,57 @@
 
 ### Source Position
 
-- `High / Visible`: 상대적으로 높은 위치에서 출발해 처음부터 보이는 직접 접근
-- `Low / Under-Horizon`: 지구 하단 또는 지구 아래쪽 궤도에서 출발해 초기에는 가려졌다가 나중에 보이는 접근
+- `High`: 지구 또는 지구 주변 궤도의 높은 위치 preset
+- `Low`: 지구 하단 또는 지구 아래쪽 궤도의 낮은 위치 preset
 
-### Visibility Behavior
-
-- `Visible from launch`: High 계열의 기본 동작
-- `Occluded first, then Visual Contact`: Low 계열의 기본 동작
-
-현재 UI에서는 비교를 단순하게 유지하기 위해 아래 네 조합 버튼으로 테스트한다.
+현재 UI에서는 아래 네 조합을 선택한다.
 
 - `Earth Surface High`
 - `Earth Surface Low`
 - `Orbital High`
 - `Orbital Low`
 
+### Trajectory Model
+
+모든 조합은 하나의 공통 cubic bezier 기반 trajectory model을 사용한다.
+
+```text
+start = selected source position
+end = Lunar Defense Zone surface anchor
+trajectory = common generated path from start to end
+```
+
+공통 generator는 선택한 start와 고정된 Lunar Defense Zone end를 기준으로 control point를 계산한다. High / Low 전용 우회 경로, hidden waypoint, reveal waypoint, behind path는 사용하지 않는다. 이 경로는 실제 탄도나 중력 계산이 아니라 공격 원천에서 방어 지점으로 접근하는 감각을 확인하기 위한 단순 곡선이다.
+
+### Visibility Behavior와 Under-Horizon
+
+`Under-Horizon`은 독립된 Origin Type이나 Trajectory Model이 아니다. 낮은 source position 또는 현재 view offset 때문에 위협이 동적 달 표면 영역 뒤에 놓일 때 자연스럽게 발생하는 visibility behavior다.
+
+```text
+위협이 화면 밖에 있음
+→ Off-screen / edge indicator
+
+위협이 화면 안이지만 현재 달 표면 영역 뒤에 있음
+→ Detected / Occluded
+
+위협이 현재 보이는 하늘 영역에 있음
+→ Visual Contact
+
+Visual Contact 상태에서 중앙 crosshair 근처에 있음
+→ Lock Ready
+```
+
+판정은 Origin Type이나 High / Low preset으로 강제하지 않는다. 따라서 Low 위협도 실제로 보이는 영역에 있으면 `Visual Contact`가 되고, High 위협도 시야 이동으로 달 표면 뒤에 놓이면 `Detected / Occluded`가 된다.
+
 ## 조합별 표시
 
 ### Earth Surface High / Low
 
-source marker를 지구 표면 또는 가장자리에 붙여 지구 표면 원천으로 읽히게 한다. `Earth Surface Low`는 지구 하단 가장자리에서 시작하고 Under-Horizon visibility behavior를 사용한다. 실제 지구 표면 좌표나 남극 좌표는 계산하지 않는다.
+source marker를 지구 표면 또는 가장자리에 붙여 지구 표면 원천으로 읽히게 한다. High와 Low는 지구 가장자리의 출발 각도만 다르며, 같은 trajectory model로 Lunar Defense Zone을 향한다. 실제 지구 표면 좌표나 남극 좌표는 계산하지 않는다.
 
 ### Orbital High / Low
 
-source marker를 지구 표면에서 약간 떨어진 위치에 두고 orbit guide를 표시해 궤도 원천으로 읽히게 한다. `Orbital Low`는 지구 아래쪽 궤도에서 시작하고 Under-Horizon visibility behavior를 사용한다. 실제 위성 운동이나 공격 위성 궤도는 계산하지 않는다.
-
-## Low / Under-Horizon 흐름
-
-Low 계열은 `source → hidden waypoint → reveal waypoint → Lunar Defense Zone` 순서의 단순 곡선 경로를 사용한다.
-
-```text
-Earth Surface Low 또는 Orbital Low
-→ Detected / Occluded
-→ Visual Contact
-→ Lock Ready
-→ Intercepted
-```
-
-초기 hidden 구간은 달 표면 또는 현재 시야에 가려진 감지 상태로 처리한다. 이후 위협은 보이는 하늘의 reveal waypoint로 올라와 반드시 `Visual Contact`가 가능해지고, Lunar Defense Zone 위쪽을 거쳐 달 표면 내부 방어 지점으로 내려온다. Low 계열의 source marker와 launch pulse는 지구 하단 또는 지구 하단 궤도에만 표시한다.
+source marker를 지구 표면에서 약간 떨어진 위치에 두고 orbit guide를 표시해 궤도 원천으로 읽히게 한다. High와 Low는 궤도상의 출발 각도만 다르며, 같은 trajectory model로 Lunar Defense Zone을 향한다. 실제 위성 운동이나 공격 위성 궤도는 계산하지 않는다.
 
 ## 적용한 기준값
 
@@ -91,12 +105,12 @@ Earth Surface Low 또는 Orbital Low
 ## 위협 상태 구분
 
 - `Off-screen`: 위협이 화면 밖에 있으며 edge indicator로 방향만 안내한다.
-- `Detected / Occluded`: 위협이 현재 표시되는 달 표면 영역에 가려졌거나 Low 경로의 reveal waypoint에 아직 도달하지 않은 상태이다.
-- `Visual Contact`: 위협이 화면 안에 있고 달 표면에 가려지지 않아 실제로 볼 수 있는 상태이다.
+- `Detected / Occluded`: 위협이 화면 안에 있지만 현재 동적 달 표면 영역 뒤에 있어 실제로 보이지 않는 상태이다.
+- `Visual Contact`: 위협이 화면 안의 보이는 하늘 영역에 있는 상태이다.
 - `Lock Ready`: `Visual Contact` 상태의 위협이 화면 중앙 crosshair의 가이드 반경 안에 들어온 상태이다.
 - `Intercepted`: `Lock Ready` 상태에서 발사 입력을 받아 요격 성공으로 처리된 상태이다.
-- `Impact Warning`: 위협 접근 진행도가 높거나 Low 접근 초기 경고가 필요한 상태 메시지이다.
-- `Threat Passed`: 위협이 접근 경로 끝까지 도달한 상태 메시지이다.
+- `Impact Warning`: 위협 진행도가 높거나 Lunar Defense Zone 가까이 도달한 상태이다.
+- `Threat Passed`: 위협이 접근 경로 끝까지 도달한 상태이다.
 
 가려진 상태에서는 중앙 crosshair 근처에 있더라도 `Lock Ready`가 되지 않는다.
 
@@ -116,10 +130,11 @@ Earth Surface Low 또는 Orbital Low
 - Earth Vertical Position 30%, 동적 Lunar Surface Area 기준 구도
 - 마우스 기반 제한 시야 이동과 중앙 고정 crosshair
 - 화면 밖 위협 방향을 알려주는 edge indicator
-- Earth Surface High / Low, Orbital High / Low 조합 선택 UI
-- 조합별 source marker, launch pulse, 단순 접근 경로
+- Earth Surface High / Low, Orbital High / Low source position preset UI
+- 네 조합에 공통으로 적용되는 단순 cubic bezier trajectory model
+- 조합별 source marker와 launch pulse
 - Orbital 계열의 orbit guide
-- Low 계열의 hidden / reveal waypoint와 `Occluded Track` cue
+- 현재 화면과 동적 달 표면 영역 기준의 Occluded / Visual Contact 판정
 - 달 표면 내부 surface depth 약 60%의 Lunar Defense Zone
 - 움직이는 위협 1개와 Lock Ready / 요격 피드백
 - 새 위협 생성 / Restart와 현재 상태 패널
@@ -133,15 +148,15 @@ Earth Surface Low 또는 Orbital Low
 ## 확인할 질문
 
 - Earth Surface와 Orbital이 source marker 위치와 orbit guide로 구분되는가?
-- High와 Low의 출발 위치 및 visibility behavior 차이가 읽히는가?
-- Low 계열이 달이 아니라 지구 하단 또는 낮은 지구 궤도에서 출발하는 것으로 보이는가?
-- Low 계열에서 `Detected / Occluded → Visual Contact → Lock Ready → Intercepted` 흐름이 가능한가?
-- Origin Type과 Source Position이 바뀌어도 기존 edge indicator와 요격 흐름이 유지되는가?
+- High와 Low가 별도 공격 방식이 아니라 source position 차이로 읽히는가?
+- 네 조합이 같은 trajectory model로 Lunar Defense Zone을 향하는가?
+- 시야 이동에 따라 High도 Occluded, Low도 Visual Contact가 될 수 있는가?
+- Origin Type과 Source Position이 바뀌어도 edge indicator, Lock Ready, 요격 흐름이 유지되는가?
 
 ## 다음 단계 후보
 
 - Earth Surface / Orbital source marker와 orbit guide 표현 개선
-- Low 계열 hidden / reveal waypoint와 타이밍 조정
+- 공통 trajectory control point와 접근 타이밍 조정
 - 달 표면/충돌 연출 문제 검토
 - 실제 공격 궤도 후보 검토
 - 마우스 감도와 시야 이동 범위 조정

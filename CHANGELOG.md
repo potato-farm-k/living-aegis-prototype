@@ -5,7 +5,7 @@
 ### Added
 
 - `prototype-07-threat-origin-types`를 추가해 Earth Surface / Orbital Origin Type과 High / Low Source Position의 차이를 확인할 수 있게 함
-- `prototype-07-threat-origin-types`에 Earth Surface High / Low, Orbital High / Low 선택과 조합별 source marker, launch pulse, 단순 접근 경로를 추가
+- `prototype-07-threat-origin-types`에 Earth Surface High / Low, Orbital High / Low 선택과 조합별 source marker, launch pulse, 공통 단순 접근 경로를 추가
 - `prototype-07-threat-origin-types`에서 기존 edge indicator, Visual Contact, Lock Ready, Mouse Click/Space 요격 피드백 흐름을 유지
 - 루트 prototype 런처에서 `prototype-07-threat-origin-types`로 이동하는 링크 추가
 - `prototype-06-attack-source-trajectory`를 추가해 공격 원천에서 위협이 출발해 접근하고 요격되는 흐름을 확인할 수 있게 함
@@ -39,7 +39,9 @@
 
 ### Changed
 
-- `prototype-07-threat-origin-types`에서 `Under-Horizon Approach`를 독립 Origin Type 선택지에서 제외하고, Low Source Position에서 발생하는 `Occluded-then-Visual-Contact` visibility behavior로 정리
+- `prototype-07-threat-origin-types`의 Earth Surface High / Low, Orbital High / Low가 출발 위치만 다른 공통 trajectory model을 사용하도록 단순화
+- `prototype-07-threat-origin-types`에서 Low 전용 hidden / reveal 경로와 강제 가림 판정을 제거하고, 현재 화면과 동적 달 표면 영역 기준의 공통 visibility 판정으로 정리
+- `prototype-07-threat-origin-types`에서 `Under-Horizon`을 독립 Origin Type이나 별도 trajectory model이 아닌 source position과 시야 상태에 따른 visibility behavior로 정리
 - `prototype-07-threat-origin-types`의 분류와 UI를 Origin Type(Earth Surface / Orbital)과 Source Position(High / Low)의 네 조합으로 정리
 - `prototype-06-attack-source-trajectory` 검토 결과를 문서화하고 마지막 도달 지점의 달 내부 진입처럼 보이는 표현을 후속 과제로 기록
 - `prototype-06-attack-source-trajectory`에서 위협 이동을 `Direct Surface Approach` 단순 곡선으로 보정해 달 표면 내부 방어 지점 위쪽에서 내려오는 흐름을 강화

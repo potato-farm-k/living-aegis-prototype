@@ -56,9 +56,9 @@
 
 - Path: `prototype-07-threat-origin-types/`
 - Status: `1차 구현`
-- Purpose: 공격 원천의 종류와 위치에 따라 시야 가림, Visual Contact, 접근 감각이 어떻게 달라지는지 확인
+- Purpose: 공격 원천의 종류와 위치가 시야 가림, Visual Contact, 접근 감각에 어떤 영향을 주는지 확인
 - Entry: `prototype-07-threat-origin-types/index.html`
-- Notes: `prototype-06-attack-source-trajectory`의 공격 원천 → 접근 경로 → Lunar Defense Zone 흐름을 바탕으로, Origin Type(Earth Surface / Orbital)과 Source Position(High / Low)을 구분하고 Low 위치의 가려짐 → Visual Contact → 요격 흐름이 유지되는지 확인하는 프로토타입
+- Notes: `prototype-06-attack-source-trajectory`의 공격 원천 → 접근 경로 → Lunar Defense Zone 흐름을 바탕으로, Origin Type(Earth Surface / Orbital)과 Source Position(High / Low)을 구분하되 네 조합에 공통 trajectory model과 화면 기준 visibility 판정을 사용하는 프로토타입
 
 ## Removed Placeholder
 
