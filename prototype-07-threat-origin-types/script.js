@@ -14,11 +14,13 @@ const settings = {
   aimGuideRadius: 64,
   viewScale: 2.45,
   threatRate: 0.052,
-  impactWarningProgress: 0.82,
+  impactWarningProgress: 0.92,
   launchSignalDuration: 1200,
   defenseZoneSurfaceDepth: 0.6,
-  approachSkyClearance: 58,
-  approachControlLift: 18,
+  visibleApproachStartProgress: 0.64,
+  terminalDescentStartProgress: 0.84,
+  visibleApproachSkyClearanceRatio: 0.2,
+  visibleApproachLateralRatio: 0.14,
   launchBoostDistanceRatio: 0.5,
 };
 
@@ -113,6 +115,7 @@ const state = {
   threatProgress: 0,
   intercepted: false,
   threatPassed: false,
+  hasVisualContact: false,
   fireStatus: "No Visual Contact",
   fireMessageUntil: 0,
   launchStartedAt: performance.now(),
@@ -305,7 +308,7 @@ function getTrajectory(width, height) {
     y: source.y,
   };
   const end = getDefenseZoneWorldPosition(width, height);
-  const path = getCommonApproachControls(width, height, start, end);
+  const path = getCommonApproachPath(width, height, start, end);
 
   return {
     profile,
@@ -332,7 +335,7 @@ function getSurfaceAnchoredWorldPosition(width, height, worldX, surfaceDepth) {
   };
 }
 
-function getCommonApproachControls(width, height, start, end) {
+function getCommonApproachPath(width, height, start, end) {
   const startScreen = projectWorldToScreen(start.x, start.y, width, height);
   const endScreen = projectWorldToScreen(end.x, end.y, width, height);
   const earthCenter = getEarthWorldPosition(width, height);
@@ -345,23 +348,91 @@ function getCommonApproachControls(width, height, start, end) {
     y: start.y + (radialY / radialLength) * boostDistance,
   };
   const horizonY = getLunarSurfaceCurveY(width, height, endScreen.x);
-  const horizontalDistance = Math.abs(endScreen.x - startScreen.x);
-  const lift = settings.approachControlLift + clamp(horizontalDistance * 0.04, 0, 28);
-  const skyY = clamp(
-    horizonY - settings.approachSkyClearance - lift,
-    height * 0.12,
-    horizonY - 28,
+  const approachSide = startScreen.x < endScreen.x ? -1 : 1;
+  const skyClearance = clamp(
+    height * settings.visibleApproachSkyClearanceRatio,
+    72,
+    128,
   );
-
-  const controlBScreen = {
+  const lateralDistance = clamp(
+    width * settings.visibleApproachLateralRatio,
+    90,
+    170,
+  );
+  const visibleApproachY = Math.max(settings.screenMargin + 8, horizonY - skyClearance);
+  const visibleApproachEntryScreen = {
+    x: endScreen.x + approachSide * lateralDistance,
+    y: visibleApproachY - 12,
+  };
+  const visibleApproachPointScreen = {
+    x: endScreen.x + approachSide * 24,
+    y: visibleApproachY,
+  };
+  const transferControlScreen = {
+    x: visibleApproachEntryScreen.x + approachSide * lateralDistance * 0.55,
+    y: visibleApproachEntryScreen.y,
+  };
+  const visibleControlAScreen = {
+    x: visibleApproachEntryScreen.x - approachSide * lateralDistance * 0.3,
+    y: visibleApproachEntryScreen.y,
+  };
+  const visibleControlBScreen = {
+    x: visibleApproachPointScreen.x + approachSide * lateralDistance * 0.24,
+    y: visibleApproachPointScreen.y - 14,
+  };
+  const terminalControlAScreen = {
+    x: visibleApproachPointScreen.x - approachSide * 10,
+    y: visibleApproachPointScreen.y + skyClearance * 0.34,
+  };
+  const terminalControlBScreen = {
     x: endScreen.x,
-    y: skyY,
+    y: horizonY - clamp(skyClearance * 0.22, 20, 34),
   };
 
   return {
     boostPoint,
-    controlA: boostPoint,
-    controlB: unprojectScreenToWorld(controlBScreen.x, controlBScreen.y, width, height),
+    transferControl: unprojectScreenToWorld(
+      transferControlScreen.x,
+      transferControlScreen.y,
+      width,
+      height,
+    ),
+    visibleApproachEntry: unprojectScreenToWorld(
+      visibleApproachEntryScreen.x,
+      visibleApproachEntryScreen.y,
+      width,
+      height,
+    ),
+    visibleControlA: unprojectScreenToWorld(
+      visibleControlAScreen.x,
+      visibleControlAScreen.y,
+      width,
+      height,
+    ),
+    visibleControlB: unprojectScreenToWorld(
+      visibleControlBScreen.x,
+      visibleControlBScreen.y,
+      width,
+      height,
+    ),
+    visibleApproachPoint: unprojectScreenToWorld(
+      visibleApproachPointScreen.x,
+      visibleApproachPointScreen.y,
+      width,
+      height,
+    ),
+    terminalControlA: unprojectScreenToWorld(
+      terminalControlAScreen.x,
+      terminalControlAScreen.y,
+      width,
+      height,
+    ),
+    terminalControlB: unprojectScreenToWorld(
+      terminalControlBScreen.x,
+      terminalControlBScreen.y,
+      width,
+      height,
+    ),
   };
 }
 
@@ -377,12 +448,45 @@ function getDefenseZoneWorldPosition(width, height) {
 function getThreatWorldPosition(width, height, progress = state.threatProgress) {
   const trajectory = getTrajectory(width, height);
   const t = clamp(progress, 0, 1);
+
+  if (t < settings.visibleApproachStartProgress) {
+    const transferProgress = t / settings.visibleApproachStartProgress;
+
+    return cubicBezierPoint(
+      trajectory.start,
+      trajectory.boostPoint,
+      trajectory.transferControl,
+      trajectory.visibleApproachEntry,
+      transferProgress,
+    );
+  }
+
+  if (t < settings.terminalDescentStartProgress) {
+    const visibleProgress = (
+      (t - settings.visibleApproachStartProgress) /
+      (settings.terminalDescentStartProgress - settings.visibleApproachStartProgress)
+    );
+
+    return cubicBezierPoint(
+      trajectory.visibleApproachEntry,
+      trajectory.visibleControlA,
+      trajectory.visibleControlB,
+      trajectory.visibleApproachPoint,
+      visibleProgress,
+    );
+  }
+
+  const terminalProgress = (
+    (t - settings.terminalDescentStartProgress) /
+    (1 - settings.terminalDescentStartProgress)
+  );
+
   return cubicBezierPoint(
-    trajectory.start,
-    trajectory.controlA,
-    trajectory.controlB,
+    trajectory.visibleApproachPoint,
+    trajectory.terminalControlA,
+    trajectory.terminalControlB,
     trajectory.end,
-    t,
+    terminalProgress,
   );
 }
 
@@ -406,12 +510,10 @@ function cubicBezierPoint(start, controlA, controlB, end, progress) {
 function resolveThreat(width, height) {
   const mode = getSourceModeConfig();
   const profile = getSourceProfile();
-  const trajectory = getTrajectory(width, height);
   const sourceWorld = getSourceWorldPosition(width, height);
   const sourceScreen = projectWorldToScreen(sourceWorld.x, sourceWorld.y, width, height);
   const world = getThreatWorldPosition(width, height);
   const screen = projectWorldToScreen(world.x, world.y, width, height);
-  const defenseScreen = projectWorldToScreen(trajectory.end.x, trajectory.end.y, width, height);
   const active = !state.intercepted && !state.threatPassed;
   const onScreen = active && isInsideViewport(screen.x, screen.y, width, height);
   const lunarSurfaceY = getLunarSurfaceCurveY(width, height, screen.x);
@@ -419,11 +521,10 @@ function resolveThreat(width, height) {
   const visualContact = active && onScreen && !occluded;
   const aim = getAimMetrics(screen.x, screen.y, width, height);
   const lockReady = active && visualContact && aim.distance <= settings.aimGuideRadius;
-  const distanceToDefense = Math.hypot(screen.x - defenseScreen.x, screen.y - defenseScreen.y);
-  const impactWarning = active && (
-    state.threatProgress >= settings.impactWarningProgress ||
-    distanceToDefense <= 58
-  );
+  const hasVisualContact = state.hasVisualContact || visualContact;
+  const impactWarning = active &&
+    hasVisualContact &&
+    state.threatProgress >= settings.impactWarningProgress;
 
   return {
     mode: state.sourceMode,
@@ -448,6 +549,7 @@ function resolveThreat(width, height) {
     onScreen,
     occluded,
     visualContact,
+    hasVisualContact,
     lockReady,
     impactWarning,
     aimDistance: aim.distance,
@@ -548,6 +650,7 @@ function restartThreat(advanceSource = true) {
   state.threatProgress = 0;
   state.intercepted = false;
   state.threatPassed = false;
+  state.hasVisualContact = false;
   state.fireStatus = "No Visual Contact";
   state.fireMessageUntil = 0;
   state.launchStartedAt = performance.now();
@@ -1574,6 +1677,10 @@ function render(timestamp) {
   const width = state.viewportWidth;
   const height = state.viewportHeight;
   const threat = resolveThreat(width, height);
+
+  if (threat.visualContact) {
+    state.hasVisualContact = true;
+  }
 
   ctx.clearRect(0, 0, width, height);
   drawSpace(width, height);

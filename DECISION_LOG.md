@@ -197,3 +197,13 @@
 이유: 화면 위쪽으로 고정된 초기 방향은 지구 아래쪽 source에서 발사체가 지구 쪽으로 솟는 것처럼 보일 수 있다. source별 radial outward 방향을 사용하면 어느 위치에서 발사해도 첫 추진 방향이 지구 바깥쪽으로 일관되게 읽힌다.
 
 보류: 실제 탄도, 중력, 지구 탈출 궤도, 위성 궤도, 달까지의 비행 궤도 계산은 후속 검토 후보로 남긴다.
+
+## 2026-06-27 - 착탄 전 visible approach window 보장
+
+결정: `prototype-07-threat-origin-types`의 모든 위협은 `Lunar Defense Zone` 도달 전에 시야 내에서 충분히 보이는 `visible approach window`를 가진다.
+
+결정: `visible approach window`는 실제 물리 계산이 아니라 탐색, 조준, `Lock Ready`, 요격 루프를 성립시키기 위한 gameplay readability 규칙이다. 네 source 조합은 radial outward boost와 공통 trajectory model을 유지한 채 `source position → radial outward boost → transfer curve → visible approach point → terminal descent → Lunar Defense Zone` 흐름을 공유한다.
+
+결정: `Impact Warning`은 Visual Contact가 한 번 이상 발생한 뒤 terminal approach 후반부에 표시한다.
+
+보류: 마지막 접근이 플레이어에게 다가오기보다 달 표면으로 꽂히는 느낌은 후속 고도감, 표면, 충돌, 비주얼 연출에서 다룬다. 실제 탄도, 중력, 궤도 계산은 이번 단계에서 구현하지 않는다.
