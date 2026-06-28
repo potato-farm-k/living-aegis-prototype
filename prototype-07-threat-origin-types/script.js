@@ -337,20 +337,25 @@ function getCommonApproachControls(width, height, start, end) {
   };
 }
 
-function getDefenseZoneWorldPosition(width, height) {
+function getSurfaceAnchoredWorldPosition(width, height, worldX, surfaceDepth) {
   const aimCenter = getAimCenter(width, height);
-  const surfaceY = getLunarSurfaceCurveY(
-    width,
-    height,
-    aimCenter.x,
-    settings.lunarSurfaceArea,
-  );
-  const screenY = surfaceY + (height - surfaceY) * settings.defenseZoneSurfaceDepth;
+  const screenX = aimCenter.x + (worldX - state.viewX) * settings.viewScale;
+  const surfaceY = getLunarSurfaceCurveY(width, height, screenX);
+  const screenY = surfaceY + (height - surfaceY) * surfaceDepth;
 
   return {
-    x: 0,
-    y: (screenY - aimCenter.y) / settings.viewScale,
+    x: worldX,
+    y: state.viewY + (screenY - aimCenter.y) / settings.viewScale,
   };
+}
+
+function getDefenseZoneWorldPosition(width, height) {
+  return getSurfaceAnchoredWorldPosition(
+    width,
+    height,
+    0,
+    settings.defenseZoneSurfaceDepth,
+  );
 }
 
 function getThreatWorldPosition(width, height, progress = state.threatProgress) {

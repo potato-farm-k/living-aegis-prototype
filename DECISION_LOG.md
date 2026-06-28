@@ -229,3 +229,13 @@
 결정: `Visual Contact`는 경로 강제 보정이 아니라 현재 화면과 동적 달 표면 영역 기준의 상태 판정으로 처리한다.
 
 보류: Visual Contact 시간과 마지막 접근에서 아래로 꽂히는 느낌은 후속 시야 범위, 속도, 공격 각도, 고도감, 표면, 충돌, 비주얼 연출에서 다룬다.
+
+## 2026-06-28 - Lunar Defense Zone 동적 surface anchor 기준
+
+결정: `prototype-07-threat-origin-types`의 `Lunar Defense Zone`은 화면 또는 우주공간의 고정 좌표가 아니라, 현재 보이는 달 표면 영역에서 지평선부터 약 `60%` 내려온 surface anchor로 처리한다.
+
+결정: 위협의 최종 목표점과 실제 방어 지점 마커는 같은 surface anchor를 사용한다. 텍스트 라벨만 가독성을 위해 기준점보다 약간 위에 표시할 수 있다.
+
+결정: 궤적은 source position에서 짧은 radial outward 초기 접선을 거쳐 하나의 부드러운 곡선으로 surface anchor에 접근하는 공통 모델을 유지한다. 고정 하늘 경유점과 High / Low 전용 경로는 사용하지 않는다.
+
+보류: 실제 달 위도/경도, 탄도, 중력, 궤도와 충돌/폭발 시스템은 후속 검토 후보로 남긴다.
