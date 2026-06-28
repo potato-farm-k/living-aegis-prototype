@@ -57,7 +57,7 @@ Earth Surface / Orbital, High / Low는 모두 같은 boost 계산과 같은 traj
 
 `Lunar Defense Zone`은 화면이나 우주공간의 고정 좌표가 아니라 현재 보이는 달 표면 내부의 surface anchor다. 실제 달 위도/경도 대신, 현재 달 지평선에서 화면 하단 방향으로 surface depth 약 `60%` 내려온 위치를 사용한다. 시야 이동으로 달 표면 비중과 지평선이 달라지면 실제 마커와 위협의 최종 목표점도 같은 표면 기준으로 함께 이동한다. 텍스트 라벨은 가독성을 위해 기준점보다 약간 위에 표시한다.
 
-`Impact Warning`은 마지막으로 연속해서 보이는 하늘 구간에서 시작해 기본 `2.0초` 동안 유지한다. 이 단계에서는 `Surface Occluded`를 허용하지 않는다. 플레이어가 다른 방향을 보면 `Impact Warning + Off-screen`이 될 수 있지만, 위협 방향으로 시선을 돌리면 horizon 위에서 `Visual Contact`가 되고 crosshair 근처에서는 `Lock Ready`가 된다. 경고 시간이 끝나면 별도 충돌 시스템 없이 기존 `Threat Passed`를 Lunar Defense Zone 도달/Impact의 간단한 상태 메시지로 사용한다.
+`Impact Warning`은 마지막으로 연속해서 보이는 하늘 구간에서 시작해 기본 `2.0초` 동안 유지한다. 이 단계에서는 `Surface Occluded`를 허용하지 않는다. 플레이어가 다른 방향을 보면 `Impact Warning + Off-screen`이 될 수 있지만, 위협 방향으로 시선을 돌리면 horizon 위에서 `Visual Contact`가 되고 crosshair 근처에서는 `Lock Ready`가 된다. 경고 시간이 끝나도 위협을 제거하지 않으며, 같은 trajectory를 따라 Lunar Defense Zone surface anchor에 도달할 때까지 `Off-screen`, `Surface Occluded`, `Visual Contact` 상태로 계속 추적한다.
 
 경고 시간은 source까지의 거리나 High / Low preset이 아니라 threat type 기준으로 정하는 것이 적절하다. 현재는 threat type이 하나이므로 네 조합 모두 같은 `2.0초`를 사용한다. 향후 fast 또는 heavy threat type이 생기면 타입별 duration을 검토할 수 있다.
 
@@ -130,7 +130,7 @@ source marker를 지구 표면에서 약간 떨어진 위치에 두고 orbit gui
 - `Lock Ready`: `Visual Contact` 상태의 위협이 화면 중앙 crosshair의 가이드 반경 안에 들어온 상태이다.
 - `Intercepted`: `Lock Ready` 상태에서 발사 입력을 받아 요격 성공으로 처리된 상태이다.
 - `Impact Warning`: Lunar Defense Zone 도달 전 마지막 `2.0초` 방어 기회다. 올바른 방향을 보면 horizon 위에서 조준할 수 있다.
-- `Threat Passed`: `Impact Warning`이 끝나 Lunar Defense Zone / Impact에 도달했음을 알리는 간단한 상태이다.
+- `Threat Passed`: 위협이 trajectory 끝의 Lunar Defense Zone surface anchor에 도달했음을 알리는 간단한 상태이다. horizon 접촉이나 `Impact Warning` 종료만으로는 이 상태가 되지 않는다.
 
 가려진 상태에서는 중앙 crosshair 근처에 있더라도 `Lock Ready`가 되지 않는다.
 

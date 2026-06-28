@@ -115,6 +115,7 @@ const state = {
   threatPassed: false,
   impactWarningStartedAt: null,
   impactWarningStartProgress: 0,
+  impactWarningComplete: false,
   fireStatus: "No Visual Contact",
   fireMessageUntil: 0,
   launchStartedAt: performance.now(),
@@ -596,6 +597,7 @@ function restartThreat(advanceSource = true) {
   state.threatPassed = false;
   state.impactWarningStartedAt = null;
   state.impactWarningStartProgress = 0;
+  state.impactWarningComplete = false;
   state.fireStatus = "No Visual Contact";
   state.fireMessageUntil = 0;
   state.launchStartedAt = performance.now();
@@ -618,10 +620,8 @@ function updateThreat(deltaSeconds, now) {
     );
 
     if (warningProgress >= 1) {
-      state.threatProgress = 1;
-      state.threatPassed = true;
-      state.fireStatus = "Threat Passed";
-      state.fireMessageUntil = now + 1400;
+      state.impactWarningStartedAt = null;
+      state.impactWarningComplete = true;
     }
 
     return;
@@ -633,7 +633,7 @@ function updateThreat(deltaSeconds, now) {
     state.viewportHeight,
   );
 
-  if (nextProgress >= warningWindow.start) {
+  if (!state.impactWarningComplete && nextProgress >= warningWindow.start) {
     state.threatProgress = warningWindow.start;
     state.impactWarningStartedAt = now;
     state.impactWarningStartProgress = warningWindow.start;
@@ -641,6 +641,12 @@ function updateThreat(deltaSeconds, now) {
   }
 
   state.threatProgress = nextProgress;
+
+  if (state.threatProgress >= 1) {
+    state.threatPassed = true;
+    state.fireStatus = "Threat Passed";
+    state.fireMessageUntil = now + 1400;
+  }
 }
 
 function attemptFire() {
