@@ -239,3 +239,17 @@
 결정: 궤적은 source position에서 짧은 radial outward 초기 접선을 거쳐 하나의 부드러운 곡선으로 surface anchor에 접근하는 공통 모델을 유지한다. 고정 하늘 경유점과 High / Low 전용 경로는 사용하지 않는다.
 
 보류: 실제 달 위도/경도, 탄도, 중력, 궤도와 충돌/폭발 시스템은 후속 검토 후보로 남긴다.
+
+## 2026-06-28 - Impact Warning 마지막 방어 기회 기준
+
+결정: `prototype-07-threat-origin-types`의 `Impact Warning`은 단순 착탄 직전 표시가 아니라, `Lunar Defense Zone` 도달 전에 플레이어가 위협을 찾아 조준하고 요격할 수 있는 마지막 방어 기회로 정의한다.
+
+결정: `Impact Warning` 상태에서는 `Surface Occluded`를 허용하지 않는다. 플레이어가 다른 방향을 보면 `Off-screen / Out of View`가 될 수 있지만, 올바른 방향으로 시선을 돌리면 horizon 위에서 `Visual Contact`와 `Lock Ready`가 가능해야 한다.
+
+결정: `Surface Occluded`는 달 표면 뒤에 가려져 조준할 수 없는 상태이며, `Off-screen / Out of View`는 현재 화면 밖이지만 시선을 돌리면 다시 찾을 수 있는 상태로 의미를 분리한다.
+
+결정: 현재 단일 threat의 `Impact Warning` duration은 source 거리와 무관한 공통 `2.0초`로 둔다. 향후 threat type이 추가되면 type 기준 duration을 검토한다.
+
+결정: 궤적은 짧게 강조한 radial outward boost와 하나의 공통 cubic trajectory를 유지한다. 고정 하늘 경유점, forced visible approach point, 높은 terminal entry point, High / Low 전용 경로는 추가하지 않는다.
+
+보류: 상태 전환 문제가 반복되면 별도 `lunar-threat-approach-visibility-simulator`에서 phase와 visibility 관계를 검토한다.

@@ -14,10 +14,11 @@ const settings = {
   aimGuideRadius: 64,
   viewScale: 2.45,
   threatRate: 0.052,
-  impactWarningProgress: 0.92,
+  impactWarningDurationSeconds: 2,
+  impactSurfaceClearance: 8,
   launchSignalDuration: 1200,
   defenseZoneSurfaceDepth: 0.6,
-  launchBoostDistanceRatio: 0.5,
+  launchBoostDistanceRatio: 0.62,
   approachControlRatio: 0.28,
 };
 
@@ -112,7 +113,8 @@ const state = {
   threatProgress: 0,
   intercepted: false,
   threatPassed: false,
-  hasVisualContact: false,
+  impactWarningStartedAt: null,
+  impactWarningStartProgress: 0,
   fireStatus: "No Visual Contact",
   fireMessageUntil: 0,
   launchStartedAt: performance.now(),
@@ -370,6 +372,80 @@ function getThreatWorldPosition(width, height, progress = state.threatProgress) 
   );
 }
 
+function getSurfaceClearanceAtProgress(width, height, progress) {
+  const world = getThreatWorldPosition(width, height, progress);
+  const screen = projectWorldToScreen(world.x, world.y, width, height);
+  return getLunarSurfaceCurveY(width, height, screen.x) - screen.y;
+}
+
+function getImpactWarningWindow(width, height) {
+  const sampleCount = 80;
+  const warningTravel = settings.threatRate * settings.impactWarningDurationSeconds;
+  let currentSegmentStart = null;
+  let finalSegment = null;
+
+  for (let index = 0; index <= sampleCount; index += 1) {
+    const progress = index / sampleCount;
+    const clearance = getSurfaceClearanceAtProgress(width, height, progress);
+    const visibleAboveSurface = clearance >= settings.impactSurfaceClearance;
+
+    if (visibleAboveSurface && currentSegmentStart === null) {
+      currentSegmentStart = progress;
+      continue;
+    }
+
+    if (!visibleAboveSurface && currentSegmentStart !== null) {
+      finalSegment = {
+        start: currentSegmentStart,
+        end: Math.max(currentSegmentStart, (index - 1) / sampleCount),
+      };
+      currentSegmentStart = null;
+    }
+  }
+
+  if (currentSegmentStart !== null) {
+    finalSegment = { start: currentSegmentStart, end: 1 };
+  }
+
+  if (!finalSegment) {
+    return { start: 0, end: 0 };
+  }
+
+  return {
+    start: Math.max(finalSegment.start, finalSegment.end - warningTravel),
+    end: finalSegment.end,
+  };
+}
+
+function getResolvedThreatProgress(width, height, now = performance.now()) {
+  if (
+    state.intercepted ||
+    state.threatPassed ||
+    state.impactWarningStartedAt === null
+  ) {
+    return state.threatProgress;
+  }
+
+  const warningWindow = getImpactWarningWindow(width, height);
+  const storedWarningStartProgress = Math.min(
+    state.impactWarningStartProgress,
+    warningWindow.end,
+  );
+  const warningStartProgress = Math.max(
+    warningWindow.start,
+    storedWarningStartProgress,
+  );
+  const elapsedSeconds = (now - state.impactWarningStartedAt) / 1000;
+  const warningProgress = clamp(
+    elapsedSeconds / settings.impactWarningDurationSeconds,
+    0,
+    1,
+  );
+
+  return warningStartProgress +
+    (warningWindow.end - warningStartProgress) * warningProgress;
+}
+
 function cubicBezierPoint(start, controlA, controlB, end, progress) {
   const inverse = 1 - progress;
 
@@ -392,7 +468,8 @@ function resolveThreat(width, height) {
   const profile = getSourceProfile();
   const sourceWorld = getSourceWorldPosition(width, height);
   const sourceScreen = projectWorldToScreen(sourceWorld.x, sourceWorld.y, width, height);
-  const world = getThreatWorldPosition(width, height);
+  const progress = getResolvedThreatProgress(width, height);
+  const world = getThreatWorldPosition(width, height, progress);
   const screen = projectWorldToScreen(world.x, world.y, width, height);
   const active = !state.intercepted && !state.threatPassed;
   const onScreen = active && isInsideViewport(screen.x, screen.y, width, height);
@@ -401,10 +478,7 @@ function resolveThreat(width, height) {
   const visualContact = active && onScreen && !occluded;
   const aim = getAimMetrics(screen.x, screen.y, width, height);
   const lockReady = active && visualContact && aim.distance <= settings.aimGuideRadius;
-  const hasVisualContact = state.hasVisualContact || visualContact;
-  const impactWarning = active &&
-    hasVisualContact &&
-    state.threatProgress >= settings.impactWarningProgress;
+  const impactWarning = active && state.impactWarningStartedAt !== null;
 
   return {
     mode: state.sourceMode,
@@ -417,7 +491,7 @@ function resolveThreat(width, height) {
     active,
     intercepted: state.intercepted,
     threatPassed: state.threatPassed,
-    progress: state.threatProgress,
+    progress,
     sourceWorldX: sourceWorld.x,
     sourceWorldY: sourceWorld.y,
     sourceScreenX: sourceScreen.x,
@@ -429,7 +503,6 @@ function resolveThreat(width, height) {
     onScreen,
     occluded,
     visualContact,
-    hasVisualContact,
     lockReady,
     impactWarning,
     aimDistance: aim.distance,
@@ -521,7 +594,8 @@ function restartThreat(advanceSource = true) {
   state.threatProgress = 0;
   state.intercepted = false;
   state.threatPassed = false;
-  state.hasVisualContact = false;
+  state.impactWarningStartedAt = null;
+  state.impactWarningStartProgress = 0;
   state.fireStatus = "No Visual Contact";
   state.fireMessageUntil = 0;
   state.launchStartedAt = performance.now();
@@ -529,18 +603,44 @@ function restartThreat(advanceSource = true) {
   updateSettings(resolveThreat(state.viewportWidth, state.viewportHeight));
 }
 
-function updateThreat(deltaSeconds) {
+function updateThreat(deltaSeconds, now) {
   if (state.intercepted || state.threatPassed) {
     return;
   }
 
-  state.threatProgress = clamp(state.threatProgress + settings.threatRate * deltaSeconds, 0, 1);
+  if (state.impactWarningStartedAt !== null) {
+    const elapsedSeconds = (now - state.impactWarningStartedAt) / 1000;
+    const warningProgress = clamp(elapsedSeconds / settings.impactWarningDurationSeconds, 0, 1);
+    state.threatProgress = getResolvedThreatProgress(
+      state.viewportWidth,
+      state.viewportHeight,
+      now,
+    );
 
-  if (state.threatProgress >= 1) {
-    state.threatPassed = true;
-    state.fireStatus = "Threat Passed";
-    state.fireMessageUntil = performance.now() + 1400;
+    if (warningProgress >= 1) {
+      state.threatProgress = 1;
+      state.threatPassed = true;
+      state.fireStatus = "Threat Passed";
+      state.fireMessageUntil = now + 1400;
+    }
+
+    return;
   }
+
+  const nextProgress = clamp(state.threatProgress + settings.threatRate * deltaSeconds, 0, 1);
+  const warningWindow = getImpactWarningWindow(
+    state.viewportWidth,
+    state.viewportHeight,
+  );
+
+  if (nextProgress >= warningWindow.start) {
+    state.threatProgress = warningWindow.start;
+    state.impactWarningStartedAt = now;
+    state.impactWarningStartProgress = warningWindow.start;
+    return;
+  }
+
+  state.threatProgress = nextProgress;
 }
 
 function attemptFire() {
@@ -575,7 +675,7 @@ function attemptFire() {
   }
 
   if (threat.occluded) {
-    setFireMessage("Occluded", 1000);
+    setFireMessage("Surface Occluded", 1000);
     return "occluded";
   }
 
@@ -671,7 +771,7 @@ function getThreatStatusLabel(threat) {
   }
 
   if (threat.occluded) {
-    return "Detected / Occluded";
+    return "Surface Occluded";
   }
 
   if (threat.lockReady) {
@@ -739,7 +839,7 @@ function getFireStatusLabel(threat) {
   }
 
   if (threat.occluded) {
-    return "Occluded";
+    return "Surface Occluded";
   }
 
   return "No Visual Contact";
@@ -748,7 +848,7 @@ function getFireStatusLabel(threat) {
 function isFireWarning(status) {
   return (
     status === "Not Aligned" ||
-    status === "Occluded" ||
+    status === "Surface Occluded" ||
     status === "No Visual Contact" ||
     status === "Already Intercepted" ||
     status === "Threat Passed"
@@ -1378,7 +1478,7 @@ function drawOccludedIndicator(threat, timestamp) {
 
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.fillStyle = "rgba(255, 232, 170, 0.9)";
-  ctx.fillText(threat.impactWarning ? "Impact Warning" : "Occluded", 12, -10);
+  ctx.fillText("Surface Occluded", 12, -10);
   ctx.restore();
 }
 
@@ -1407,7 +1507,11 @@ function drawEdgeIndicator(threat, width, height, timestamp) {
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
   ctx.fillStyle = "rgba(255, 216, 190, 0.9)";
-  ctx.fillText("위협 방향", edge.x, clamp(edge.y + 25, 22, height - 14));
+  ctx.fillText(
+    threat.impactWarning ? "Impact Warning" : "위협 방향",
+    edge.x,
+    clamp(edge.y + 25, 22, height - 14),
+  );
   ctx.restore();
 }
 
@@ -1549,10 +1653,6 @@ function render(timestamp) {
   const height = state.viewportHeight;
   const threat = resolveThreat(width, height);
 
-  if (threat.visualContact) {
-    state.hasVisualContact = true;
-  }
-
   ctx.clearRect(0, 0, width, height);
   drawSpace(width, height);
   drawEarth(width, height);
@@ -1573,7 +1673,7 @@ function loop(now) {
   state.lastFrameTime = now;
 
   updateView(deltaSeconds);
-  updateThreat(deltaSeconds);
+  updateThreat(deltaSeconds, now);
   render(now);
   requestAnimationFrame(loop);
 }

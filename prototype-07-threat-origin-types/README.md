@@ -15,6 +15,8 @@
 
 High / Low는 별도 공격 타입이나 별도 궤적 모델이 아니라, 프로토타입 검토용 source position preset이다. 네 조합은 모두 같은 trajectory generator를 사용하고, 차이는 지구 또는 궤도상의 출발 위치에만 둔다.
 
+기본 단계는 `source → boost → trajectory → Impact Warning → Lunar Defense Zone / Impact`로 본다. `Impact Warning`은 단순한 착탄 직전 표시가 아니라, Lunar Defense Zone 도달 전에 플레이어가 위협을 다시 찾고 조준해 요격할 수 있는 마지막 방어 기회다.
+
 ## 분류 기준과 테스트 조합
 
 ### Origin Type
@@ -47,15 +49,17 @@ controlB = source와 Lunar Defense Zone 사이의 완만한 접근 control point
 trajectory = one smooth cubic bezier from start to end
 ```
 
-공통 generator는 `sourcePosition - earthCenter`를 정규화한 radial outward 방향에 첫 control point를 짧게 둔다. 이 방향은 위협이 멀리 치솟아 반드시 통과하는 waypoint가 아니라, 발사 직후 지구 바깥쪽으로 살짝 밀려나는 초기 접선이다. 두 번째 control point는 source와 `Lunar Defense Zone`을 잇는 방향 안에서 완만한 곡률을 만들며, 마지막 구간도 별도 하강 단계 없이 같은 곡선으로 목표에 수렴한다.
+공통 generator는 `sourcePosition - earthCenter`를 정규화한 radial outward 방향에 첫 control point를 짧게 둔다. 이 방향은 위협이 멀리 치솟아 반드시 통과하는 waypoint가 아니라, 발사 직후 지구 바깥쪽으로 밀려나는 초기 접선이다. 검토를 위해 boost 거리를 이전보다 약간 강조했지만, 짧은 초기 추진 범위에만 사용해 궤적 전체가 크게 치솟거나 꺾이지 않게 한다. 두 번째 control point는 source와 `Lunar Defense Zone`을 잇는 방향 안에서 완만한 곡률을 만들며, 마지막 구간도 별도 하강 단계 없이 같은 곡선으로 목표에 수렴한다.
 
 Earth Surface / Orbital, High / Low는 모두 같은 boost 계산과 같은 trajectory model을 사용한다. High / Low 전용 우회 경로, hidden waypoint, reveal waypoint, behind path는 사용하지 않는다. 이 경로는 실제 탄도, 중력, 지구 탈출 또는 달 비행 궤도 계산이 아니라 공격 원천에서 방어 지점으로 접근하는 감각을 확인하기 위한 단순 곡선이다.
 
-`Visual Contact`는 위협을 고정 하늘 지점으로 보내서 만드는 것이 아니다. 단일 곡선 위의 위협이 현재 화면의 보이는 하늘 영역에 들어오면 `Visual Contact`로 판정하고, 달 표면에 가려져 있으면 `Detected / Occluded`로 판정한다.
+`Visual Contact`는 위협을 고정 하늘 지점으로 보내서 만드는 것이 아니다. 단일 곡선 위의 위협이 현재 화면의 보이는 하늘 영역에 들어오면 `Visual Contact`로 판정한다. 화면 밖이면 `Off-screen / Out of View`, 화면 안이지만 달 표면 뒤에 있으면 `Surface Occluded`로 구분한다.
 
 `Lunar Defense Zone`은 화면이나 우주공간의 고정 좌표가 아니라 현재 보이는 달 표면 내부의 surface anchor다. 실제 달 위도/경도 대신, 현재 달 지평선에서 화면 하단 방향으로 surface depth 약 `60%` 내려온 위치를 사용한다. 시야 이동으로 달 표면 비중과 지평선이 달라지면 실제 마커와 위협의 최종 목표점도 같은 표면 기준으로 함께 이동한다. 텍스트 라벨은 가독성을 위해 기준점보다 약간 위에 표시한다.
 
-`Impact Warning`은 Visual Contact가 한 번 이상 발생한 뒤 terminal approach 후반부에만 표시한다. 위협이 계속 달 표면에 가려져 있으면 `Detected / Occluded`를 유지하며 `Lock Ready`를 허용하지 않는다.
+`Impact Warning`은 마지막으로 연속해서 보이는 하늘 구간에서 시작해 기본 `2.0초` 동안 유지한다. 이 단계에서는 `Surface Occluded`를 허용하지 않는다. 플레이어가 다른 방향을 보면 `Impact Warning + Off-screen`이 될 수 있지만, 위협 방향으로 시선을 돌리면 horizon 위에서 `Visual Contact`가 되고 crosshair 근처에서는 `Lock Ready`가 된다. 경고 시간이 끝나면 별도 충돌 시스템 없이 기존 `Threat Passed`를 Lunar Defense Zone 도달/Impact의 간단한 상태 메시지로 사용한다.
+
+경고 시간은 source까지의 거리나 High / Low preset이 아니라 threat type 기준으로 정하는 것이 적절하다. 현재는 threat type이 하나이므로 네 조합 모두 같은 `2.0초`를 사용한다. 향후 fast 또는 heavy threat type이 생기면 타입별 duration을 검토할 수 있다.
 
 향후 지구 표면 전체나 다양한 원형/타원 궤도상의 source position을 검토할 때도, 첫 boost 방향은 각 source에서 지구 중심 반대 방향으로 두는 것을 기본 후보로 삼는다.
 
@@ -65,10 +69,10 @@ Earth Surface / Orbital, High / Low는 모두 같은 boost 계산과 같은 traj
 
 ```text
 위협이 화면 밖에 있음
-→ Off-screen / edge indicator
+→ Off-screen / Out of View / edge indicator
 
 위협이 화면 안이지만 현재 달 표면 영역 뒤에 있음
-→ Detected / Occluded
+→ Surface Occluded / 조준 불가
 
 위협이 현재 보이는 하늘 영역에 있음
 → Visual Contact
@@ -77,7 +81,9 @@ Visual Contact 상태에서 중앙 crosshair 근처에 있음
 → Lock Ready
 ```
 
-판정은 Origin Type이나 High / Low preset으로 강제하지 않는다. 따라서 Low 위협도 실제로 보이는 영역에 있으면 `Visual Contact`가 되고, High 위협도 시야 이동으로 달 표면 뒤에 놓이면 `Detected / Occluded`가 된다.
+판정은 Origin Type이나 High / Low preset으로 강제하지 않는다. 따라서 Low 위협도 실제로 보이는 영역에 있으면 `Visual Contact`가 되고, High 위협도 시야 이동으로 달 표면 뒤에 놓이면 `Surface Occluded`가 된다.
+
+`Off-screen`은 시선을 돌려 다시 찾을 수 있는 상태이며 달 표면 가림을 뜻하지 않는다. `Surface Occluded`만 실제 달 표면 뒤에 있어 `Lock Ready`가 될 수 없는 상태다. Source / Boost / Trajectory 단계에서는 두 상태가 모두 가능하지만, `Impact Warning` 단계에서는 `Off-screen`, `Visual Contact`, `Lock Ready`만 허용한다.
 
 ## 조합별 표시
 
@@ -96,6 +102,7 @@ source marker를 지구 표면에서 약간 떨어진 위치에 두고 orbit gui
 - Earth Vertical Position: `30%`
 - Lunar Surface Area: 정면 보기 약 `30%`, 아래 보기 약 `50%` ~ `80%`
 - Lunar Defense Zone Surface Depth: 현재 보이는 달 표면 영역 안에서 지평선부터 약 `60%`
+- Impact Warning Duration: 모든 source preset에 공통으로 `2.0초`
 - Aim Guide Radius: 화면 중앙 조준 기준점 기준 `64px`
 - View Movement: 이전 prototype과 같은 제한된 좌우/상하 이동 범위
 
@@ -117,13 +124,13 @@ source marker를 지구 표면에서 약간 떨어진 위치에 두고 orbit gui
 
 ## 위협 상태 구분
 
-- `Off-screen`: 위협이 화면 밖에 있으며 edge indicator로 방향만 안내한다.
-- `Detected / Occluded`: 위협이 화면 안에 있지만 현재 동적 달 표면 영역 뒤에 있어 실제로 보이지 않는 상태이다.
+- `Off-screen / Out of View`: 위협이 현재 화면 밖에 있으며 edge indicator로 방향을 안내한다. 시선을 돌리면 다시 볼 수 있다.
+- `Surface Occluded`: 위협이 화면 안에 있지만 현재 동적 달 표면 영역 뒤에 있어 실제로 보이지 않고 조준할 수 없는 상태이다.
 - `Visual Contact`: 위협이 화면 안의 보이는 하늘 영역에 있는 상태이다.
 - `Lock Ready`: `Visual Contact` 상태의 위협이 화면 중앙 crosshair의 가이드 반경 안에 들어온 상태이다.
 - `Intercepted`: `Lock Ready` 상태에서 발사 입력을 받아 요격 성공으로 처리된 상태이다.
-- `Impact Warning`: Visual Contact가 한 번 이상 발생한 뒤 terminal approach 후반부에 들어간 상태이다.
-- `Threat Passed`: 위협이 접근 경로 끝까지 도달한 상태이다.
+- `Impact Warning`: Lunar Defense Zone 도달 전 마지막 `2.0초` 방어 기회다. 올바른 방향을 보면 horizon 위에서 조준할 수 있다.
+- `Threat Passed`: `Impact Warning`이 끝나 Lunar Defense Zone / Impact에 도달했음을 알리는 간단한 상태이다.
 
 가려진 상태에서는 중앙 crosshair 근처에 있더라도 `Lock Ready`가 되지 않는다.
 
@@ -132,8 +139,9 @@ source marker를 지구 표면에서 약간 떨어진 위치에 두고 orbit gui
 - `Lock Ready` 상태에서 Mouse Click 또는 Space 입력을 하면 `Intercepted` 상태가 된다.
 - 요격 성공 시 위협 마커를 제거하고 짧은 flash와 burst circle을 표시한다.
 - `Visual Contact` 상태지만 `Lock Ready`가 아니면 `Not Aligned`를 표시한다.
-- `Detected / Occluded` 상태에서는 `Occluded`를 표시하고 요격 성공 처리하지 않는다.
+- `Surface Occluded` 상태에서는 같은 이름을 표시하고 요격 성공 처리하지 않는다.
 - 화면 밖 위협에는 `No Visual Contact`를 표시하고 요격 성공 처리하지 않는다.
+- `Impact Warning` 중에도 `Visual Contact`와 `Lock Ready` 규칙은 동일하며, `Lock Ready`에서 발사하면 요격할 수 있다.
 - 실패/패널티는 이번 단계에서 넣지 않는다.
 
 ## 포함한 기능
@@ -150,14 +158,15 @@ source marker를 지구 표면에서 약간 떨어진 위치에 두고 orbit gui
 - 현재 달 표면의 surface depth 약 60%에 마커와 위협 목표점을 함께 두는 Lunar Defense Zone anchor
 - 조합별 source marker와 launch pulse
 - Orbital 계열의 orbit guide
-- 현재 화면과 동적 달 표면 영역 기준의 Occluded / Visual Contact 판정
+- 현재 화면과 동적 달 표면 영역 기준의 Off-screen / Surface Occluded / Visual Contact 판정
+- source 거리와 무관한 공통 `2.0초` Impact Warning과 마지막 요격 기회
 - 달 표면 내부 surface depth 약 60%의 Lunar Defense Zone
 - 움직이는 위협 1개와 Lock Ready / 요격 피드백
 - 새 위협 생성 / Restart와 현재 상태 패널
 
 ## 제외한 기능
 
-점수, 체력, 게임 오버, 웨이브, 난이도 상승, 여러 위협 동시 출현, 사운드, 실제 총알/요격체 궤적, 실제 탄도 계산, 실제 중력 계산, 실제 공격 위성 궤도 계산, 실제 위성 운동, 실제 달 뒤편 물리 계산, 실제 지구 남극 좌표 계산, 지구 표면의 정확한 발사 좌표 계산은 이번 범위에서 제외한다.
+점수, 체력, 게임 오버, 웨이브, 난이도 상승, 여러 위협 동시 출현, 사운드, 실제 총알/요격체 궤적, 실제 탄도 계산, 실제 중력 계산, 실제 공격 위성 궤도 계산, 실제 위성 운동, 실제 달 뒤편 물리 계산, 실제 지구 남극 좌표 계산, 지구 표면의 정확한 발사 좌표 계산은 이번 범위에서 제외한다. 고정 하늘 경유점, forced visible approach point, 높은 terminal entry point도 사용하지 않는다.
 
 또한 복잡한 폭발 연출, 실제 무기 시스템 확정, 메인 게임 구현, simulator 저장소 수정, fullscreen mode 구현은 포함하지 않는다.
 
@@ -166,11 +175,14 @@ source marker를 지구 표면에서 약간 떨어진 위치에 두고 orbit gui
 - Earth Surface와 Orbital이 source marker 위치와 orbit guide로 구분되는가?
 - High와 Low가 별도 공격 방식이 아니라 source position 차이로 읽히는가?
 - 각 source에서 발사 직후 지구 중심 반대 방향으로 짧게 boost 되는가?
+- boost가 이전보다 분명하지만 전체 궤적을 과도하게 치솟게 만들지 않는가?
 - 네 조합이 같은 trajectory model로 Lunar Defense Zone을 향하는가?
 - 위협이 높은 고정 경유점으로 치솟지 않고 하나의 부드러운 곡선으로 목표에 접근하는가?
 - 시야 이동으로 달 표면 비중이 바뀌어도 Lunar Defense Zone과 위협 목표점이 같은 surface anchor에 놓이는가?
 - Visual Contact가 경로 강제 보정이 아니라 현재 화면과 달 표면 기준 상태 판정으로 발생하는가?
-- 시야 이동에 따라 High도 Occluded, Low도 Visual Contact가 될 수 있는가?
+- Off-screen과 실제 달 표면 뒤의 Surface Occluded가 의미상 구분되는가?
+- Impact Warning 중에는 Surface Occluded가 발생하지 않고, 올바른 방향에서 Visual Contact / Lock Ready가 가능한가?
+- 네 source 조합의 Impact Warning이 같은 `2.0초`를 사용하는가?
 - Origin Type과 Source Position이 바뀌어도 edge indicator, Lock Ready, 요격 흐름이 유지되는가?
 
 ## 다음 단계 후보
@@ -183,3 +195,4 @@ source marker를 지구 표면에서 약간 떨어진 위치에 두고 orbit gui
 - 마우스 감도와 시야 이동 범위 조정
 - fullscreen mode 검토
 - 이후 별도 단계에서 실제 요격체 궤적 검토
+- 상태 전환 문제가 반복되면 별도 `lunar-threat-approach-visibility-simulator`에서 phase와 visibility 관계 검토
