@@ -253,3 +253,11 @@
 결정: 궤적은 짧게 강조한 radial outward boost와 하나의 공통 cubic trajectory를 유지한다. 고정 하늘 경유점, forced visible approach point, 높은 terminal entry point, High / Low 전용 경로는 추가하지 않는다.
 
 보류: 상태 전환 문제가 반복되면 별도 `lunar-threat-approach-visibility-simulator`에서 phase와 visibility 관계를 검토한다.
+
+## 2026-06-28 - Impact 직전 phase 우선순위 복구
+
+결정: `prototype-07-threat-origin-types`의 `Impact Warning`은 source 위치와 무관하게 Lunar Defense Zone 도달 직전의 공통 `2.0초` phase로 반드시 표시한다.
+
+결정: 이 phase에서는 `Surface Occluded`가 상태를 덮어쓰지 않으며, 플레이어가 올바른 방향을 보면 `Visual Contact`와 `Lock Ready`가 가능해야 한다.
+
+결정: 이번 hotfix는 phase/state 전환만 복구하며 기존 cubic trajectory, radial outward boost, source preset과 Lunar Defense Zone surface anchor는 변경하지 않는다.

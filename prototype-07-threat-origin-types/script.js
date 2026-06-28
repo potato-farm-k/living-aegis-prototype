@@ -15,7 +15,6 @@ const settings = {
   viewScale: 2.45,
   threatRate: 0.052,
   impactWarningDurationSeconds: 2,
-  impactSurfaceClearance: 8,
   launchSignalDuration: 1200,
   defenseZoneSurfaceDepth: 0.6,
   launchBoostDistanceRatio: 0.62,
@@ -115,7 +114,6 @@ const state = {
   threatPassed: false,
   impactWarningStartedAt: null,
   impactWarningStartProgress: 0,
-  impactWarningComplete: false,
   fireStatus: "No Visual Contact",
   fireMessageUntil: 0,
   launchStartedAt: performance.now(),
@@ -373,48 +371,12 @@ function getThreatWorldPosition(width, height, progress = state.threatProgress) 
   );
 }
 
-function getSurfaceClearanceAtProgress(width, height, progress) {
-  const world = getThreatWorldPosition(width, height, progress);
-  const screen = projectWorldToScreen(world.x, world.y, width, height);
-  return getLunarSurfaceCurveY(width, height, screen.x) - screen.y;
-}
-
-function getImpactWarningWindow(width, height) {
-  const sampleCount = 80;
+function getImpactWarningWindow() {
   const warningTravel = settings.threatRate * settings.impactWarningDurationSeconds;
-  let currentSegmentStart = null;
-  let finalSegment = null;
-
-  for (let index = 0; index <= sampleCount; index += 1) {
-    const progress = index / sampleCount;
-    const clearance = getSurfaceClearanceAtProgress(width, height, progress);
-    const visibleAboveSurface = clearance >= settings.impactSurfaceClearance;
-
-    if (visibleAboveSurface && currentSegmentStart === null) {
-      currentSegmentStart = progress;
-      continue;
-    }
-
-    if (!visibleAboveSurface && currentSegmentStart !== null) {
-      finalSegment = {
-        start: currentSegmentStart,
-        end: Math.max(currentSegmentStart, (index - 1) / sampleCount),
-      };
-      currentSegmentStart = null;
-    }
-  }
-
-  if (currentSegmentStart !== null) {
-    finalSegment = { start: currentSegmentStart, end: 1 };
-  }
-
-  if (!finalSegment) {
-    return { start: 0, end: 0 };
-  }
 
   return {
-    start: Math.max(finalSegment.start, finalSegment.end - warningTravel),
-    end: finalSegment.end,
+    start: Math.max(0, 1 - warningTravel),
+    end: 1,
   };
 }
 
@@ -427,7 +389,7 @@ function getResolvedThreatProgress(width, height, now = performance.now()) {
     return state.threatProgress;
   }
 
-  const warningWindow = getImpactWarningWindow(width, height);
+  const warningWindow = getImpactWarningWindow();
   const storedWarningStartProgress = Math.min(
     state.impactWarningStartProgress,
     warningWindow.end,
@@ -475,11 +437,13 @@ function resolveThreat(width, height) {
   const active = !state.intercepted && !state.threatPassed;
   const onScreen = active && isInsideViewport(screen.x, screen.y, width, height);
   const lunarSurfaceY = getLunarSurfaceCurveY(width, height, screen.x);
-  const occluded = active && onScreen && isOccludedByLunarSurface(screen.x, screen.y, width, height);
+  const impactWarning = active && state.impactWarningStartedAt !== null;
+  const surfaceOccluded = active && onScreen &&
+    isOccludedByLunarSurface(screen.x, screen.y, width, height);
+  const occluded = surfaceOccluded && !impactWarning;
   const visualContact = active && onScreen && !occluded;
   const aim = getAimMetrics(screen.x, screen.y, width, height);
   const lockReady = active && visualContact && aim.distance <= settings.aimGuideRadius;
-  const impactWarning = active && state.impactWarningStartedAt !== null;
 
   return {
     mode: state.sourceMode,
@@ -597,7 +561,6 @@ function restartThreat(advanceSource = true) {
   state.threatPassed = false;
   state.impactWarningStartedAt = null;
   state.impactWarningStartProgress = 0;
-  state.impactWarningComplete = false;
   state.fireStatus = "No Visual Contact";
   state.fireMessageUntil = 0;
   state.launchStartedAt = performance.now();
@@ -620,20 +583,19 @@ function updateThreat(deltaSeconds, now) {
     );
 
     if (warningProgress >= 1) {
-      state.impactWarningStartedAt = null;
-      state.impactWarningComplete = true;
+      state.threatProgress = 1;
+      state.threatPassed = true;
+      state.fireStatus = "Threat Passed";
+      state.fireMessageUntil = now + 1400;
     }
 
     return;
   }
 
   const nextProgress = clamp(state.threatProgress + settings.threatRate * deltaSeconds, 0, 1);
-  const warningWindow = getImpactWarningWindow(
-    state.viewportWidth,
-    state.viewportHeight,
-  );
+  const warningWindow = getImpactWarningWindow();
 
-  if (!state.impactWarningComplete && nextProgress >= warningWindow.start) {
+  if (nextProgress >= warningWindow.start) {
     state.threatProgress = warningWindow.start;
     state.impactWarningStartedAt = now;
     state.impactWarningStartProgress = warningWindow.start;
@@ -1459,7 +1421,12 @@ function drawThreat(threat, width, height, timestamp) {
 
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.fillStyle = threat.lockReady ? "rgba(222, 255, 216, 0.94)" : "rgba(255, 230, 210, 0.92)";
-  ctx.fillText(threat.lockReady ? "Lock Ready" : "Visual Contact", 12, -10);
+  const markerLabel = threat.lockReady
+    ? "Lock Ready"
+    : threat.impactWarning
+      ? "Impact Warning"
+      : "Visual Contact";
+  ctx.fillText(markerLabel, 12, -10);
   ctx.restore();
 }
 
