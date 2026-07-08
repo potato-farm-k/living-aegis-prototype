@@ -39,6 +39,8 @@
 
 ### Changed
 
+- `PROTOTYPE_INDEX.md`에 Threat Type Draft v0.1의 P0/P1/P2 prototype 검증 우선순위 추가
+- `AGENTS.md`에 세 Living Aegis 저장소의 공통 문서 업데이트 원칙 추가
 - `prototype-07-threat-origin-types`의 Impact 직전 공통 2초를 Impact Warning phase로 복구하고, 이 구간에서 Surface Occluded가 Visual Contact와 Lock Ready를 덮어쓰지 않도록 상태 우선순위를 보정
 - `prototype-07-threat-origin-types`에서 Impact Warning 종료 시 위협을 즉시 제거하던 회귀를 수정해, horizon 접촉 후에도 Lunar Defense Zone 도달 전까지 상태와 마커를 유지
 - `prototype-07-threat-origin-types`의 boost를 짧은 radial outward 범위 안에서 소폭 강조하고, Off-screen과 Surface Occluded를 분리하며 Impact Warning을 source와 무관한 2초 마지막 요격 기회로 보정

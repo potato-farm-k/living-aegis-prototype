@@ -2,6 +2,12 @@
 
 이 문서는 `living-aegis-prototype`의 구조와 문서 정책에 관한 결정을 기록한다.
 
+## 2026-07-08 - Threat Type Draft v0.1 prototype 우선순위
+
+결정: 현재 prototype 검증의 P0 위협은 Missile-type Threat으로 유지한다. Beam/Charge-type Threat은 P1 pre-fire intercept variation, Mass/Object-type Threat은 P2 heavy special threat로 보류한다.
+
+이유: Missile-type Threat이 source, boost, trajectory, Lunar Defense Zone, Impact Warning Corridor와 기본 요격 감각을 함께 검증하기에 가장 적합하다. 나머지 두 계열은 기본 문법이 안정되기 전에 구현하면 현재 prototype 범위를 흐릴 수 있으므로 지금 구현하지 않는다.
+
 ## 2026-06-23 - 초기 저장소 구조
 
 결정:

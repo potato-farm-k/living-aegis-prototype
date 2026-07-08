@@ -60,6 +60,16 @@
 - Entry: `prototype-07-threat-origin-types/index.html`
 - Notes: `prototype-06-attack-source-trajectory`의 공격 원천 → 접근 경로 → Lunar Defense Zone 흐름을 바탕으로, 네 Origin Type / Source Position 조합이 짧은 radial boost와 공통 단일 곡선을 사용하고 Off-screen / Surface Occluded를 구분하며 source와 무관한 2초 Impact Warning을 마지막 요격 기회로 제공하는 프로토타입
 
+## Threat Type Validation Priority v0.1
+
+위협 유형의 상세 기준은 `living-aegis-origin/docs/GDD.md`에서 관리하고, 이 문서에는 prototype 검증 우선순위만 기록한다. 이 분류는 최종 enemy taxonomy가 아니라 현재 단계의 working draft다.
+
+- P0 — Missile-type Threat: 현재 prototype의 main threat다. source, boost, trajectory, Lunar Defense Zone, Impact Warning Corridor와 기본 요격 문법을 우선 검증한다.
+- P1 — Beam/Charge-type Threat: 발사 후 빔 대응이 아니라 발사 전 충전 또는 조준 source 차단을 검토하는 후속 변주다. 현재 구현 대상이 아니다.
+- P2 — Mass/Object-type Threat: 약점 공격, 반복 타격, 줌 활용에 적합한 느리고 무거운 special threat 후보다. 현재 구현 대상이 아니다.
+
+Beam/Charge-type Threat과 Mass/Object-type Threat은 Missile-type Threat의 기본 플레이 문법이 안정된 뒤 별도 prototype 필요성을 판단한다.
+
 ## Removed Placeholder
 
 - `prototype-01-basic-defense/`는 초기 구조 확인용 scaffold였으며, 실제 실험 대상이 아니어서 루트 런처와 활성 prototype 목록에서 제거했다.
