@@ -301,6 +301,13 @@ function updateThreat(deltaSeconds) {
   }
 }
 
+function setPaused(paused) {
+  state.paused = paused;
+  state.lastFrameTime = performance.now();
+  els.pause.textContent = state.paused ? "Resume" : "Pause";
+  els.pause.classList.toggle("is-paused", state.paused);
+}
+
 function resetThreat() {
   state.progress = 0;
   state.intercepted = false;
@@ -308,14 +315,11 @@ function resetThreat() {
   state.fireStatus = "Waiting";
   state.fireMessageUntil = 0;
   state.interceptFeedback = null;
-  state.lastFrameTime = performance.now();
+  setPaused(false);
 }
 
 function togglePause() {
-  state.paused = !state.paused;
-  state.lastFrameTime = performance.now();
-  els.pause.textContent = state.paused ? "Resume" : "Pause";
-  els.pause.classList.toggle("is-paused", state.paused);
+  setPaused(!state.paused);
 }
 
 function tryFire() {
@@ -883,11 +887,13 @@ function bindControls() {
       tryFire();
     }
 
-    if (event.key.toLowerCase() === "r" || event.key.toLowerCase() === "n") {
+    if (event.code === "KeyR" || event.code === "KeyN") {
+      event.preventDefault();
       resetThreat();
     }
 
-    if (event.key.toLowerCase() === "p") {
+    if (event.code === "KeyP") {
+      event.preventDefault();
       togglePause();
     }
   });
