@@ -67,7 +67,11 @@ Canvas 2D 안에서는 실제 물리 대신 아래 표현으로 정면 접근감
 
 `Impact Warning Corridor`에서는 HUD warning, corridor guide, threat pulse, Lunar Defense Zone ring을 함께 강화한다. 이 구간은 단순 텍스트 경고가 아니라 마지막 방어 선택 구간으로 본다.
 
-기본 view에서는 `Earth direction` marker를 화면 정면 기준에 가깝게 둔다. 좌우 또는 상하에서 들어오는 변주는 source preset으로만 확인한다.
+기본 view에서는 `Earth direction` marker를 화면 정면 기준에 가깝게 둔다. 이번 calibration patch에서는 marker 크기를 줄여 정면 기준점처럼 읽히도록 하고, 좌우 또는 상하에서 들어오는 변주는 source preset stress test로만 확인한다.
+
+Camera Pitch는 `-45`부터 `+45`까지 조정해 `Off-screen / Visual Contact` 전환을 더 분명히 볼 수 있게 했다. 이 값은 실제 mouse-look이나 시야 시스템 확장이 아니라, 검토용 pitch calibration이다.
+
+Boost angle은 이번 단계에서 물리적으로 재설계하지 않는다. 현재 boost는 front projection 검토를 위한 fixed screen-space boost이며, 복잡한 orbital threat boost model은 후속 검토 후보로 남긴다.
 
 ## 조작 방법
 
@@ -77,7 +81,7 @@ Canvas 2D 안에서는 실제 물리 대신 아래 표현으로 정면 접근감
 - Pause 또는 `P`: 일시정지
 - Speed: 진행 속도 배율
 - Source preset: 먼 source의 화면상 시작 방향 후보
-- Camera Pitch: Off-screen / Visual Contact 전환 확인
+- Camera Pitch: `-45` / `+45` 범위에서 Off-screen / Visual Contact 전환 확인
 - Impact Warning Start: corridor 시작 progress 조정
 
 ## 포함한 기능
@@ -92,6 +96,7 @@ Canvas 2D 안에서는 실제 물리 대신 아래 표현으로 정면 접근감
 - 중앙 crosshair와 Lock Ready 상태
 - Off-screen indicator
 - progress / phase / visibility / aim debug panel
+- fixed boost debug label
 - reset / replay, pause, speed multiplier
 - camera pitch slider
 - Impact Warning Corridor start percent slider
@@ -100,7 +105,7 @@ Canvas 2D 안에서는 실제 물리 대신 아래 표현으로 정면 접근감
 
 `Surface Occluded`, `Predicted Contact`, `Predicted Impact`, `Incoming Prediction`, Beam/Charge-type Threat, Mass/Object-type Threat, 실제 game balance, 복잡한 enemy taxonomy, Three.js, WebGL, 실제 asset, Sound Direction, Concept Art 반영은 이번 범위에서 제외한다.
 
-또한 실제 미사일 탄도, 중력, 궤도 계산, 요격체 궤적, 체력, 점수, 게임 오버, 여러 위협 동시 출현, 메인 게임 구현, simulator 저장소 수정은 포함하지 않는다.
+또한 실제 미사일 탄도, 중력, 궤도 계산, 복잡한 orbital threat boost model, mouse-look 확장, 요격체 궤적, 체력, 점수, 게임 오버, 여러 위협 동시 출현, 메인 게임 구현, simulator 저장소 수정은 포함하지 않는다.
 
 ## PM 검토 포인트
 

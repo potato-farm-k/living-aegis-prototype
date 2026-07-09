@@ -7,6 +7,10 @@ const settings = {
   screenMargin: 28,
   edgeInset: 34,
   finalApproachStart: 0.95,
+  cameraPitchLimit: 45,
+  pitchShiftRatio: 0.44,
+  earthDirectionY: 0.145,
+  earthDirectionRadius: 0.044,
 };
 
 const sourcePresets = {
@@ -135,12 +139,12 @@ function resizeCanvas() {
 }
 
 function getPitchRatio() {
-  return clamp(state.cameraPitch / 30, -1, 1);
+  return clamp(state.cameraPitch / settings.cameraPitchLimit, -1, 1);
 }
 
 function getSurfaceMetrics(width, height) {
   const pitchRatio = getPitchRatio();
-  const surfaceTop = height * clamp(0.72 - pitchRatio * 0.16, 0.54, 0.84);
+  const surfaceTop = height * clamp(0.72 - pitchRatio * 0.2, 0.5, 0.86);
   const surfaceHeight = height - surfaceTop;
 
   return {
@@ -156,7 +160,7 @@ function getSurfaceMetrics(width, height) {
 function getPathPoints(width, height) {
   const preset = sourcePresets[state.sourcePreset];
   const surface = getSurfaceMetrics(width, height);
-  const pitchShift = -getPitchRatio() * height * 0.18;
+  const pitchShift = -getPitchRatio() * height * settings.pitchShiftRatio;
   const source = {
     x: width * (0.5 + preset.x * 0.34),
     y: height * (0.34 + preset.y * 0.17) + pitchShift,
@@ -367,8 +371,8 @@ function drawBackground(width, height, now) {
   });
 
   const earthX = width * 0.5;
-  const earthY = height * 0.18 - getPitchRatio() * height * 0.08;
-  const earthRadius = Math.min(width, height) * 0.052;
+  const earthY = height * settings.earthDirectionY - getPitchRatio() * height * 0.1;
+  const earthRadius = Math.min(width, height) * settings.earthDirectionRadius;
   const earthGlow = ctx.createRadialGradient(earthX, earthY, earthRadius * 0.2, earthX, earthY, earthRadius * 2.5);
   earthGlow.addColorStop(0, "rgba(126, 222, 255, 0.34)");
   earthGlow.addColorStop(1, "rgba(126, 222, 255, 0)");
@@ -644,6 +648,31 @@ function drawOffscreenIndicator(info, width, height) {
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText("Off-screen", x, y - 18);
+  ctx.fillStyle = "rgba(255, 232, 176, 0.68)";
+  ctx.font = "700 10px Arial, Helvetica, sans-serif";
+  ctx.fillText(`Pitch ${state.cameraPitch} / ${sourcePresets[state.sourcePreset].label}`, x, y - 5);
+}
+
+function drawDebugOverlay(info, width) {
+  const visibility = info.visualContact ? "Visual Contact" : "Off-screen";
+
+  ctx.save();
+  ctx.fillStyle = "rgba(5, 7, 13, 0.58)";
+  ctx.strokeStyle = info.visualContact ? "rgba(123, 220, 255, 0.36)" : "rgba(255, 156, 108, 0.48)";
+  ctx.lineWidth = 1;
+  ctx.fillRect(16, 16, Math.min(300, width - 32), 68);
+  ctx.strokeRect(16, 16, Math.min(300, width - 32), 68);
+
+  ctx.fillStyle = info.visualContact ? "rgba(123, 220, 255, 0.96)" : "rgba(255, 156, 108, 0.96)";
+  ctx.font = "700 12px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(`Visibility: ${visibility}`, 28, 38);
+
+  ctx.fillStyle = "rgba(235, 246, 255, 0.76)";
+  ctx.font = "700 10px Arial, Helvetica, sans-serif";
+  ctx.fillText(`Pitch: ${state.cameraPitch} / Source: ${sourcePresets[state.sourcePreset].label}`, 28, 56);
+  ctx.fillText("Boost: fixed screen-space boost", 28, 72);
+  ctx.restore();
 }
 
 function drawCrosshair(info) {
@@ -753,6 +782,7 @@ function drawFrame(now) {
   drawImpactOrIntercept(info, now);
   drawCrosshair(info);
   drawWarningHud(info, width, height);
+  drawDebugOverlay(info, width);
   updatePanels(info);
 }
 
