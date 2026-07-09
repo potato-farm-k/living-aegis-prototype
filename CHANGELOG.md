@@ -42,6 +42,7 @@
 
 ### Changed
 
+- `prototype-08-p0-missile-front-approach`의 기본 Earth-direction marker를 정면 기준에 가깝게 옮기고, 입력 안내를 실제 동작하는 Canvas Click / Space / Replay / Pause 기준으로 정리
 - `PROTOTYPE_INDEX.md`에 Threat Type Draft v0.1의 P0/P1/P2 prototype 검증 우선순위 추가
 - `AGENTS.md`에 세 Living Aegis 저장소의 공통 문서 업데이트 원칙 추가
 - `prototype-07-threat-origin-types`의 Impact 직전 공통 2초를 Impact Warning phase로 복구하고, 이 구간에서 Surface Occluded가 Visual Contact와 Lock Ready를 덮어쓰지 않도록 상태 우선순위를 보정

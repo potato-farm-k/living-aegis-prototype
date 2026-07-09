@@ -47,7 +47,7 @@ Engagement는 아래처럼 단순화한다.
 
 - `Not Locked`: Visual Contact가 아니거나 crosshair 기준 반경 밖인 상태
 - `Lock Ready`: Visual Contact 상태의 위협이 중앙 crosshair 근처에 들어온 상태
-- `Intercept`: Lock Ready 상태에서 Mouse Click 또는 Space 입력을 받은 상태
+- `Intercept`: Lock Ready 상태에서 Canvas Click 또는 Space 입력을 받은 상태
 - `Impact`: 위협이 Lunar Defense Zone에 도달한 상태
 
 요격체 궤적, 체력, 점수, 게임 오버는 포함하지 않는다.
@@ -67,9 +67,11 @@ Canvas 2D 안에서는 실제 물리 대신 아래 표현으로 정면 접근감
 
 `Impact Warning Corridor`에서는 HUD warning, corridor guide, threat pulse, Lunar Defense Zone ring을 함께 강화한다. 이 구간은 단순 텍스트 경고가 아니라 마지막 방어 선택 구간으로 본다.
 
+기본 view에서는 `Earth direction` marker를 화면 정면 기준에 가깝게 둔다. 좌우 또는 상하에서 들어오는 변주는 source preset으로만 확인한다.
+
 ## 조작 방법
 
-- Mouse Click: 발사 입력
+- Canvas Click: 발사 입력
 - Space: 발사 입력
 - Replay 또는 `R` / `N`: 위협 재시작
 - Pause 또는 `P`: 일시정지

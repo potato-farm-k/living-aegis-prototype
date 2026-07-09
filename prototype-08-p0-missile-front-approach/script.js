@@ -315,6 +315,18 @@ function togglePause() {
 }
 
 function tryFire() {
+  if (state.intercepted) {
+    state.fireStatus = "Intercept";
+    state.fireMessageUntil = performance.now() + 1200;
+    return;
+  }
+
+  if (state.impactReached) {
+    state.fireStatus = "Impact Reached";
+    state.fireMessageUntil = performance.now() + 1200;
+    return;
+  }
+
   const info = getThreatInfo(performance.now());
 
   if (info.lockReady) {
@@ -329,9 +341,7 @@ function tryFire() {
     return;
   }
 
-  if (state.impactReached) {
-    state.fireStatus = "Impact Reached";
-  } else if (!info.visualContact) {
+  if (!info.visualContact) {
     state.fireStatus = "No Visual Contact";
   } else {
     state.fireStatus = "Not Locked";
@@ -356,7 +366,7 @@ function drawBackground(width, height, now) {
     ctx.fill();
   });
 
-  const earthX = width * 0.18;
+  const earthX = width * 0.5;
   const earthY = height * 0.18 - getPitchRatio() * height * 0.08;
   const earthRadius = Math.min(width, height) * 0.052;
   const earthGlow = ctx.createRadialGradient(earthX, earthY, earthRadius * 0.2, earthX, earthY, earthRadius * 2.5);
@@ -378,7 +388,8 @@ function drawBackground(width, height, now) {
 
   ctx.fillStyle = "rgba(200, 239, 255, 0.78)";
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
-  ctx.fillText("Earth direction", earthX + earthRadius + 12, earthY + 4);
+  ctx.textAlign = "center";
+  ctx.fillText("Earth direction", earthX, earthY - earthRadius - 12);
 }
 
 function drawLunarSurface(surface, width, height) {
@@ -760,7 +771,13 @@ function updatePanels(info) {
       ? "Lock Ready"
       : "Not Locked";
 
-  const fireLabel = performance.now() < state.fireMessageUntil ? state.fireStatus : (info.lockReady ? "Ready" : "Waiting");
+  const fireLabel = state.intercepted
+    ? "Intercept"
+    : state.impactReached
+      ? "Impact Reached"
+      : performance.now() < state.fireMessageUntil
+        ? state.fireStatus
+        : (info.lockReady ? "Ready" : "Waiting");
 
   els.phaseStatus.textContent = phaseLabel;
   els.phaseStatus.className = "";
