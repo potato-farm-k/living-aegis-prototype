@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prototype 08 - P0 Missile Front Approach</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <main class="prototype-shell">
+      <a class="back-link" href="../">Back to Prototype Lab</a>
+
+      <section class="intro" aria-labelledby="prototype-title">
+        <p class="eyebrow">P0 Missile Prototype</p>
+        <h1 id="prototype-title">P0 Missile Front Approach</h1>
+        <p class="lede">
+          P0 Missile-type Threat가 화면 위에서 아래로 낙하하는 것이 아니라, 정면 먼 곳에서 Lunar Defense Zone으로 접근하는지 검증하는 prototype입니다.
+        </p>
+      </section>
+
+      <div class="playtest-layout">
+        <section class="stage-section" aria-label="P0 missile front approach canvas">
+          <canvas
+            id="approach-canvas"
+            width="1280"
+            height="720"
+            aria-label="P0 Missile-type Threat의 정면 접근감과 Impact Warning Corridor를 확인하는 2D Canvas"
+          ></canvas>
+        </section>
+
+        <aside class="control-section" aria-labelledby="control-title">
+          <div class="control-header">
+            <h2 id="control-title">현재 상태</h2>
+            <div class="button-row" aria-label="Playback controls">
+              <button id="reset-threat" type="button">Replay</button>
+              <button id="pause-threat" type="button">Pause</button>
+              <label class="select-control" for="speed-multiplier">
+                <span>Speed</span>
+                <select id="speed-multiplier">
+                  <option value="0.5">0.5x</option>
+                  <option value="1" selected>1x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2">2x</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="source-row" aria-label="Source offset presets">
+              <button class="source-button is-active" type="button" data-source-preset="center">Center</button>
+              <button class="source-button" type="button" data-source-preset="upper">Upper</button>
+              <button class="source-button" type="button" data-source-preset="lower">Lower</button>
+              <button class="source-button" type="button" data-source-preset="left">Left</button>
+              <button class="source-button" type="button" data-source-preset="right">Right</button>
+            </div>
+
+            <label class="range-control" for="camera-pitch">
+              <span>Camera Pitch</span>
+              <input id="camera-pitch" type="range" min="-30" max="30" value="0" step="1">
+              <strong id="camera-pitch-value">0</strong>
+            </label>
+
+            <label class="range-control" for="warning-start">
+              <span>Impact Warning Start</span>
+              <input id="warning-start" type="range" min="60" max="88" value="75" step="1">
+              <strong id="warning-start-value">75%</strong>
+            </label>
+          </div>
+
+          <div class="phase-panel" aria-live="polite">
+            <div class="status-line">
+              <span>Phase</span>
+              <strong id="phase-status">Source</strong>
+            </div>
+            <p>source → boost → main trajectory → Impact Warning Corridor → Impact</p>
+          </div>
+
+          <div class="visibility-panel" aria-live="polite">
+            <div class="status-line">
+              <span>Visibility</span>
+              <strong id="visibility-status">Off-screen</strong>
+            </div>
+            <p>Surface Occluded와 Predicted Contact 없이 시야 안팎만 확인합니다.</p>
+          </div>
+
+          <div class="aim-panel" aria-live="polite">
+            <div class="status-line">
+              <span>Aim</span>
+              <strong id="aim-status">Not Locked</strong>
+            </div>
+            <p>Visual Contact 상태의 위협이 중앙 crosshair 근처에 들어오면 Lock Ready입니다.</p>
+          </div>
+
+          <div class="fire-panel" aria-live="polite">
+            <div class="status-line">
+              <span>Fire</span>
+              <strong id="fire-status">Waiting</strong>
+            </div>
+            <p>Mouse Click 또는 Space로 Lock Ready 상태의 위협을 요격합니다.</p>
+          </div>
+
+          <dl class="settings-grid" aria-live="polite">
+            <div class="setting-line-card">
+              <dt>Threat Progress</dt>
+              <dd id="threat-progress">0%</dd>
+              <dt>Corridor</dt>
+              <dd id="corridor-status">Standby</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Source Offset</dt>
+              <dd id="source-offset-value">Center</dd>
+              <dt>Pitch</dt>
+              <dd id="pitch-value">0</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Visual Contact</dt>
+              <dd id="visual-contact">No</dd>
+              <dt>Off-screen</dt>
+              <dd id="offscreen-state">Yes</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Aim Distance</dt>
+              <dd id="aim-distance">0 px</dd>
+              <dt>Lock Radius</dt>
+              <dd id="lock-radius">86 px</dd>
+            </div>
+          </dl>
+
+          <p class="control-help">
+            Mouse Click/Space: 발사. Replay: 위협 재시작. Pause: 일시정지. Camera Pitch와 source preset으로 Off-screen / Visual Contact 전환을 확인합니다.
+          </p>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>

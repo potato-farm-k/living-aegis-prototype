@@ -19,7 +19,14 @@ Living Aegis Origin에 넣기 전 기능 아이디어를 작고 독립적인 pro
 현재 런처에서 이동할 수 있는 prototype:
 
 ```text
-prototype-01-basic-defense/
+prototype-01-lunar-view-control/
+prototype-02-threat-direction-scan/
+prototype-03-threat-aim-lock/
+prototype-04-intercept-feedback/
+prototype-05-threat-approach-timing/
+prototype-06-attack-source-trajectory/
+prototype-07-threat-origin-types/
+prototype-08-p0-missile-front-approach/
 ```
 
 각 prototype은 build step 없이 정적 페이지로 실행할 수 있도록 관리한다.
