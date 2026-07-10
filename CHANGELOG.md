@@ -42,6 +42,7 @@
 
 ### Changed
 
+- `prototype-08-p0-missile-front-approach`의 Lunar Defense Zone과 Impact Point를 앞쪽 지면 목표물이 아닌 Player Centered near-field defense anchor로 보정
 - `prototype-08-p0-missile-front-approach`에서 Impact Warning / Lock Ready / Intercept feel 검증을 위해 warning intensity, lock radius, 결과 상태, debug label을 보강
 - `prototype-08-p0-missile-front-approach`의 1차 PM 검토 결과를 문서화하고, Left / Right off-screen arrow 이슈를 HUD indicator refinement backlog로 기록
 - `prototype-08-p0-missile-front-approach`에서 Replay / R / N 입력이 paused 상태를 풀고 즉시 재시작되도록 보정

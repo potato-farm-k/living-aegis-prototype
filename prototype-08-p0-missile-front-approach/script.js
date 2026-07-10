@@ -12,6 +12,7 @@ const settings = {
   pitchShiftRatio: 0.44,
   earthDirectionY: 0.145,
   earthDirectionRadius: 0.044,
+  finalCurveStart: 0.82,
 };
 
 const sourcePresets = {
@@ -70,6 +71,8 @@ const els = {
   interceptResult: document.querySelector("#intercept-result"),
   warningActive: document.querySelector("#warning-active"),
   inputHint: document.querySelector("#input-hint"),
+  defenseAnchor: document.querySelector("#defense-anchor"),
+  impactAnchor: document.querySelector("#impact-anchor"),
 };
 
 const stars = createStars(160);
@@ -158,14 +161,25 @@ function getSurfaceMetrics(width, height) {
   const pitchRatio = getPitchRatio();
   const surfaceTop = height * clamp(0.72 - pitchRatio * 0.2, 0.5, 0.86);
   const surfaceHeight = height - surfaceTop;
+  const forwardGround = {
+    x: width * 0.5,
+    y: surfaceTop + surfaceHeight * 0.38,
+  };
+  const playerAnchorY = Math.min(
+    Math.max(height * 0.82, surfaceTop + surfaceHeight * 0.62),
+    height * 0.9,
+  );
+  const playerAnchor = {
+    x: width * 0.5,
+    y: playerAnchorY,
+  };
 
   return {
     top: surfaceTop,
     height: surfaceHeight,
-    defense: {
-      x: width * 0.5,
-      y: surfaceTop + surfaceHeight * 0.38,
-    },
+    forwardGround,
+    defense: playerAnchor,
+    anchorMode: "Player Centered",
   };
 }
 
@@ -178,19 +192,26 @@ function getPathPoints(width, height) {
     y: height * (0.34 + preset.y * 0.17) + pitchShift,
   };
   const target = surface.defense;
+  const forwardTarget = surface.forwardGround;
   const controlA = {
-    x: source.x + (source.x - target.x) * 0.16,
+    x: source.x + (source.x - forwardTarget.x) * 0.16,
     y: source.y - height * (0.07 + Math.abs(preset.x) * 0.02),
   };
   const controlB = {
-    x: target.x + (source.x - target.x) * 0.24,
-    y: target.y - height * 0.37,
+    x: forwardTarget.x + (source.x - forwardTarget.x) * 0.24,
+    y: forwardTarget.y - height * 0.37,
+  };
+  const finalControl = {
+    x: target.x + (source.x - target.x) * 0.06,
+    y: Math.min(forwardTarget.y, target.y) - height * 0.18,
   };
 
   return {
     source,
     controlA,
     controlB,
+    forwardTarget,
+    finalControl,
     target,
     surface,
   };
@@ -198,7 +219,21 @@ function getPathPoints(width, height) {
 
 function getThreatPosition(progress, width, height) {
   const path = getPathPoints(width, height);
-  const position = cubicBezier(path.source, path.controlA, path.controlB, path.target, progress);
+  const finalStart = cubicBezier(
+    path.source,
+    path.controlA,
+    path.controlB,
+    path.forwardTarget,
+    settings.finalCurveStart,
+  );
+  let position;
+
+  if (progress <= settings.finalCurveStart) {
+    position = cubicBezier(path.source, path.controlA, path.controlB, path.forwardTarget, progress);
+  } else {
+    const t = clamp((progress - settings.finalCurveStart) / (1 - settings.finalCurveStart), 0, 1);
+    position = cubicBezier(finalStart, path.finalControl, path.target, path.target, t);
+  }
 
   return {
     ...position,
@@ -465,28 +500,40 @@ function drawDefenseZone(surface, now, info) {
   const activeWarning = info.inCorridor || state.impactReached;
   const intensity = activeWarning ? Math.max(info.warningIntensity, 1) : 0;
   const pulse = (Math.sin(now * 0.01) + 1) / 2;
-  const ringRadius = 22 + (activeWarning ? pulse * 8 * intensity : pulse * 3);
+  const ringRadius = 32 + (activeWarning ? pulse * 11 * intensity : pulse * 4);
+  const shieldWidth = ringRadius * 2.65;
+  const shieldHeight = ringRadius * 1.08;
 
   ctx.save();
   ctx.strokeStyle = activeWarning ? "rgba(255, 156, 108, 0.95)" : "rgba(123, 220, 255, 0.8)";
-  ctx.fillStyle = activeWarning ? `rgba(255, 117, 93, ${0.1 + 0.04 * intensity})` : "rgba(123, 220, 255, 0.08)";
+  ctx.fillStyle = activeWarning ? `rgba(255, 117, 93, ${0.08 + 0.04 * intensity})` : "rgba(123, 220, 255, 0.07)";
   ctx.lineWidth = activeWarning ? 2 + intensity : 2;
+
   ctx.beginPath();
-  ctx.ellipse(defense.x, defense.y, ringRadius * 1.75, ringRadius * 0.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(defense.x, defense.y + ringRadius * 0.08, shieldWidth, shieldHeight * 0.5, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
+  ctx.strokeStyle = activeWarning ? `rgba(255, 211, 180, ${0.7 + pulse * 0.18})` : "rgba(160, 236, 255, 0.58)";
+  ctx.lineWidth = activeWarning ? 3 : 2;
   ctx.beginPath();
-  ctx.moveTo(defense.x - 46, defense.y);
-  ctx.lineTo(defense.x + 46, defense.y);
-  ctx.moveTo(defense.x, defense.y - 14);
-  ctx.lineTo(defense.x, defense.y + 14);
+  ctx.arc(defense.x, defense.y - ringRadius * 0.08, shieldWidth * 0.58, Math.PI * 1.08, Math.PI * 1.92);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(defense.x - shieldWidth * 0.38, defense.y);
+  ctx.lineTo(defense.x + shieldWidth * 0.38, defense.y);
+  ctx.moveTo(defense.x, defense.y - shieldHeight * 0.54);
+  ctx.lineTo(defense.x, defense.y + shieldHeight * 0.34);
   ctx.stroke();
 
   ctx.fillStyle = "rgba(235, 246, 255, 0.88)";
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Lunar Defense Zone", defense.x, defense.y - 34);
+  ctx.fillText("Lunar Defense Zone", defense.x, defense.y - shieldHeight * 0.64);
+  ctx.fillStyle = "rgba(200, 239, 255, 0.62)";
+  ctx.font = "700 10px Arial, Helvetica, sans-serif";
+  ctx.fillText("Player-centered anchor", defense.x, defense.y - shieldHeight * 0.42);
   ctx.restore();
 }
 
@@ -500,7 +547,7 @@ function drawTrajectoryGuide(info, width, height) {
   ctx.beginPath();
   for (let i = 0; i <= 48; i += 1) {
     const t = i / 48;
-    const p = cubicBezier(path.source, path.controlA, path.controlB, path.target, t);
+    const p = getThreatPosition(t, width, height);
     if (i === 0) {
       ctx.moveTo(p.x, p.y);
     } else {
@@ -517,7 +564,7 @@ function drawTrajectoryGuide(info, width, height) {
     for (let i = 0; i <= 24; i += 1) {
       const t = lerp(state.warningStart, settings.finalApproachStart, i / 24);
       const travelT = getTravelProgress(t);
-      const p = cubicBezier(path.source, path.controlA, path.controlB, path.target, travelT);
+      const p = getThreatPosition(travelT, width, height);
       if (i === 0) {
         ctx.moveTo(p.x, p.y);
       } else {
@@ -716,8 +763,8 @@ function drawDebugOverlay(info, width) {
   ctx.fillText(`Visibility: ${visibility} / Warning: ${warningState}`, 28, 56);
   ctx.fillText(`Lock: ${lockState} (${Math.round(info.aimDistance)} / ${state.lockRadius}px)`, 28, 72);
   ctx.fillText(`Result: ${state.interceptResult} / Input: ${inputHint}`, 28, 88);
-  ctx.fillText(`Pitch: ${state.cameraPitch} / Source: ${sourcePresets[state.sourcePreset].label}`, 28, 104);
-  ctx.fillText("Boost: fixed screen-space boost", 28, 120);
+  ctx.fillText("Anchor: Player Centered / Impact: Player Centered", 28, 104);
+  ctx.fillText(`Pitch: ${state.cameraPitch} / Source: ${sourcePresets[state.sourcePreset].label} / Fixed Boost`, 28, 120);
   ctx.restore();
 }
 
@@ -931,6 +978,8 @@ function updatePanels(info) {
   els.interceptResult.textContent = state.interceptResult;
   els.warningActive.textContent = info.inCorridor ? "Active" : "Standby";
   els.inputHint.textContent = inputHint;
+  els.defenseAnchor.textContent = info.path.surface.anchorMode;
+  els.impactAnchor.textContent = "Player Centered";
 }
 
 function animate(now) {
