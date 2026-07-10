@@ -65,6 +65,18 @@
               <input id="warning-start" type="range" min="60" max="88" value="75" step="1">
               <strong id="warning-start-value">75%</strong>
             </label>
+
+            <label class="range-control" for="lock-radius-control">
+              <span>Lock Radius</span>
+              <input id="lock-radius-control" type="range" min="56" max="120" value="86" step="2">
+              <strong id="lock-radius-value">86px</strong>
+            </label>
+
+            <label class="range-control" for="warning-intensity">
+              <span>Warning Intensity</span>
+              <input id="warning-intensity" type="range" min="75" max="150" value="115" step="5">
+              <strong id="warning-intensity-value">115%</strong>
+            </label>
           </div>
 
           <div class="phase-panel" aria-live="polite">
@@ -96,7 +108,7 @@
               <span>Fire</span>
               <strong id="fire-status">Waiting</strong>
             </div>
-            <p>Canvas Click 또는 Space로 Lock Ready 상태의 위협을 요격합니다.</p>
+            <p>Lock Ready 상태에서 Canvas Click 또는 Space로 요격을 시도합니다.</p>
           </div>
 
           <dl class="settings-grid" aria-live="polite">
@@ -125,6 +137,18 @@
               <dd id="lock-radius">86 px</dd>
             </div>
             <div class="setting-line-card">
+              <dt>Lock State</dt>
+              <dd id="lock-state-value">false</dd>
+              <dt>Result</dt>
+              <dd id="intercept-result">Ready</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Warning</dt>
+              <dd id="warning-active">Standby</dd>
+              <dt>Input</dt>
+              <dd id="input-hint">Click / Space</dd>
+            </div>
+            <div class="setting-line-card">
               <dt>Pitch Range</dt>
               <dd>-45 / +45</dd>
               <dt>Boost Model</dt>
@@ -133,7 +157,7 @@
           </dl>
 
           <p class="control-help">
-            Canvas Click/Space: 발사. Replay (R/N): 위협 재시작. Pause 또는 P: 일시정지. Camera Pitch와 source preset으로 Off-screen / Visual Contact 전환을 확인합니다.
+            Canvas Click/Space: Intercept attempt. R/N 또는 Replay: 위협 재시작. Pause 또는 P: 일시정지. Camera Pitch와 source preset으로 Off-screen / Visual Contact 전환을 확인합니다.
           </p>
         </aside>
       </div>

@@ -4,6 +4,7 @@ const ctx = canvas.getContext("2d");
 const settings = {
   baseThreatRate: 0.06,
   lockRadius: 86,
+  warningIntensity: 1.15,
   screenMargin: 28,
   edgeInset: 34,
   finalApproachStart: 0.95,
@@ -29,11 +30,14 @@ const state = {
   paused: false,
   cameraPitch: 0,
   warningStart: 0.75,
+  lockRadius: settings.lockRadius,
+  warningIntensity: settings.warningIntensity,
   sourcePreset: "center",
   lastFrameTime: performance.now(),
   intercepted: false,
   impactReached: false,
   fireStatus: "Waiting",
+  interceptResult: "Ready",
   fireMessageUntil: 0,
   interceptFeedback: null,
 };
@@ -46,6 +50,10 @@ const els = {
   cameraPitchValue: document.querySelector("#camera-pitch-value"),
   warningStart: document.querySelector("#warning-start"),
   warningStartValue: document.querySelector("#warning-start-value"),
+  lockRadiusControl: document.querySelector("#lock-radius-control"),
+  lockRadiusValue: document.querySelector("#lock-radius-value"),
+  warningIntensity: document.querySelector("#warning-intensity"),
+  warningIntensityValue: document.querySelector("#warning-intensity-value"),
   phaseStatus: document.querySelector("#phase-status"),
   visibilityStatus: document.querySelector("#visibility-status"),
   aimStatus: document.querySelector("#aim-status"),
@@ -58,6 +66,10 @@ const els = {
   offscreenState: document.querySelector("#offscreen-state"),
   aimDistance: document.querySelector("#aim-distance"),
   lockRadius: document.querySelector("#lock-radius"),
+  lockStateValue: document.querySelector("#lock-state-value"),
+  interceptResult: document.querySelector("#intercept-result"),
+  warningActive: document.querySelector("#warning-active"),
+  inputHint: document.querySelector("#input-hint"),
 };
 
 const stars = createStars(160);
@@ -261,10 +273,16 @@ function getThreatInfo(now) {
   const visualContact = active && onScreen;
   const crosshair = { x: width * 0.5, y: height * 0.5 };
   const aimDistance = Math.hypot(position.x - crosshair.x, position.y - crosshair.y);
-  const lockReady = visualContact && aimDistance <= settings.lockRadius;
+  const lockReady = visualContact && aimDistance <= state.lockRadius;
   const inCorridor = active && progress >= state.warningStart && progress < 1;
+  const warningPressure = inCorridor
+    ? clamp((progress - state.warningStart) / (1 - state.warningStart), 0, 1)
+    : 0;
+  const warningIntensity = inCorridor
+    ? state.warningIntensity * lerp(0.78, 1.18, warningPressure)
+    : 0;
   const pulse = (Math.sin(now * 0.012) + 1) / 2;
-  const size = lerp(4, 32, Math.pow(progress, 1.65)) + (inCorridor ? pulse * 4 : 0);
+  const size = lerp(4, 32, Math.pow(progress, 1.65)) + (inCorridor ? pulse * 4.8 * warningIntensity : 0);
 
   return {
     ...position,
@@ -277,6 +295,8 @@ function getThreatInfo(now) {
     lockReady,
     aimDistance,
     inCorridor,
+    warningPressure,
+    warningIntensity,
     pulse,
     size,
     crosshair,
@@ -296,7 +316,8 @@ function updateThreat(deltaSeconds) {
 
   if (state.progress >= 1) {
     state.impactReached = true;
-    state.fireStatus = "Impact Reached";
+    state.fireStatus = "Impact";
+    state.interceptResult = "Impact";
     state.fireMessageUntil = performance.now() + 1600;
   }
 }
@@ -313,6 +334,7 @@ function resetThreat() {
   state.intercepted = false;
   state.impactReached = false;
   state.fireStatus = "Waiting";
+  state.interceptResult = "Ready";
   state.fireMessageUntil = 0;
   state.interceptFeedback = null;
   setPaused(false);
@@ -324,13 +346,15 @@ function togglePause() {
 
 function tryFire() {
   if (state.intercepted) {
-    state.fireStatus = "Intercept";
+    state.fireStatus = "Intercepted";
+    state.interceptResult = "Intercepted";
     state.fireMessageUntil = performance.now() + 1200;
     return;
   }
 
   if (state.impactReached) {
-    state.fireStatus = "Impact Reached";
+    state.fireStatus = "Impact";
+    state.interceptResult = "Missed - Impact";
     state.fireMessageUntil = performance.now() + 1200;
     return;
   }
@@ -339,7 +363,8 @@ function tryFire() {
 
   if (info.lockReady) {
     state.intercepted = true;
-    state.fireStatus = "Intercept";
+    state.fireStatus = "Intercepted";
+    state.interceptResult = "Intercepted";
     state.fireMessageUntil = performance.now() + 1800;
     state.interceptFeedback = {
       x: info.x,
@@ -350,9 +375,11 @@ function tryFire() {
   }
 
   if (!info.visualContact) {
-    state.fireStatus = "No Visual Contact";
+    state.fireStatus = "No Visual";
+    state.interceptResult = "Missed - Off-screen";
   } else {
-    state.fireStatus = "Not Locked";
+    state.fireStatus = "No Lock";
+    state.interceptResult = "Missed - No Lock";
   }
 
   state.fireMessageUntil = performance.now() + 1200;
@@ -433,15 +460,17 @@ function drawLunarSurface(surface, width, height) {
   });
 }
 
-function drawDefenseZone(surface, now, inCorridor) {
+function drawDefenseZone(surface, now, info) {
   const defense = surface.defense;
+  const activeWarning = info.inCorridor || state.impactReached;
+  const intensity = activeWarning ? Math.max(info.warningIntensity, 1) : 0;
   const pulse = (Math.sin(now * 0.01) + 1) / 2;
-  const ringRadius = 22 + (inCorridor ? pulse * 10 : pulse * 3);
+  const ringRadius = 22 + (activeWarning ? pulse * 8 * intensity : pulse * 3);
 
   ctx.save();
-  ctx.strokeStyle = inCorridor ? "rgba(255, 156, 108, 0.95)" : "rgba(123, 220, 255, 0.8)";
-  ctx.fillStyle = inCorridor ? "rgba(255, 117, 93, 0.12)" : "rgba(123, 220, 255, 0.08)";
-  ctx.lineWidth = inCorridor ? 3 : 2;
+  ctx.strokeStyle = activeWarning ? "rgba(255, 156, 108, 0.95)" : "rgba(123, 220, 255, 0.8)";
+  ctx.fillStyle = activeWarning ? `rgba(255, 117, 93, ${0.1 + 0.04 * intensity})` : "rgba(123, 220, 255, 0.08)";
+  ctx.lineWidth = activeWarning ? 2 + intensity : 2;
   ctx.beginPath();
   ctx.ellipse(defense.x, defense.y, ringRadius * 1.75, ringRadius * 0.5, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -482,8 +511,8 @@ function drawTrajectoryGuide(info, width, height) {
   ctx.setLineDash([]);
 
   if (info.inCorridor) {
-    ctx.lineWidth = 2.4;
-    ctx.strokeStyle = `rgba(255, 156, 108, ${0.45 + info.pulse * 0.35})`;
+    ctx.lineWidth = 2 + info.warningIntensity * 0.7;
+    ctx.strokeStyle = `rgba(255, 156, 108, ${Math.min(0.9, 0.38 + info.pulse * 0.34 * info.warningIntensity)})`;
     ctx.beginPath();
     for (let i = 0; i <= 24; i += 1) {
       const t = lerp(state.warningStart, settings.finalApproachStart, i / 24);
@@ -498,7 +527,7 @@ function drawTrajectoryGuide(info, width, height) {
     ctx.stroke();
 
     const target = path.target;
-    ctx.fillStyle = `rgba(255, 117, 93, ${0.06 + info.pulse * 0.06})`;
+    ctx.fillStyle = `rgba(255, 117, 93, ${0.05 + info.pulse * 0.05 * info.warningIntensity})`;
     ctx.beginPath();
     ctx.moveTo(info.x, info.y);
     ctx.lineTo(target.x - width * 0.09, target.y + height * 0.01);
@@ -559,8 +588,8 @@ function drawTrail(info) {
     ctx.fill();
   }
 
-  ctx.strokeStyle = `rgba(255, 186, 112, ${info.inCorridor ? 0.32 : 0.18})`;
-  ctx.lineWidth = info.inCorridor ? 2.5 : 1.5;
+  ctx.strokeStyle = `rgba(255, 186, 112, ${info.inCorridor ? Math.min(0.46, 0.24 + info.warningIntensity * 0.07) : 0.18})`;
+  ctx.lineWidth = info.inCorridor ? 1.8 + info.warningIntensity * 0.7 : 1.5;
   ctx.beginPath();
   for (let i = 0; i <= trailCount; i += 1) {
     const t = clamp(info.progress - (trailCount - i) * 0.022, 0, 1);
@@ -582,9 +611,9 @@ function drawThreat(info, now) {
   }
 
   const alpha = 0.55 + info.progress * 0.4;
-  const glowRadius = info.size * (info.inCorridor ? 3.2 : 2.2);
+  const glowRadius = info.size * (info.inCorridor ? 2.6 + info.warningIntensity * 0.75 : 2.2);
   const glow = ctx.createRadialGradient(info.x, info.y, info.size * 0.2, info.x, info.y, glowRadius);
-  glow.addColorStop(0, `rgba(255, 223, 160, ${0.45 + info.pulse * 0.2})`);
+  glow.addColorStop(0, `rgba(255, 223, 160, ${Math.min(0.82, 0.42 + info.pulse * 0.18 * Math.max(info.warningIntensity, 1))})`);
   glow.addColorStop(1, "rgba(255, 117, 93, 0)");
 
   ctx.save();
@@ -608,7 +637,9 @@ function drawThreat(info, now) {
   ctx.stroke();
 
   if (info.inCorridor || info.lockReady) {
-    ctx.strokeStyle = info.lockReady ? "rgba(156, 255, 141, 0.85)" : `rgba(255, 156, 108, ${0.55 + info.pulse * 0.3})`;
+    ctx.strokeStyle = info.lockReady
+      ? "rgba(156, 255, 141, 0.85)"
+      : `rgba(255, 156, 108, ${Math.min(0.9, 0.48 + info.pulse * 0.25 * info.warningIntensity)})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(0, 0, info.size * (1.45 + info.pulse * 0.22), 0, Math.PI * 2);
@@ -659,35 +690,50 @@ function drawOffscreenIndicator(info, width, height) {
 
 function drawDebugOverlay(info, width) {
   const visibility = info.visualContact ? "Visual Contact" : "Off-screen";
+  const lockState = info.lockReady ? "Lock Ready" : "Not Locked";
+  const warningState = info.inCorridor ? "Active" : "Standby";
+  const inputHint = state.intercepted || state.impactReached ? "R Replay" : "Click/Space Intercept";
+  const panelWidth = Math.min(360, width - 32);
 
   ctx.save();
   ctx.fillStyle = "rgba(5, 7, 13, 0.58)";
   ctx.strokeStyle = info.visualContact ? "rgba(123, 220, 255, 0.36)" : "rgba(255, 156, 108, 0.48)";
   ctx.lineWidth = 1;
-  ctx.fillRect(16, 16, Math.min(300, width - 32), 68);
-  ctx.strokeRect(16, 16, Math.min(300, width - 32), 68);
+  ctx.fillRect(16, 16, panelWidth, 120);
+  ctx.strokeRect(16, 16, panelWidth, 120);
 
-  ctx.fillStyle = info.visualContact ? "rgba(123, 220, 255, 0.96)" : "rgba(255, 156, 108, 0.96)";
+  ctx.fillStyle = info.lockReady
+    ? "rgba(156, 255, 141, 0.96)"
+    : info.visualContact
+      ? "rgba(123, 220, 255, 0.96)"
+      : "rgba(255, 156, 108, 0.96)";
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText(`Visibility: ${visibility}`, 28, 38);
+  ctx.fillText(`Phase: ${getPhaseLabel(info.phase)} / Progress: ${Math.round(info.progress * 100)}%`, 28, 38);
 
   ctx.fillStyle = "rgba(235, 246, 255, 0.76)";
   ctx.font = "700 10px Arial, Helvetica, sans-serif";
-  ctx.fillText(`Pitch: ${state.cameraPitch} / Source: ${sourcePresets[state.sourcePreset].label}`, 28, 56);
-  ctx.fillText("Boost: fixed screen-space boost", 28, 72);
+  ctx.fillText(`Visibility: ${visibility} / Warning: ${warningState}`, 28, 56);
+  ctx.fillText(`Lock: ${lockState} (${Math.round(info.aimDistance)} / ${state.lockRadius}px)`, 28, 72);
+  ctx.fillText(`Result: ${state.interceptResult} / Input: ${inputHint}`, 28, 88);
+  ctx.fillText(`Pitch: ${state.cameraPitch} / Source: ${sourcePresets[state.sourcePreset].label}`, 28, 104);
+  ctx.fillText("Boost: fixed screen-space boost", 28, 120);
   ctx.restore();
 }
 
 function drawCrosshair(info) {
   const center = info.crosshair;
-  const lockColor = info.lockReady ? "rgba(156, 255, 141, 0.94)" : "rgba(222, 241, 255, 0.72)";
+  const lockColor = info.lockReady
+    ? "rgba(156, 255, 141, 0.94)"
+    : info.inCorridor
+      ? "rgba(255, 156, 108, 0.78)"
+      : "rgba(222, 241, 255, 0.72)";
 
   ctx.save();
   ctx.strokeStyle = lockColor;
   ctx.lineWidth = info.lockReady ? 2.5 : 1.5;
   ctx.beginPath();
-  ctx.arc(center.x, center.y, settings.lockRadius, 0, Math.PI * 2);
+  ctx.arc(center.x, center.y, state.lockRadius, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.beginPath();
@@ -708,7 +754,7 @@ function drawCrosshair(info) {
   ctx.restore();
 }
 
-function drawImpactOrIntercept(info, now) {
+function drawImpactOrIntercept(info, now, width) {
   if (state.interceptFeedback) {
     const age = now - state.interceptFeedback.startedAt;
     const t = clamp(age / 900, 0, 1);
@@ -729,6 +775,15 @@ function drawImpactOrIntercept(info, now) {
     if (t >= 1) {
       state.interceptFeedback = null;
     }
+  }
+
+  if (state.intercepted) {
+    ctx.save();
+    ctx.fillStyle = "rgba(143, 243, 255, 0.92)";
+    ctx.font = "700 18px Arial, Helvetica, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("INTERCEPTED", width * 0.5, 66);
+    ctx.restore();
   }
 
   if (state.impactReached) {
@@ -754,19 +809,40 @@ function drawWarningHud(info, width, height) {
     return;
   }
 
-  const alpha = 0.38 + info.pulse * 0.28;
+  const alpha = Math.min(0.86, 0.3 + info.pulse * 0.24 * info.warningIntensity);
   ctx.save();
   ctx.strokeStyle = `rgba(255, 117, 93, ${alpha})`;
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 4 + info.warningIntensity;
   ctx.strokeRect(12, 12, width - 24, height - 24);
 
-  ctx.fillStyle = `rgba(255, 117, 93, ${0.07 + info.pulse * 0.04})`;
+  ctx.fillStyle = `rgba(255, 117, 93, ${0.05 + info.pulse * 0.035 * info.warningIntensity})`;
   ctx.fillRect(0, 0, width, height);
 
   ctx.fillStyle = `rgba(255, 232, 176, ${0.82 + info.pulse * 0.12})`;
   ctx.font = "700 15px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText("Impact Warning Corridor", width * 0.5, 34);
+  ctx.fillStyle = info.lockReady ? "rgba(196, 255, 186, 0.96)" : "rgba(255, 232, 176, 0.82)";
+  ctx.font = "700 12px Arial, Helvetica, sans-serif";
+  ctx.fillText(info.lockReady ? "LOCK READY - Click / Space" : "Align crosshair for Lock Ready", width * 0.5, 54);
+  ctx.restore();
+}
+
+function drawResultHud(now, width) {
+  const showingMessage = now < state.fireMessageUntil;
+  const isMissed = state.interceptResult.startsWith("Missed");
+
+  if (!showingMessage || state.intercepted || state.impactReached || !isMissed) {
+    return;
+  }
+
+  const message = state.interceptResult.includes("No Lock") ? "NO LOCK" : "NO VISUAL CONTACT";
+
+  ctx.save();
+  ctx.fillStyle = "rgba(255, 156, 108, 0.92)";
+  ctx.font = "700 16px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(message, width * 0.5, 66);
   ctx.restore();
 }
 
@@ -780,17 +856,19 @@ function drawFrame(now) {
   drawSource(info, now);
   drawTrail(info);
   drawLunarSurface(info.path.surface, width, height);
-  drawDefenseZone(info.path.surface, now, info.inCorridor || state.impactReached);
+  drawDefenseZone(info.path.surface, now, info);
   drawThreat(info, now);
   drawOffscreenIndicator(info, width, height);
-  drawImpactOrIntercept(info, now);
+  drawImpactOrIntercept(info, now, width);
   drawCrosshair(info);
   drawWarningHud(info, width, height);
+  drawResultHud(now, width);
   drawDebugOverlay(info, width);
   updatePanels(info);
 }
 
 function updatePanels(info) {
+  const now = performance.now();
   const phaseLabel = getPhaseLabel(info.phase);
   const visibilityLabel = state.intercepted
     ? "Intercepted"
@@ -806,12 +884,18 @@ function updatePanels(info) {
       : "Not Locked";
 
   const fireLabel = state.intercepted
-    ? "Intercept"
+    ? "Intercepted"
     : state.impactReached
-      ? "Impact Reached"
-      : performance.now() < state.fireMessageUntil
+      ? "Impact"
+      : now < state.fireMessageUntil
         ? state.fireStatus
-        : (info.lockReady ? "Ready" : "Waiting");
+        : (info.lockReady ? "Ready" : (info.inCorridor ? "No Lock" : "Waiting"));
+  const lockStateLabel = info.lockReady ? "true" : "false";
+  const inputHint = state.intercepted || state.impactReached
+    ? "R Replay"
+    : info.lockReady
+      ? "Click / Space"
+      : "Aim then fire";
 
   els.phaseStatus.textContent = phaseLabel;
   els.phaseStatus.className = "";
@@ -832,15 +916,21 @@ function updatePanels(info) {
   els.fireStatus.className = "";
   els.fireStatus.classList.toggle("is-intercepted", state.intercepted);
   els.fireStatus.classList.toggle("is-impact", state.impactReached);
+  els.fireStatus.classList.toggle("is-missed", state.interceptResult.startsWith("Missed") && now < state.fireMessageUntil);
+  els.fireStatus.classList.toggle("is-ready", info.lockReady && !state.intercepted && !state.impactReached);
 
   els.progress.textContent = `${Math.round(info.progress * 100)}%`;
-  els.corridorStatus.textContent = info.inCorridor ? "Active" : "Standby";
+  els.corridorStatus.textContent = info.inCorridor ? `Active ${Math.round(info.warningIntensity * 100)}%` : "Standby";
   els.sourceOffset.textContent = sourcePresets[state.sourcePreset].label;
   els.pitchValue.textContent = String(state.cameraPitch);
   els.visualContact.textContent = info.visualContact ? "Yes" : "No";
   els.offscreenState.textContent = !info.onScreen && info.active ? "Yes" : "No";
   els.aimDistance.textContent = `${Math.round(info.aimDistance)} px`;
-  els.lockRadius.textContent = `${settings.lockRadius} px`;
+  els.lockRadius.textContent = `${state.lockRadius} px`;
+  els.lockStateValue.textContent = lockStateLabel;
+  els.interceptResult.textContent = state.interceptResult;
+  els.warningActive.textContent = info.inCorridor ? "Active" : "Standby";
+  els.inputHint.textContent = inputHint;
 }
 
 function animate(now) {
@@ -867,6 +957,16 @@ function bindControls() {
   els.warningStart.addEventListener("input", () => {
     state.warningStart = Number(els.warningStart.value) / 100;
     els.warningStartValue.textContent = `${els.warningStart.value}%`;
+  });
+
+  els.lockRadiusControl.addEventListener("input", () => {
+    state.lockRadius = Number(els.lockRadiusControl.value);
+    els.lockRadiusValue.textContent = `${state.lockRadius}px`;
+  });
+
+  els.warningIntensity.addEventListener("input", () => {
+    state.warningIntensity = Number(els.warningIntensity.value) / 100;
+    els.warningIntensityValue.textContent = `${els.warningIntensity.value}%`;
   });
 
   document.querySelectorAll(".source-button").forEach((button) => {

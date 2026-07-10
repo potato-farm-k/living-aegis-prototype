@@ -68,6 +68,7 @@
 - Entry: `prototype-08-p0-missile-front-approach/index.html`
 - Notes: `Surface Occluded / Predicted Contact` 없이 `Off-screen / Visual Contact / Lock Ready`만으로, source → boost → main trajectory → Impact Warning Corridor → Lunar Defense Zone / Impact 흐름이 Canvas 2D front projection에서 성립하는지 확인하는 프로토타입
 - Review: 1차 PM 검토에서 정면 접근감과 단계 구분은 긍정적으로 확인됨. `Left` / `Right` off-screen arrow는 `HUD indicator refinement` backlog로 보류.
+- Interaction: 2차 검토 단계에서 Impact Warning → Lock Ready → Intercept 입력 감각과 Intercepted / No Lock / Impact 결과 구분을 확인함.
 
 ## Threat Type Validation Priority v0.1
 

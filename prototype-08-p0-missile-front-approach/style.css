@@ -340,6 +340,14 @@ input[type="range"] {
   color: var(--danger);
 }
 
+#fire-status.is-missed {
+  color: var(--danger-strong);
+}
+
+#fire-status.is-ready {
+  color: var(--lock);
+}
+
 .phase-panel p,
 .visibility-panel p,
 .aim-panel p,
@@ -378,6 +386,8 @@ dd {
   margin: 0;
   font-size: 0.82rem;
   font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
   text-align: right;
 }
 
