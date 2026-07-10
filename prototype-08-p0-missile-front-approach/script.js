@@ -13,6 +13,7 @@ const settings = {
   earthDirectionY: 0.145,
   earthDirectionRadius: 0.044,
   finalCurveStart: 0.82,
+  showDefenseAnchor: false,
 };
 
 const sourcePresets = {
@@ -179,7 +180,8 @@ function getSurfaceMetrics(width, height) {
     height: surfaceHeight,
     forwardGround,
     defense: playerAnchor,
-    anchorMode: "Player Centered",
+    anchorMode: "Logical / Hidden",
+    impactMode: "Player Anchor / Hidden",
   };
 }
 
@@ -496,6 +498,10 @@ function drawLunarSurface(surface, width, height) {
 }
 
 function drawDefenseZone(surface, now, info) {
+  if (!settings.showDefenseAnchor) {
+    return;
+  }
+
   const defense = surface.defense;
   const activeWarning = info.inCorridor || state.impactReached;
   const intensity = activeWarning ? Math.max(info.warningIntensity, 1) : 0;
@@ -530,10 +536,10 @@ function drawDefenseZone(surface, now, info) {
   ctx.fillStyle = "rgba(235, 246, 255, 0.88)";
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Lunar Defense Zone", defense.x, defense.y - shieldHeight * 0.64);
+  ctx.fillText("Hidden Defense Anchor", defense.x, defense.y - shieldHeight * 0.64);
   ctx.fillStyle = "rgba(200, 239, 255, 0.62)";
   ctx.font = "700 10px Arial, Helvetica, sans-serif";
-  ctx.fillText("Player-centered anchor", defense.x, defense.y - shieldHeight * 0.42);
+  ctx.fillText("debug only", defense.x, defense.y - shieldHeight * 0.42);
   ctx.restore();
 }
 
@@ -763,7 +769,7 @@ function drawDebugOverlay(info, width) {
   ctx.fillText(`Visibility: ${visibility} / Warning: ${warningState}`, 28, 56);
   ctx.fillText(`Lock: ${lockState} (${Math.round(info.aimDistance)} / ${state.lockRadius}px)`, 28, 72);
   ctx.fillText(`Result: ${state.interceptResult} / Input: ${inputHint}`, 28, 88);
-  ctx.fillText("Anchor: Player Centered / Impact: Player Centered", 28, 104);
+  ctx.fillText("Defense Zone: Logical / Hidden / Impact: Hidden", 28, 104);
   ctx.fillText(`Pitch: ${state.cameraPitch} / Source: ${sourcePresets[state.sourcePreset].label} / Fixed Boost`, 28, 120);
   ctx.restore();
 }
@@ -834,19 +840,19 @@ function drawImpactOrIntercept(info, now, width) {
   }
 
   if (state.impactReached) {
-    const target = info.path.target;
     ctx.save();
-    ctx.fillStyle = "rgba(255, 117, 93, 0.18)";
-    ctx.strokeStyle = "rgba(255, 156, 108, 0.9)";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(target.x, target.y, 48 + info.pulse * 12, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fillStyle = `rgba(255, 117, 93, ${0.12 + info.pulse * 0.04})`;
+    ctx.fillRect(0, 0, state.width, state.height);
+    ctx.strokeStyle = "rgba(255, 156, 108, 0.92)";
+    ctx.lineWidth = 7;
+    ctx.strokeRect(18, 18, state.width - 36, state.height - 36);
     ctx.fillStyle = "rgba(255, 235, 220, 0.95)";
-    ctx.font = "700 16px Arial, Helvetica, sans-serif";
+    ctx.font = "700 20px Arial, Helvetica, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Impact", target.x, target.y - 58);
+    ctx.fillText("IMPACT", state.width * 0.5, state.height * 0.5 + 42);
+    ctx.fillStyle = "rgba(255, 232, 176, 0.8)";
+    ctx.font = "700 12px Arial, Helvetica, sans-serif";
+    ctx.fillText("Player anchor compromised", state.width * 0.5, state.height * 0.5 + 62);
     ctx.restore();
   }
 }
@@ -979,7 +985,7 @@ function updatePanels(info) {
   els.warningActive.textContent = info.inCorridor ? "Active" : "Standby";
   els.inputHint.textContent = inputHint;
   els.defenseAnchor.textContent = info.path.surface.anchorMode;
-  els.impactAnchor.textContent = "Player Centered";
+  els.impactAnchor.textContent = info.path.surface.impactMode;
 }
 
 function animate(now) {
