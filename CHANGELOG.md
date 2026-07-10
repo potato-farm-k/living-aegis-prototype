@@ -42,6 +42,7 @@
 
 ### Changed
 
+- `prototype-08-p0-missile-front-approach`의 1차 PM 검토 결과를 문서화하고, Left / Right off-screen arrow 이슈를 HUD indicator refinement backlog로 기록
 - `prototype-08-p0-missile-front-approach`에서 Replay / R / N 입력이 paused 상태를 풀고 즉시 재시작되도록 보정
 - `prototype-08-p0-missile-front-approach`의 camera pitch 범위를 넓혀 Off-screen 전환을 더 명확히 하고, Earth-direction marker 크기와 fixed boost debug label을 검토용으로 보정
 - `prototype-08-p0-missile-front-approach`의 기본 Earth-direction marker를 정면 기준에 가깝게 옮기고, 입력 안내를 실제 동작하는 Canvas Click / Space / Replay / Pause 기준으로 정리
