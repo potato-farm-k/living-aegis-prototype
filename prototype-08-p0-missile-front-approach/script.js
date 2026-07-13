@@ -14,6 +14,8 @@ const settings = {
   earthDirectionRadius: 0.044,
   finalCurveStart: 0.82,
   showDefenseAnchor: false,
+  impactBlinkDuration: 1000,
+  impactBlinkCount: 3,
 };
 
 const sourcePresets = {
@@ -38,6 +40,7 @@ const state = {
   lastFrameTime: performance.now(),
   intercepted: false,
   impactReached: false,
+  impactStartedAt: null,
   fireStatus: "Waiting",
   interceptResult: "Ready",
   fireMessageUntil: 0,
@@ -353,6 +356,7 @@ function updateThreat(deltaSeconds) {
 
   if (state.progress >= 1) {
     state.impactReached = true;
+    state.impactStartedAt = performance.now();
     state.fireStatus = "Impact";
     state.interceptResult = "Impact";
     state.fireMessageUntil = performance.now() + 1600;
@@ -370,6 +374,7 @@ function resetThreat() {
   state.progress = 0;
   state.intercepted = false;
   state.impactReached = false;
+  state.impactStartedAt = null;
   state.fireStatus = "Waiting";
   state.interceptResult = "Ready";
   state.fireMessageUntil = 0;
@@ -840,17 +845,27 @@ function drawImpactOrIntercept(info, now, width) {
   }
 
   if (state.impactReached) {
+    const impactAge = state.impactStartedAt === null ? settings.impactBlinkDuration : now - state.impactStartedAt;
+    const blinkActive = impactAge < settings.impactBlinkDuration;
+    const blinkProgress = clamp(impactAge / settings.impactBlinkDuration, 0, 1);
+    const blinkPulse = blinkActive
+      ? 0.5 + Math.sin(blinkProgress * Math.PI * settings.impactBlinkCount * 2) * 0.5
+      : 0.35;
+    const overlayAlpha = blinkActive ? 0.08 + blinkPulse * 0.1 : 0.09;
+    const borderAlpha = blinkActive ? 0.42 + blinkPulse * 0.48 : 0.62;
+    const titleAlpha = blinkActive ? 0.55 + blinkPulse * 0.45 : 0.9;
+
     ctx.save();
-    ctx.fillStyle = `rgba(255, 117, 93, ${0.12 + info.pulse * 0.04})`;
+    ctx.fillStyle = `rgba(255, 117, 93, ${overlayAlpha})`;
     ctx.fillRect(0, 0, state.width, state.height);
-    ctx.strokeStyle = "rgba(255, 156, 108, 0.92)";
+    ctx.strokeStyle = `rgba(255, 156, 108, ${borderAlpha})`;
     ctx.lineWidth = 7;
     ctx.strokeRect(18, 18, state.width - 36, state.height - 36);
-    ctx.fillStyle = "rgba(255, 235, 220, 0.95)";
+    ctx.fillStyle = `rgba(255, 235, 220, ${titleAlpha})`;
     ctx.font = "700 20px Arial, Helvetica, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("IMPACT", state.width * 0.5, state.height * 0.5 + 42);
-    ctx.fillStyle = "rgba(255, 232, 176, 0.8)";
+    ctx.fillStyle = `rgba(255, 232, 176, ${blinkActive ? 0.52 + blinkPulse * 0.3 : 0.76})`;
     ctx.font = "700 12px Arial, Helvetica, sans-serif";
     ctx.fillText("Player anchor compromised", state.width * 0.5, state.height * 0.5 + 62);
     ctx.restore();

@@ -161,7 +161,7 @@ Minor issue / backlog:
 - `Visual Contact` 상태의 위협이 중앙 crosshair의 Lock Radius 안에 들어오면 `Lock Ready`로 표시한다.
 - Lock Ready 상태에서 Canvas Click 또는 Space를 입력하면 `Intercepted`로 처리하고 burst / flash feedback을 보여준다.
 - Lock Ready가 아닐 때 입력하면 `No Lock` 또는 `No Visual`로 실패 결과를 구분한다.
-- 위협이 Lunar Defense Zone / Impact에 도달하면 `Impact` 결과를 표시한다.
+- 위협이 Lunar Defense Zone / Impact에 도달하면 `Impact` 결과를 표시한다. Impact warning text는 약 1초 동안 2~3회 blink한 뒤 정적인 최종 결과 상태로 멈춘다.
 - debug panel에는 progress %, phase, visibility, lock state, lock distance, lock radius, warning active, intercept result, input hint를 표시한다.
 
 이번 단계에서도 `Surface Occluded`, `Predicted Contact`, Three.js / WebGL, mouse-look, Earth size 조정, source별 boost angle 재설계, off-screen arrow refinement는 구현하지 않는다.

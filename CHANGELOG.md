@@ -42,6 +42,7 @@
 
 ### Changed
 
+- `prototype-08-p0-missile-front-approach`의 Impact 결과 warning이 약 1초 동안만 blink한 뒤 정적 최종 상태로 멈추도록 보정
 - `prototype-08-p0-missile-front-approach`에서 visible Lunar Defense Zone / Defense Anchor marker를 기본 화면에서 숨기고 hidden logical impact target으로 정리
 - `prototype-08-p0-missile-front-approach`의 final approach / Impact Point를 Player Centered logical target 기준으로 보정
 - `prototype-08-p0-missile-front-approach`에서 Impact Warning / Lock Ready / Intercept feel 검증을 위해 warning intensity, lock radius, 결과 상태, debug label을 보강
