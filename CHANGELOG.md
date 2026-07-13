@@ -42,6 +42,7 @@
 
 ### Changed
 
+- `prototype-08-p0-missile-front-approach`에서 hidden defense anchor 주변의 제한된 Basic Missile impact point variation과 final approach start variation을 추가하고 debug panel에 선택값을 표시
 - `prototype-08-p0-missile-front-approach`의 Impact 결과 warning이 약 1초 동안만 blink한 뒤 정적 최종 상태로 멈추도록 보정
 - `prototype-08-p0-missile-front-approach`에서 visible Lunar Defense Zone / Defense Anchor marker를 기본 화면에서 숨기고 hidden logical impact target으로 정리
 - `prototype-08-p0-missile-front-approach`의 final approach / Impact Point를 Player Centered logical target 기준으로 보정

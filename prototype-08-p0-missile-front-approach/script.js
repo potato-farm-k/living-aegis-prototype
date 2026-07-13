@@ -7,7 +7,6 @@ const settings = {
   warningIntensity: 1.15,
   screenMargin: 28,
   edgeInset: 34,
-  finalApproachStart: 0.95,
   cameraPitchLimit: 45,
   pitchShiftRatio: 0.44,
   earthDirectionY: 0.145,
@@ -26,6 +25,15 @@ const sourcePresets = {
   right: { label: "Right", x: 0.95, y: -0.05 },
 };
 
+const threatVariationPresets = {
+  basicMissile: {
+    label: "Basic Missile",
+    impactOffsetX: [-40, 40],
+    impactOffsetY: [-30, 30],
+    finalApproachStartPercent: [78, 86],
+  },
+};
+
 const state = {
   width: 1280,
   height: 720,
@@ -36,6 +44,9 @@ const state = {
   warningStart: 0.75,
   lockRadius: settings.lockRadius,
   warningIntensity: settings.warningIntensity,
+  variationMode: "basicMissile",
+  impactOffset: { x: 0, y: 0 },
+  finalApproachStart: 0.82,
   sourcePreset: "center",
   lastFrameTime: performance.now(),
   intercepted: false,
@@ -77,6 +88,9 @@ const els = {
   inputHint: document.querySelector("#input-hint"),
   defenseAnchor: document.querySelector("#defense-anchor"),
   impactAnchor: document.querySelector("#impact-anchor"),
+  variationMode: document.querySelector("#variation-mode"),
+  impactOffset: document.querySelector("#impact-offset"),
+  finalApproachStart: document.querySelector("#final-approach-start"),
 };
 
 const stars = createStars(160);
@@ -130,6 +144,27 @@ function clamp(value, min, max) {
 
 function lerp(a, b, t) {
   return a + (b - a) * t;
+}
+
+function randomRange(range) {
+  return range[0] + Math.random() * (range[1] - range[0]);
+}
+
+function formatSigned(value) {
+  return value > 0 ? `+${value}` : String(value);
+}
+
+function formatPercent(value) {
+  return `${Math.round(value * 100)}%`;
+}
+
+function selectThreatVariation() {
+  const preset = threatVariationPresets[state.variationMode];
+  state.impactOffset = {
+    x: Math.round(randomRange(preset.impactOffsetX)),
+    y: Math.round(randomRange(preset.impactOffsetY)),
+  };
+  state.finalApproachStart = randomRange(preset.finalApproachStartPercent) / 100;
 }
 
 function cubicBezier(a, b, c, d, t) {
@@ -188,6 +223,17 @@ function getSurfaceMetrics(width, height) {
   };
 }
 
+function getImpactTarget(surface, width, height) {
+  return {
+    x: clamp(surface.defense.x + state.impactOffset.x, width * 0.36, width * 0.64),
+    y: clamp(
+      surface.defense.y + state.impactOffset.y,
+      surface.top + Math.max(16, surface.height * 0.22),
+      height * 0.93,
+    ),
+  };
+}
+
 function getPathPoints(width, height) {
   const preset = sourcePresets[state.sourcePreset];
   const surface = getSurfaceMetrics(width, height);
@@ -196,7 +242,7 @@ function getPathPoints(width, height) {
     x: width * (0.5 + preset.x * 0.34),
     y: height * (0.34 + preset.y * 0.17) + pitchShift,
   };
-  const target = surface.defense;
+  const target = getImpactTarget(surface, width, height);
   const forwardTarget = surface.forwardGround;
   const controlA = {
     x: source.x + (source.x - forwardTarget.x) * 0.16,
@@ -247,11 +293,11 @@ function getThreatPosition(progress, width, height) {
 }
 
 function getTravelProgress(progress) {
-  if (progress <= settings.finalApproachStart) {
-    return (progress / settings.finalApproachStart) * 0.82;
+  if (progress <= state.finalApproachStart) {
+    return (progress / state.finalApproachStart) * 0.82;
   }
 
-  const finalT = (progress - settings.finalApproachStart) / (1 - settings.finalApproachStart);
+  const finalT = (progress - state.finalApproachStart) / (1 - state.finalApproachStart);
   return lerp(0.82, 1, clamp(finalT, 0, 1));
 }
 
@@ -264,7 +310,7 @@ function getPhase(progress) {
     return "impact";
   }
 
-  if (progress >= settings.finalApproachStart) {
+  if (progress >= state.finalApproachStart) {
     return "finalApproach";
   }
 
@@ -371,6 +417,7 @@ function setPaused(paused) {
 }
 
 function resetThreat() {
+  selectThreatVariation();
   state.progress = 0;
   state.intercepted = false;
   state.impactReached = false;
@@ -573,7 +620,7 @@ function drawTrajectoryGuide(info, width, height) {
     ctx.strokeStyle = `rgba(255, 156, 108, ${Math.min(0.9, 0.38 + info.pulse * 0.34 * info.warningIntensity)})`;
     ctx.beginPath();
     for (let i = 0; i <= 24; i += 1) {
-      const t = lerp(state.warningStart, settings.finalApproachStart, i / 24);
+      const t = lerp(state.warningStart, state.finalApproachStart, i / 24);
       const travelT = getTravelProgress(t);
       const p = getThreatPosition(travelT, width, height);
       if (i === 0) {
@@ -752,13 +799,14 @@ function drawDebugOverlay(info, width) {
   const warningState = info.inCorridor ? "Active" : "Standby";
   const inputHint = state.intercepted || state.impactReached ? "R Replay" : "Click/Space Intercept";
   const panelWidth = Math.min(360, width - 32);
+  const preset = threatVariationPresets[state.variationMode];
 
   ctx.save();
   ctx.fillStyle = "rgba(5, 7, 13, 0.58)";
   ctx.strokeStyle = info.visualContact ? "rgba(123, 220, 255, 0.36)" : "rgba(255, 156, 108, 0.48)";
   ctx.lineWidth = 1;
-  ctx.fillRect(16, 16, panelWidth, 120);
-  ctx.strokeRect(16, 16, panelWidth, 120);
+  ctx.fillRect(16, 16, panelWidth, 168);
+  ctx.strokeRect(16, 16, panelWidth, 168);
 
   ctx.fillStyle = info.lockReady
     ? "rgba(156, 255, 141, 0.96)"
@@ -774,8 +822,11 @@ function drawDebugOverlay(info, width) {
   ctx.fillText(`Visibility: ${visibility} / Warning: ${warningState}`, 28, 56);
   ctx.fillText(`Lock: ${lockState} (${Math.round(info.aimDistance)} / ${state.lockRadius}px)`, 28, 72);
   ctx.fillText(`Result: ${state.interceptResult} / Input: ${inputHint}`, 28, 88);
-  ctx.fillText("Defense Zone: Logical / Hidden / Impact: Hidden", 28, 104);
-  ctx.fillText(`Pitch: ${state.cameraPitch} / Source: ${sourcePresets[state.sourcePreset].label} / Fixed Boost`, 28, 120);
+  ctx.fillText("Defense Anchor: hidden / player-centered", 28, 104);
+  ctx.fillText(`Impact Offset X: ${formatSigned(state.impactOffset.x)} / Y: ${formatSigned(state.impactOffset.y)}`, 28, 120);
+  ctx.fillText(`Final Approach Start: ${formatPercent(state.finalApproachStart)}`, 28, 136);
+  ctx.fillText(`Variation Mode: ${preset.label} / Fixed Boost`, 28, 152);
+  ctx.fillText(`Pitch: ${state.cameraPitch} / Source: ${sourcePresets[state.sourcePreset].label}`, 28, 168);
   ctx.restore();
 }
 
@@ -1001,6 +1052,9 @@ function updatePanels(info) {
   els.inputHint.textContent = inputHint;
   els.defenseAnchor.textContent = info.path.surface.anchorMode;
   els.impactAnchor.textContent = info.path.surface.impactMode;
+  els.variationMode.textContent = threatVariationPresets[state.variationMode].label;
+  els.impactOffset.textContent = `${formatSigned(state.impactOffset.x)} / ${formatSigned(state.impactOffset.y)}`;
+  els.finalApproachStart.textContent = formatPercent(state.finalApproachStart);
 }
 
 function animate(now) {
@@ -1072,5 +1126,6 @@ function bindControls() {
 window.addEventListener("resize", resizeCanvas);
 
 resizeCanvas();
+selectThreatVariation();
 bindControls();
 requestAnimationFrame(animate);
