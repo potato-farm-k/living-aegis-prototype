@@ -4,6 +4,7 @@
 
 ### Added
 
+- `prototype-08-p0-missile-front-approach`에 Earth Visual Mode / Scale / Position 옵션을 추가해 telephoto-compressed와 dramatic-backdrop 지구 배경 감각을 prototype 전용 visual tuning으로 확인할 수 있게 함
 - `prototype-08-p0-missile-front-approach`를 추가해 P0 Missile-type Threat의 정면 접근감과 Impact Warning Corridor를 Canvas 2D로 검증할 수 있게 함
 - `prototype-08-p0-missile-front-approach`에 source / boost / main trajectory / Impact Warning Corridor / Impact 단계, 크기 증가, trail, warning pulse, Lock Ready, Off-screen indicator, replay / pause / speed / camera pitch / warning start 조정을 추가
 - 루트 prototype 런처에서 `prototype-08-p0-missile-front-approach`로 이동하는 링크 추가

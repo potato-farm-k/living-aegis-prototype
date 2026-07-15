@@ -71,6 +71,7 @@
 - Interaction: 2차 검토 단계에서 Impact Warning → Lock Ready → Intercept 입력 감각과 Intercepted / No Lock / Impact 결과 구분을 확인함.
 - Anchor: 기본 화면에서 visible `Lunar Defense Zone` marker / label을 숨기고, `Impact Point`는 `Player Centered` logical target으로 유지함.
 - Variation: `Basic Missile` preset으로 hidden defense anchor 주변의 제한된 impact offset, final approach start percent, trajectory curve amount를 replay / reset마다 다시 선택하고 전체 경로를 selected impact point로 수렴시킴.
+- Earth Backdrop: `Earth Visual Mode` / visual scale / position preset으로 `telephoto-compressed`와 `dramatic-backdrop` 감각을 prototype-only visual tuning으로 확인함.
 
 ## Threat Type Validation Priority v0.1
 

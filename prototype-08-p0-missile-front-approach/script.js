@@ -25,6 +25,56 @@ const sourcePresets = {
   right: { label: "Right", x: 0.95, y: -0.05 },
 };
 
+const earthVisualModes = {
+  "realistic-ish": {
+    label: "Realistic-ish",
+    radiusMultiplier: 0.85,
+    compression: "low",
+    parallax: 0.12,
+    glow: 1.9,
+    alpha: 0.82,
+  },
+  enlarged: {
+    label: "Enlarged",
+    radiusMultiplier: 1,
+    compression: "medium",
+    parallax: 0.08,
+    glow: 2.15,
+    alpha: 0.84,
+  },
+  "telephoto-compressed": {
+    label: "Telephoto-compressed",
+    radiusMultiplier: 1.18,
+    compression: "medium",
+    parallax: 0.045,
+    glow: 2.35,
+    alpha: 0.86,
+  },
+  "dramatic-backdrop": {
+    label: "Dramatic-backdrop",
+    radiusMultiplier: 1.38,
+    compression: "high",
+    parallax: 0.025,
+    glow: 2.7,
+    alpha: 0.8,
+  },
+};
+
+const earthPositionPresets = {
+  center: { label: "Center", x: 0.5, y: 0.18 },
+  "upper-center": { label: "Upper-center", x: 0.5, y: 0.12 },
+  side: { label: "Side", x: 0.34, y: 0.17 },
+  "low-horizon": { label: "Low-horizon", x: 0.5, y: 0.34 },
+};
+
+const earthVisualScales = {
+  1: { label: "1x", value: 1 },
+  2: { label: "2x", value: 2 },
+  4: { label: "4x", value: 4 },
+  6: { label: "6x", value: 6 },
+  8: { label: "8x", value: 8 },
+};
+
 const threatVariationPresets = {
   basicMissile: {
     label: "Basic Missile",
@@ -53,6 +103,9 @@ const state = {
   boostMode: "source-relative",
   sourcePreset: "center",
   selectedSourcePreset: "center",
+  earthVisualMode: "telephoto-compressed",
+  earthVisualScale: "4",
+  earthPosition: "upper-center",
   lastFrameTime: performance.now(),
   intercepted: false,
   impactReached: false,
@@ -67,6 +120,9 @@ const els = {
   reset: document.querySelector("#reset-threat"),
   pause: document.querySelector("#pause-threat"),
   speed: document.querySelector("#speed-multiplier"),
+  earthVisualMode: document.querySelector("#earth-visual-mode"),
+  earthVisualScale: document.querySelector("#earth-visual-scale"),
+  earthPosition: document.querySelector("#earth-position"),
   cameraPitch: document.querySelector("#camera-pitch"),
   cameraPitchValue: document.querySelector("#camera-pitch-value"),
   warningStart: document.querySelector("#warning-start"),
@@ -83,6 +139,10 @@ const els = {
   corridorStatus: document.querySelector("#corridor-status"),
   sourceOffset: document.querySelector("#source-offset-value"),
   pitchValue: document.querySelector("#pitch-value"),
+  earthModeValue: document.querySelector("#earth-mode-value"),
+  earthScaleValue: document.querySelector("#earth-scale-value"),
+  earthPositionValue: document.querySelector("#earth-position-value"),
+  backdropCompressionValue: document.querySelector("#backdrop-compression-value"),
   visualContact: document.querySelector("#visual-contact"),
   offscreenState: document.querySelector("#offscreen-state"),
   aimDistance: document.querySelector("#aim-distance"),
@@ -264,6 +324,22 @@ function getEarthDirectionPoint(width, height) {
   return {
     x: width * 0.5,
     y: height * settings.earthDirectionY - getPitchRatio() * height * 0.1,
+  };
+}
+
+function getEarthBackdropConfig(width, height) {
+  const mode = earthVisualModes[state.earthVisualMode];
+  const scale = earthVisualScales[state.earthVisualScale];
+  const position = earthPositionPresets[state.earthPosition];
+  const radius = Math.min(width, height) * settings.earthDirectionRadius * scale.value * mode.radiusMultiplier;
+
+  return {
+    mode,
+    scale,
+    position,
+    x: width * position.x,
+    y: height * position.y - getPitchRatio() * height * mode.parallax,
+    radius,
   };
 }
 
@@ -538,30 +614,65 @@ function drawBackground(width, height, now) {
     ctx.fill();
   });
 
-  const earthX = width * 0.5;
-  const earthY = height * settings.earthDirectionY - getPitchRatio() * height * 0.1;
-  const earthRadius = Math.min(width, height) * settings.earthDirectionRadius;
-  const earthGlow = ctx.createRadialGradient(earthX, earthY, earthRadius * 0.2, earthX, earthY, earthRadius * 2.5);
-  earthGlow.addColorStop(0, "rgba(126, 222, 255, 0.34)");
+  const earth = getEarthBackdropConfig(width, height);
+  const earthX = earth.x;
+  const earthY = earth.y;
+  const earthRadius = earth.radius;
+  const earthGlow = ctx.createRadialGradient(earthX, earthY, earthRadius * 0.18, earthX, earthY, earthRadius * earth.mode.glow);
+  earthGlow.addColorStop(0, `rgba(126, 222, 255, ${0.24 + earth.mode.alpha * 0.14})`);
   earthGlow.addColorStop(1, "rgba(126, 222, 255, 0)");
   ctx.fillStyle = earthGlow;
   ctx.beginPath();
-  ctx.arc(earthX, earthY, earthRadius * 2.5, 0, Math.PI * 2);
+  ctx.arc(earthX, earthY, earthRadius * earth.mode.glow, 0, Math.PI * 2);
   ctx.fill();
 
+  ctx.save();
+  ctx.globalAlpha = earth.mode.alpha;
   ctx.beginPath();
   ctx.fillStyle = "#8fddff";
   ctx.arc(earthX, earthY, earthRadius, 0, Math.PI * 2);
   ctx.fill();
+
+  ctx.clip();
+  const oceanShade = ctx.createLinearGradient(
+    earthX - earthRadius,
+    earthY - earthRadius,
+    earthX + earthRadius,
+    earthY + earthRadius,
+  );
+  oceanShade.addColorStop(0, "rgba(219, 248, 255, 0.22)");
+  oceanShade.addColorStop(0.45, "rgba(63, 174, 221, 0.1)");
+  oceanShade.addColorStop(1, "rgba(4, 21, 43, 0.5)");
+  ctx.fillStyle = oceanShade;
+  ctx.fillRect(earthX - earthRadius, earthY - earthRadius, earthRadius * 2, earthRadius * 2);
+
   ctx.beginPath();
-  ctx.fillStyle = "rgba(14, 73, 92, 0.52)";
-  ctx.ellipse(earthX + earthRadius * 0.18, earthY + earthRadius * 0.1, earthRadius * 0.72, earthRadius * 0.34, -0.32, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(20, 88, 86, 0.5)";
+  ctx.ellipse(earthX + earthRadius * 0.16, earthY + earthRadius * 0.08, earthRadius * 0.72, earthRadius * 0.26, -0.32, 0, Math.PI * 2);
   ctx.fill();
+  ctx.beginPath();
+  ctx.fillStyle = "rgba(32, 117, 92, 0.4)";
+  ctx.ellipse(earthX - earthRadius * 0.24, earthY - earthRadius * 0.14, earthRadius * 0.4, earthRadius * 0.2, 0.46, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.fillStyle = "rgba(235, 248, 255, 0.32)";
+  ctx.ellipse(earthX - earthRadius * 0.12, earthY + earthRadius * 0.18, earthRadius * 0.88, earthRadius * 0.08, -0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(219, 248, 255, 0.44)";
+  ctx.lineWidth = Math.max(1.2, earthRadius * 0.012);
+  ctx.beginPath();
+  ctx.arc(earthX, earthY, earthRadius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 
   ctx.fillStyle = "rgba(200, 239, 255, 0.78)";
   ctx.font = "700 12px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Earth direction", earthX, earthY - earthRadius - 12);
+  const labelY = clamp(earthY - earthRadius - 12, 18, height - 22);
+  ctx.fillText("Earth visual backdrop", earthX, labelY);
 }
 
 function drawLunarSurface(surface, width, height) {
@@ -848,13 +959,14 @@ function drawDebugOverlay(info, width) {
   const inputHint = state.intercepted || state.impactReached ? "R Replay" : "Click/Space Intercept";
   const panelWidth = Math.min(360, width - 32);
   const preset = threatVariationPresets[state.variationMode];
+  const earth = getEarthBackdropConfig(width, state.height);
 
   ctx.save();
   ctx.fillStyle = "rgba(5, 7, 13, 0.58)";
   ctx.strokeStyle = info.visualContact ? "rgba(123, 220, 255, 0.36)" : "rgba(255, 156, 108, 0.48)";
   ctx.lineWidth = 1;
-  ctx.fillRect(16, 16, panelWidth, 184);
-  ctx.strokeRect(16, 16, panelWidth, 184);
+  ctx.fillRect(16, 16, panelWidth, 200);
+  ctx.strokeRect(16, 16, panelWidth, 200);
 
   ctx.fillStyle = info.lockReady
     ? "rgba(156, 255, 141, 0.96)"
@@ -876,6 +988,7 @@ function drawDebugOverlay(info, width) {
   ctx.fillText(`Target Mode: ${state.trajectoryTargetMode} / Boost: ${state.boostMode}`, 28, 152);
   ctx.fillText(`Curve Amount: ${formatCurveAmount(state.trajectoryCurveAmount)} / ${preset.label}`, 28, 168);
   ctx.fillText(`Pitch: ${state.cameraPitch} / Source Plan: ${sourcePresets[state.selectedSourcePreset].label}`, 28, 184);
+  ctx.fillText(`Earth: ${earth.mode.label} / ${earth.scale.label} / ${earth.position.label} / ${earth.mode.compression}`, 28, 200);
   ctx.restore();
 }
 
@@ -1091,6 +1204,11 @@ function updatePanels(info) {
   els.corridorStatus.textContent = info.inCorridor ? `Active ${Math.round(info.warningIntensity * 100)}%` : "Standby";
   els.sourceOffset.textContent = sourcePresets[state.selectedSourcePreset].label;
   els.pitchValue.textContent = String(state.cameraPitch);
+  const earth = getEarthBackdropConfig(state.width, state.height);
+  els.earthModeValue.textContent = earth.mode.label;
+  els.earthScaleValue.textContent = earth.scale.label;
+  els.earthPositionValue.textContent = earth.position.label;
+  els.backdropCompressionValue.textContent = earth.mode.compression;
   els.visualContact.textContent = info.visualContact ? "Yes" : "No";
   els.offscreenState.textContent = !info.onScreen && info.active ? "Yes" : "No";
   els.aimDistance.textContent = `${Math.round(info.aimDistance)} px`;
@@ -1120,6 +1238,18 @@ function bindControls() {
 
   els.speed.addEventListener("change", () => {
     state.speed = Number(els.speed.value);
+  });
+
+  els.earthVisualMode.addEventListener("change", () => {
+    state.earthVisualMode = els.earthVisualMode.value;
+  });
+
+  els.earthVisualScale.addEventListener("change", () => {
+    state.earthVisualScale = els.earthVisualScale.value;
+  });
+
+  els.earthPosition.addEventListener("change", () => {
+    state.earthPosition = els.earthPosition.value;
   });
 
   els.cameraPitch.addEventListener("input", () => {

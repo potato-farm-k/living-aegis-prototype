@@ -46,6 +46,37 @@
               </label>
             </div>
 
+            <label class="select-control" for="earth-visual-mode">
+              <span>Earth Visual Mode</span>
+              <select id="earth-visual-mode">
+                <option value="realistic-ish">realistic-ish</option>
+                <option value="enlarged">enlarged</option>
+                <option value="telephoto-compressed" selected>telephoto-compressed</option>
+                <option value="dramatic-backdrop">dramatic-backdrop</option>
+              </select>
+            </label>
+
+            <label class="select-control" for="earth-visual-scale">
+              <span>Earth Visual Scale</span>
+              <select id="earth-visual-scale">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="4" selected>4x</option>
+                <option value="6">6x</option>
+                <option value="8">8x</option>
+              </select>
+            </label>
+
+            <label class="select-control" for="earth-position">
+              <span>Earth Position</span>
+              <select id="earth-position">
+                <option value="center">center</option>
+                <option value="upper-center" selected>upper-center</option>
+                <option value="side">side</option>
+                <option value="low-horizon">low-horizon</option>
+              </select>
+            </label>
+
             <div class="source-row" aria-label="Source offset presets">
               <button class="source-button is-active" type="button" data-source-preset="center">Center</button>
               <button class="source-button" type="button" data-source-preset="upper">Upper</button>
@@ -125,6 +156,18 @@
               <dd id="pitch-value">0</dd>
             </div>
             <div class="setting-line-card">
+              <dt>Earth Mode</dt>
+              <dd id="earth-mode-value">Telephoto</dd>
+              <dt>Earth Scale</dt>
+              <dd id="earth-scale-value">4x</dd>
+            </div>
+            <div class="setting-line-card">
+              <dt>Earth Position</dt>
+              <dd id="earth-position-value">Upper-center</dd>
+              <dt>Compression</dt>
+              <dd id="backdrop-compression-value">Medium</dd>
+            </div>
+            <div class="setting-line-card">
               <dt>Visual Contact</dt>
               <dd id="visual-contact">No</dd>
               <dt>Off-screen</dt>
@@ -175,7 +218,7 @@
           </dl>
 
           <p class="control-help">
-            Canvas Click/Space: Intercept attempt. R/N 또는 Replay: 위협 재시작. Pause 또는 P: 일시정지. Camera Pitch와 source preset으로 Off-screen / Visual Contact 전환을 확인합니다.
+            Canvas Click/Space: Intercept attempt. R/N 또는 Replay: 위협 재시작. Pause 또는 P: 일시정지. Earth visual options는 실제 천문 스케일이 아닌 prototype 전용 backdrop tuning 값입니다.
           </p>
         </aside>
       </div>
