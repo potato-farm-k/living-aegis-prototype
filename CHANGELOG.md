@@ -42,6 +42,7 @@
 
 ### Changed
 
+- `prototype-08-p0-missile-front-approach`에서 impact point variation을 Final Approach 보정이 아니라 spawn 시점의 planned trajectory로 적용해 main trajectory와 Impact Warning Corridor부터 selected impact point로 수렴하도록 보정
 - `prototype-08-p0-missile-front-approach`에서 hidden defense anchor 주변의 제한된 Basic Missile impact point variation과 final approach start variation을 추가하고 debug panel에 선택값을 표시
 - `prototype-08-p0-missile-front-approach`의 Impact 결과 warning이 약 1초 동안만 blink한 뒤 정적 최종 상태로 멈추도록 보정
 - `prototype-08-p0-missile-front-approach`에서 visible Lunar Defense Zone / Defense Anchor marker를 기본 화면에서 숨기고 hidden logical impact target으로 정리
@@ -49,7 +50,7 @@
 - `prototype-08-p0-missile-front-approach`에서 Impact Warning / Lock Ready / Intercept feel 검증을 위해 warning intensity, lock radius, 결과 상태, debug label을 보강
 - `prototype-08-p0-missile-front-approach`의 1차 PM 검토 결과를 문서화하고, Left / Right off-screen arrow 이슈를 HUD indicator refinement backlog로 기록
 - `prototype-08-p0-missile-front-approach`에서 Replay / R / N 입력이 paused 상태를 풀고 즉시 재시작되도록 보정
-- `prototype-08-p0-missile-front-approach`의 camera pitch 범위를 넓혀 Off-screen 전환을 더 명확히 하고, Earth-direction marker 크기와 fixed boost debug label을 검토용으로 보정
+- `prototype-08-p0-missile-front-approach`의 camera pitch 범위를 넓혀 Off-screen 전환을 더 명확히 하고, Earth-direction marker 크기와 boost debug label을 검토용으로 보정
 - `prototype-08-p0-missile-front-approach`의 기본 Earth-direction marker를 정면 기준에 가깝게 옮기고, 입력 안내를 실제 동작하는 Canvas Click / Space / Replay / Pause 기준으로 정리
 - `PROTOTYPE_INDEX.md`에 Threat Type Draft v0.1의 P0/P1/P2 prototype 검증 우선순위 추가
 - `AGENTS.md`에 세 Living Aegis 저장소의 공통 문서 업데이트 원칙 추가

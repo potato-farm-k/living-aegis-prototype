@@ -31,6 +31,7 @@ const threatVariationPresets = {
     impactOffsetX: [-40, 40],
     impactOffsetY: [-30, 30],
     finalApproachStartPercent: [78, 86],
+    trajectoryCurveAmount: [0.88, 1.12],
   },
 };
 
@@ -47,7 +48,11 @@ const state = {
   variationMode: "basicMissile",
   impactOffset: { x: 0, y: 0 },
   finalApproachStart: 0.82,
+  trajectoryCurveAmount: 1,
+  trajectoryTargetMode: "planned-from-spawn",
+  boostMode: "source-relative",
   sourcePreset: "center",
+  selectedSourcePreset: "center",
   lastFrameTime: performance.now(),
   intercepted: false,
   impactReached: false,
@@ -158,13 +163,34 @@ function formatPercent(value) {
   return `${Math.round(value * 100)}%`;
 }
 
+function formatCurveAmount(value) {
+  return `${value.toFixed(2)}x`;
+}
+
+function normalizeVector(vector, fallback) {
+  const length = Math.hypot(vector.x, vector.y);
+
+  if (length < 0.001) {
+    return fallback;
+  }
+
+  return {
+    x: vector.x / length,
+    y: vector.y / length,
+  };
+}
+
 function selectThreatVariation() {
   const preset = threatVariationPresets[state.variationMode];
+  state.selectedSourcePreset = state.sourcePreset;
   state.impactOffset = {
     x: Math.round(randomRange(preset.impactOffsetX)),
     y: Math.round(randomRange(preset.impactOffsetY)),
   };
   state.finalApproachStart = randomRange(preset.finalApproachStartPercent) / 100;
+  state.trajectoryCurveAmount = randomRange(preset.trajectoryCurveAmount);
+  state.trajectoryTargetMode = "planned-from-spawn";
+  state.boostMode = "source-relative";
 }
 
 function cubicBezier(a, b, c, d, t) {
@@ -234,8 +260,15 @@ function getImpactTarget(surface, width, height) {
   };
 }
 
+function getEarthDirectionPoint(width, height) {
+  return {
+    x: width * 0.5,
+    y: height * settings.earthDirectionY - getPitchRatio() * height * 0.1,
+  };
+}
+
 function getPathPoints(width, height) {
-  const preset = sourcePresets[state.sourcePreset];
+  const preset = sourcePresets[state.selectedSourcePreset];
   const surface = getSurfaceMetrics(width, height);
   const pitchShift = -getPitchRatio() * height * settings.pitchShiftRatio;
   const source = {
@@ -243,18 +276,32 @@ function getPathPoints(width, height) {
     y: height * (0.34 + preset.y * 0.17) + pitchShift,
   };
   const target = getImpactTarget(surface, width, height);
-  const forwardTarget = surface.forwardGround;
+  const curveAmount = state.trajectoryCurveAmount;
+  const targetPull = clamp(0.54 + Math.abs(state.impactOffset.x) / 260, 0.54, 0.72);
+  const forwardTarget = {
+    x: lerp(surface.forwardGround.x, target.x, targetPull),
+    y: lerp(surface.forwardGround.y, target.y, 0.22),
+  };
+  const earthDirection = getEarthDirectionPoint(width, height);
+  const boostVector = normalizeVector(
+    {
+      x: source.x - earthDirection.x,
+      y: source.y - earthDirection.y,
+    },
+    { x: 0, y: 1 },
+  );
+  const boostDistance = height * (0.11 + Math.abs(preset.x) * 0.04 + Math.max(0, preset.y) * 0.02) * curveAmount;
   const controlA = {
-    x: source.x + (source.x - forwardTarget.x) * 0.16,
-    y: source.y - height * (0.07 + Math.abs(preset.x) * 0.02),
+    x: source.x + boostVector.x * boostDistance,
+    y: source.y + boostVector.y * boostDistance,
   };
   const controlB = {
-    x: forwardTarget.x + (source.x - forwardTarget.x) * 0.24,
-    y: forwardTarget.y - height * 0.37,
+    x: lerp(source.x, forwardTarget.x, 0.72) + (target.x - forwardTarget.x) * 0.16,
+    y: lerp(source.y, forwardTarget.y, 0.56) - height * (0.17 + Math.abs(preset.x) * 0.025) * curveAmount,
   };
   const finalControl = {
-    x: target.x + (source.x - target.x) * 0.06,
-    y: Math.min(forwardTarget.y, target.y) - height * 0.18,
+    x: lerp(forwardTarget.x, target.x, 0.68),
+    y: lerp(forwardTarget.y, target.y, 0.5) - height * 0.07 * curveAmount,
   };
 
   return {
@@ -265,6 +312,7 @@ function getPathPoints(width, height) {
     finalControl,
     target,
     surface,
+    curveAmount,
   };
 }
 
@@ -790,7 +838,7 @@ function drawOffscreenIndicator(info, width, height) {
   ctx.fillText("Off-screen", x, y - 18);
   ctx.fillStyle = "rgba(255, 232, 176, 0.68)";
   ctx.font = "700 10px Arial, Helvetica, sans-serif";
-  ctx.fillText(`Pitch ${state.cameraPitch} / ${sourcePresets[state.sourcePreset].label}`, x, y - 5);
+  ctx.fillText(`Pitch ${state.cameraPitch} / ${sourcePresets[state.selectedSourcePreset].label}`, x, y - 5);
 }
 
 function drawDebugOverlay(info, width) {
@@ -805,8 +853,8 @@ function drawDebugOverlay(info, width) {
   ctx.fillStyle = "rgba(5, 7, 13, 0.58)";
   ctx.strokeStyle = info.visualContact ? "rgba(123, 220, 255, 0.36)" : "rgba(255, 156, 108, 0.48)";
   ctx.lineWidth = 1;
-  ctx.fillRect(16, 16, panelWidth, 168);
-  ctx.strokeRect(16, 16, panelWidth, 168);
+  ctx.fillRect(16, 16, panelWidth, 184);
+  ctx.strokeRect(16, 16, panelWidth, 184);
 
   ctx.fillStyle = info.lockReady
     ? "rgba(156, 255, 141, 0.96)"
@@ -825,8 +873,9 @@ function drawDebugOverlay(info, width) {
   ctx.fillText("Defense Anchor: hidden / player-centered", 28, 104);
   ctx.fillText(`Impact Offset X: ${formatSigned(state.impactOffset.x)} / Y: ${formatSigned(state.impactOffset.y)}`, 28, 120);
   ctx.fillText(`Final Approach Start: ${formatPercent(state.finalApproachStart)}`, 28, 136);
-  ctx.fillText(`Variation Mode: ${preset.label} / Fixed Boost`, 28, 152);
-  ctx.fillText(`Pitch: ${state.cameraPitch} / Source: ${sourcePresets[state.sourcePreset].label}`, 28, 168);
+  ctx.fillText(`Target Mode: ${state.trajectoryTargetMode} / Boost: ${state.boostMode}`, 28, 152);
+  ctx.fillText(`Curve Amount: ${formatCurveAmount(state.trajectoryCurveAmount)} / ${preset.label}`, 28, 168);
+  ctx.fillText(`Pitch: ${state.cameraPitch} / Source Plan: ${sourcePresets[state.selectedSourcePreset].label}`, 28, 184);
   ctx.restore();
 }
 
@@ -1040,7 +1089,7 @@ function updatePanels(info) {
 
   els.progress.textContent = `${Math.round(info.progress * 100)}%`;
   els.corridorStatus.textContent = info.inCorridor ? `Active ${Math.round(info.warningIntensity * 100)}%` : "Standby";
-  els.sourceOffset.textContent = sourcePresets[state.sourcePreset].label;
+  els.sourceOffset.textContent = sourcePresets[state.selectedSourcePreset].label;
   els.pitchValue.textContent = String(state.cameraPitch);
   els.visualContact.textContent = info.visualContact ? "Yes" : "No";
   els.offscreenState.textContent = !info.onScreen && info.active ? "Yes" : "No";
