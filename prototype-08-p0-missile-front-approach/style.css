@@ -133,8 +133,13 @@ canvas {
 
 .control-header {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin-bottom: 12px;
+}
+
+.control-header h2 {
+  min-width: 0;
 }
 
 .button-row,
@@ -148,13 +153,12 @@ canvas {
 }
 
 .source-row {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
 }
 
 .select-control {
-  grid-column: span 2;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(112px, max-content) minmax(0, 1fr);
   gap: 8px;
   align-items: center;
   min-height: 34px;
@@ -164,15 +168,26 @@ canvas {
   background: rgba(5, 7, 13, 0.36);
 }
 
+.button-row .select-control {
+  grid-column: 1 / -1;
+}
+
 .select-control span,
 .range-control span {
+  min-width: 0;
   color: var(--muted);
   font-size: 0.74rem;
   font-weight: 700;
+  line-height: 1.25;
+}
+
+.select-control span {
+  white-space: nowrap;
 }
 
 select {
   width: 100%;
+  min-width: 0;
   min-height: 28px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -181,6 +196,7 @@ select {
 }
 
 button {
+  min-width: 0;
   min-height: 34px;
   padding: 6px 9px;
   border: 1px solid var(--line);
@@ -192,6 +208,13 @@ button {
     border-color 160ms ease,
     background-color 160ms ease,
     transform 160ms ease;
+}
+
+.button-row button,
+.source-button {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 button:hover,
@@ -227,7 +250,7 @@ button.is-active {
 
 .range-control {
   display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) 48px;
+  grid-template-columns: minmax(104px, 0.9fr) minmax(92px, 1.1fr) minmax(46px, auto);
   gap: 8px;
   align-items: center;
   min-height: 34px;
@@ -240,6 +263,7 @@ button.is-active {
 .range-control strong {
   color: var(--text);
   font-size: 0.82rem;
+  white-space: nowrap;
   text-align: right;
 }
 
@@ -416,6 +440,7 @@ dd {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .select-control,
   .range-control,
   .setting-line-card {
     grid-template-columns: 1fr;
